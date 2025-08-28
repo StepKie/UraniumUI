@@ -82,7 +82,18 @@ builder.Services.Configure<AutoFormViewOptions>(options =>
 
 
 ### Property Name Mapping
-You can configure the `PropertyNameFactory` property of `AutoFormViewOptions` to use a custom factory to get the property name. For example, you can implement a localization factory to get the property name from a resource file.
+You can configure custom display name using attribute `[Display]`
+
+```csharp
+public class AutoFormViewPageViewModel : ViewModelBase
+{
+    [Reactive]
+    [Display("I Accept Terms & Conditions")]
+    public bool IsTermsAndConditionsAccepted { get; set; }
+}
+```
+
+But if you need more control you can configure the `PropertyNameFactory` property of `AutoFormViewOptions` to use a custom factory to get the property name. For example, you can implement a localization factory to get the property name from a resource file.
 
 ```csharp
 builder.Services.Configure<AutoFormViewOptions>(options =>
