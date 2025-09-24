@@ -7,12 +7,12 @@ public partial class CheckBox
     protected override void OnHandlerChanging(HandlerChangingEventArgs args)
     {
         base.OnHandlerChanging(args);
-        if (args.OldHandler != null && args.OldHandler.PlatformView is Panel oldContentPanel)
+        if (args.OldHandler?.PlatformView is Panel oldContentPanel)
         {
             oldContentPanel.KeyDown -= PlatformView_KeyDown;
             oldContentPanel.KeyUp -= PlatformView_KeyUp;
         }
-        if (args.NewHandler != null && args.NewHandler.PlatformView is Panel newContentPanel)
+        if (args.NewHandler?.PlatformView is Panel newContentPanel)
         {
             newContentPanel.IsTabStop = true;
             newContentPanel.UseSystemFocusVisuals = true;
