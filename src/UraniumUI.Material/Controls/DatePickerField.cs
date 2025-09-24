@@ -43,7 +43,16 @@ public class DatePickerField : InputField
     {
         base.RegisterForEvents();
         iconClear.TappedCommand = new Command(OnClearTapped);
-
+#if WINDOWS
+        if (DatePickerView.Parent is Microsoft.Maui.Controls.ContentView cv)
+        {
+            cv.GestureRecognizers.Add(new TapGestureRecognizer
+            {
+                Command = new Command(OnContentTapped)
+            });
+            cv.BackgroundColor = Colors.Transparent; // Workaround for tap gesture recognizer
+        }
+#endif
         UpdateClearIconState();
 
         DatePickerView.SetBinding(DatePicker.DateProperty, new Binding(nameof(Date), source: this));
@@ -98,6 +107,17 @@ public class DatePickerField : InputField
 #endif
         }
     }
+
+
+#if WINDOWS
+    protected virtual void OnContentTapped(object parameter)
+    {
+        if (IsEnabled && DatePickerView.Handler is Microsoft.Maui.Handlers.IDatePickerHandler handler)
+        {
+            handler.PlatformView.IsCalendarOpen = true;
+        }
+    }
+#endif
 
     protected virtual void OnDateChanged()
     {
