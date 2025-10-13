@@ -537,6 +537,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
             { cancel, new Command(() =>
             {
                 tcs.TrySetResult(null);
+                popup.Close();
             }) }
         });
 
