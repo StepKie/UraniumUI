@@ -112,7 +112,6 @@ public partial class InputField : ContentView
         labelTitle.SetBinding(Label.FontSizeProperty, GetRelativeBinding(nameof(TitleFontSize)));
         labelTitle.SetBinding(Label.FontAttributesProperty, GetRelativeBinding(nameof(FontAttributes)));
         labelTitle.SetBinding(Label.FontFamilyProperty, GetRelativeBinding(nameof(FontFamily)));
-        labelTitle.SetBinding(Label.FontSizeProperty, GetRelativeBinding(nameof(FontSize)));
         labelTitle.SetBinding(Label.FontAutoScalingEnabledProperty, GetRelativeBinding(nameof(FontAutoScalingEnabled)));
 
         @this.Add(labelTitle);
