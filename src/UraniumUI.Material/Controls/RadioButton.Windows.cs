@@ -2,28 +2,24 @@
 using Microsoft.UI.Xaml.Controls;
 
 namespace UraniumUI.Material.Controls;
+
+/// <summary>TODO Note that this currently duplicates the handler code in Checkbox.Windows.cs and should be unified at some point</summary>
 public partial class RadioButton
 {
-    protected override void OnHandlerChanged()
+    protected override void OnHandlerChanging(HandlerChangingEventArgs args)
     {
-        base.OnHandlerChanged();
-        if (Handler != null)
+        base.OnHandlerChanging(args);
+        if (args.OldHandler?.PlatformView is Panel oldContentPanel)
         {
-            if (Handler.PlatformView is Panel contentPanel)
-            {
-                contentPanel.IsTabStop = true;
-                contentPanel.UseSystemFocusVisuals = true;
-                contentPanel.KeyDown += PlatformView_KeyDown;
-                contentPanel.KeyUp += PlatformView_KeyUp;
-            }
+            oldContentPanel.KeyDown -= PlatformView_KeyDown;
+            oldContentPanel.KeyUp -= PlatformView_KeyUp;
         }
-        else
+        if (args.NewHandler?.PlatformView is Panel newContentPanel)
         {
-            if (Handler.PlatformView is Panel contentPanel)
-            {
-                contentPanel.KeyDown -= PlatformView_KeyDown;
-                contentPanel.KeyUp -= PlatformView_KeyUp;
-            }
+            newContentPanel.IsTabStop = true;
+            newContentPanel.UseSystemFocusVisuals = true;
+            newContentPanel.KeyDown += PlatformView_KeyDown;
+            newContentPanel.KeyUp += PlatformView_KeyUp;
         }
     }
 
