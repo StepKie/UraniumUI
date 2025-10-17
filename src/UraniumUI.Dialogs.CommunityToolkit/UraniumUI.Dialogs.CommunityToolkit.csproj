@@ -25,8 +25,11 @@
     <SupportedOSPlatformVersion Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'tizen'">6.5</SupportedOSPlatformVersion>
   </PropertyGroup>
 
-  <ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('net8'))">
     <PackageReference Include="CommunityToolkit.Maui" Version="9.1.1" />
+  </ItemGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('net9'))">
+    <PackageReference Include="CommunityToolkit.Maui" Version="12.2.0" />
   </ItemGroup>
 
   <ItemGroup>
