@@ -1,4 +1,5 @@
 ﻿
+using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Maui.Views;
 using InputKit.Shared.Controls;
 using Microsoft.Extensions.Options;
@@ -32,8 +33,10 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 #if IOS || MACCATALYST
         var popup = new Popup
         {
-            Size = new Size(calculatedSize.Width, 230),
-            Color = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
+            Padding = 0,
+            BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
             CanBeDismissedByTappingOutsideOfPopup = false,
             Content = rootContainer,
         };
@@ -41,8 +44,10 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 #else
         var popup = new Popup()
         {
-            Size = new Size(Page.Width, Page.Height),
-            Color = Colors.Transparent,
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
+            BackgroundColor = Colors.Transparent,
+            Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
             Content = new ContentView
             {
@@ -60,16 +65,16 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 
         var footer = GetFooter(new Dictionary<string, Command>
         {
-            { accept, new Command(() =>
+            { accept, new Command(async () =>
             {
                 tcs.SetResult(true);
-                popup.Close();
+                await popup.CloseAsync();
             }) },
-            { cancelText, new Command(() =>
+            { cancelText, new Command(async () =>
             {
                 tcs.SetResult(false);
-                popup.Close();
-            }) }
+                await popup.CloseAsync();
+            } )}
         });
 
         rootContainer.Add(GetHeader(title));
@@ -135,8 +140,10 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 
         var popup = new Popup()
         {
-            Size = new Size(Page.Width, Page.Height),
-            Color = Colors.Transparent,
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
+            BackgroundColor = Colors.Transparent,
+            Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
 
             Content = new ContentView
@@ -146,7 +153,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
             }
         };
 
-        var cancelAction = new DisposableAction(() => popup.Close());
+        var cancelAction = new DisposableAction(async () => await popup.CloseAsync());
         tokenSource.Token.Register(cancelAction.Dispose);
 
         Page.ShowPopup(popup);
@@ -165,9 +172,11 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         };
         var popup = new Popup
         {
-            Size = new Size(calculatedSize.Width, calculatedSize.Height),
-            Color = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
+            BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
             CanBeDismissedByTappingOutsideOfPopup = false,
+            Padding = 0,
             Content = rootContainer
         };
         rootContainer.HeightRequest = calculatedSize.Height;
@@ -177,8 +186,10 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 
         var popup = new Popup()
         {
-            Size = new Size(Page.Width, Page.Height),
-            Color = Colors.Transparent,
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
+            BackgroundColor = Colors.Transparent,
+            Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
 
             Content = new ContentView
@@ -211,15 +222,15 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 
         var footer = GetFooter(new Dictionary<string, Command>
         {
-            {accept, new Command(() =>
+            {accept, new Command(async () =>
             {
                 tcs.SetResult(checkBoxGroup.Children.Where(x => x is CheckBox checkbox && checkbox.IsChecked).Select(s => (T)(s as CheckBox).CommandParameter));
-                popup.Close();
+                await popup.CloseAsync();
             }) },
-            {cancel, new Command(() =>
+            {cancel, new Command(async () =>
             {
                 tcs.SetResult(null);
-                popup.Close();
+                await popup.CloseAsync();
             }) }
         });
 
@@ -256,9 +267,11 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         };
         var popup = new Popup
         {
-            Size = new Size(calculatedSize.Width, calculatedSize.Height),
-            Color = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
+            BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
             CanBeDismissedByTappingOutsideOfPopup = false,
+            Padding = 0,
             Content = rootContainer
         };
         rootContainer.HeightRequest = calculatedSize.Height;
@@ -267,8 +280,10 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 
         var popup = new Popup()
         {
-            Size = new Size(Page.Width, Page.Height),
-            Color = Colors.Transparent,
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
+            BackgroundColor = Colors.Transparent,
+            Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
             Content = new ContentView
             {
@@ -299,15 +314,15 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 
         var footer = GetFooter(new Dictionary<string, Command>
         {
-            { accept, new Command(() =>
+            { accept, new Command(async () =>
             {
                 tcs.SetResult((T)rbGroup.SelectedItem);
-                popup.Close();
+                await popup.CloseAsync();
             }) },
-            { cancel, new Command(() =>
+            { cancel, new Command(async () =>
             {
                 tcs.SetResult(default);
-                popup.Close();
+                await popup.CloseAsync();
             }) }
         });
 
@@ -340,17 +355,20 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 #if IOS || MACCATALYST
         var popup = new Popup
         {
-            Size = new Size(calculatedSize.Width, 230),
-            Color = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = 230,
+            BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
             CanBeDismissedByTappingOutsideOfPopup = false,
+            Padding = 0,
             Content = rootContainer,
         };
         rootContainer.VerticalOptions = LayoutOptions.Center;
 #else
         var popup = new Popup()
         {
-            Size = new Size(Page.Width, Page.Height),
-            Color = Colors.Transparent,
+            WidthRequest = Page.Width,
+            HeightRequest = Page.Height,
+            BackgroundColor = Colors.Transparent,
             CanBeDismissedByTappingOutsideOfPopup = false,
             Content = new ContentView
             {
@@ -401,15 +419,15 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 
         var footer = GetFooter(new Dictionary<string, Command>
         {
-            { accept, new Command(() =>
+            { accept, new Command(async () =>
             {
                 tcs.SetResult(entry.Text);
-                popup.Close();
+                await popup.CloseAsync();
             }) },
-            { cancel, new Command(() =>
+            { cancel, new Command(async () =>
             {
                 tcs.SetResult(initialValue);
-                popup.Close();
+                await popup.CloseAsync();
             }) }
         });
 
@@ -441,17 +459,21 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 #if IOS || MACCATALYST
         var popup = new Popup
         {
-            Size = new Size(calculatedSize.Width, 230),
-            Color = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = 230,
+            BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
             CanBeDismissedByTappingOutsideOfPopup = false,
+            Padding = 0,
             Content = rootContainer,
         };
         rootContainer.VerticalOptions = LayoutOptions.Center;
 #else
         var popup = new Popup()
         {
-            Size = new Size(Page.Width, Page.Height),
-            Color = Colors.Transparent,
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
+            BackgroundColor = Colors.Transparent,
+            Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
             Content = new ContentView
             {
@@ -463,10 +485,10 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 
         var footer = GetFooter(new Dictionary<string, Command>
         {
-            { okText, new Command(() =>
+            { okText, new Command(async () =>
             {
                 tcs.SetResult();
-                popup.Close();
+                await popup.CloseAsync();
             }) }
         });
 
@@ -507,17 +529,22 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 #if IOS || MACCATALYST
         var popup = new Popup
         {
-            Size = new Size(calculatedSize.Width, 230),
-            Color = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
+            WidthRequest = calculatedSize.Width,
+            Padding = 0,
+            HeightRequest = 230,
+            BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
             CanBeDismissedByTappingOutsideOfPopup = false,
+            Padding = 0,
             Content = rootContainer,
         };
         rootContainer.VerticalOptions = LayoutOptions.Center;
 #else
         var popup = new Popup()
         {
-            Size = new Size(Page.Width, Page.Height),
-            Color = Colors.Transparent,
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
+            BackgroundColor = Colors.Transparent,
+            Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
             Content = new ContentView
             {
@@ -529,15 +556,15 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 
         var footer = GetFooter(new Dictionary<string, Command>
         {
-            { submit, new Command(() =>
+            { submit, new Command(async () =>
             {
                 tcs.TrySetResult(viewModel);
-                popup.Close();
+                await popup.CloseAsync();
             }) },
-            { cancel, new Command(() =>
+            { cancel, new Command(async () =>
             {
                 tcs.TrySetResult(null);
-                popup.Close();
+                await popup.CloseAsync();
             }) }
         });
 
