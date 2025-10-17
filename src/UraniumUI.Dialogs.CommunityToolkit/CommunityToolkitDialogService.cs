@@ -35,6 +35,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         {
             WidthRequest = calculatedSize.Width,
             HeightRequest = calculatedSize.Height,
+            Padding = 0,
             BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
             CanBeDismissedByTappingOutsideOfPopup = false,
             Content = rootContainer,
@@ -46,6 +47,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
             WidthRequest = calculatedSize.Width,
             HeightRequest = calculatedSize.Height,
             BackgroundColor = Colors.Transparent,
+            Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
             Content = new ContentView
             {
@@ -138,9 +140,10 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 
         var popup = new Popup()
         {
-            WidthRequest = Page.Width,
-            HeightRequest = Page.Height,
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
             BackgroundColor = Colors.Transparent,
+            Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
 
             Content = new ContentView
@@ -173,6 +176,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
             HeightRequest = calculatedSize.Height,
             BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
             CanBeDismissedByTappingOutsideOfPopup = false,
+            Padding = 0,
             Content = rootContainer
         };
         rootContainer.HeightRequest = calculatedSize.Height;
@@ -182,9 +186,10 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 
         var popup = new Popup()
         {
-            WidthRequest = Page.Width,
-            HeightRequest = Page.Height,
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
             BackgroundColor = Colors.Transparent,
+            Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
 
             Content = new ContentView
@@ -266,6 +271,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
             HeightRequest = calculatedSize.Height,
             BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
             CanBeDismissedByTappingOutsideOfPopup = false,
+            Padding = 0,
             Content = rootContainer
         };
         rootContainer.HeightRequest = calculatedSize.Height;
@@ -274,9 +280,10 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 
         var popup = new Popup()
         {
-            WidthRequest = Page.Width,
-            HeightRequest = Page.Height,
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
             BackgroundColor = Colors.Transparent,
+            Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
             Content = new ContentView
             {
@@ -352,6 +359,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
             HeightRequest = 230,
             BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
             CanBeDismissedByTappingOutsideOfPopup = false,
+            Padding = 0,
             Content = rootContainer,
         };
         rootContainer.VerticalOptions = LayoutOptions.Center;
@@ -455,15 +463,17 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
             HeightRequest = 230,
             BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
             CanBeDismissedByTappingOutsideOfPopup = false,
+            Padding = 0,
             Content = rootContainer,
         };
         rootContainer.VerticalOptions = LayoutOptions.Center;
 #else
         var popup = new Popup()
         {
-            WidthRequest = Page.Width,
-            HeightRequest = Page.Height,
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
             BackgroundColor = Colors.Transparent,
+            Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
             Content = new ContentView
             {
@@ -520,18 +530,21 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         var popup = new Popup
         {
             WidthRequest = calculatedSize.Width,
+            Padding = 0,
             HeightRequest = 230,
             BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
             CanBeDismissedByTappingOutsideOfPopup = false,
+            Padding = 0,
             Content = rootContainer,
         };
         rootContainer.VerticalOptions = LayoutOptions.Center;
 #else
         var popup = new Popup()
         {
-            WidthRequest = Page.Width,
-            HeightRequest = Page.Height,
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
             BackgroundColor = Colors.Transparent,
+            Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
             Content = new ContentView
             {
