@@ -1,0 +1,34 @@
+<Solution>
+  <Folder Name="/demo/">
+    <Project Path="demo/UraniumApp/UraniumApp.csproj">
+      <Deploy />
+    </Project>
+  </Folder>
+  <Folder Name="/src/">
+    <Project Path="src/UraniumUI.Blurs/UraniumUI.Blurs.csproj" />
+    <Project Path="src/UraniumUI.Dialogs.CommunityToolkit/UraniumUI.Dialogs.CommunityToolkit.csproj" />
+    <Project Path="src/UraniumUI.Dialogs.Mopups/UraniumUI.Dialogs.Mopups.csproj" />
+    <Project Path="src/UraniumUI.Icons.FontAwesome/UraniumUI.Icons.FontAwesome.csproj">
+      <Deploy Solution="Release|*" />
+    </Project>
+    <Project Path="src/UraniumUI.Icons.MaterialIcons/UraniumUI.Icons.MaterialIcons.csproj">
+      <Deploy Solution="Release|*" />
+    </Project>
+    <Project Path="src/UraniumUI.Icons.MaterialSymbols/UraniumUI.Icons.MaterialSymbols.csproj" />
+    <Project Path="src/UraniumUI.Icons.SegoeFluent/UraniumUI.Icons.SegoeFluent.csproj" />
+    <Project Path="src/UraniumUI.Material/UraniumUI.Material.csproj">
+      <Deploy Solution="Release|*" />
+    </Project>
+    <Project Path="src/UraniumUI.Validations.DataAnnotations/UraniumUI.Validations.DataAnnotations.csproj" />
+    <Project Path="src/UraniumUI.WebComponents/UraniumUI.WebComponents.csproj" />
+    <Project Path="src/UraniumUI/UraniumUI.csproj">
+      <Deploy Solution="Release|*" />
+    </Project>
+  </Folder>
+  <Folder Name="/test/">
+    <Project Path="test/UraniumUI.Material.Tests/UraniumUI.Material.Tests.csproj" />
+    <Project Path="test/UraniumUI.Tests.Core/UraniumUI.Tests.Core.csproj" />
+    <Project Path="test/UraniumUI.Tests/UraniumUI.Tests.csproj" />
+  </Folder>
+  <Folder Name="/themes/" />
+</Solution>

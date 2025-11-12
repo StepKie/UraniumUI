@@ -37,16 +37,16 @@ public partial class StatefulContentViewHandler
         if (e.Event.Action == MotionEventActions.HoverEnter)
         {
             GoToState(StatefulView, CommonStates.PointerOver);
-            ExecuteCommandIfCan(StatefulView.HoverCommand);
             StatefulView.InvokeHovered();
+            ExecuteCommandIfCan(StatefulView.HoverCommand);
             return;
         }
 
         if (e.Event.Action == MotionEventActions.HoverExit)
         {
             GoToState(StatefulView, CommonStates.Normal);
-            ExecuteCommandIfCan(StatefulView.HoverExitCommand);
             StatefulView.InvokeHoverExited();
+            ExecuteCommandIfCan(StatefulView.HoverExitCommand);
         }
     }
 
@@ -55,8 +55,8 @@ public partial class StatefulContentViewHandler
         if (e.Event.Action == MotionEventActions.Down)
         {
             GoToState(StatefulView, "Pressed");
-            ExecuteCommandIfCan(StatefulView.PressedCommand);
             StatefulView.InvokePressed();
+            ExecuteCommandIfCan(StatefulView.PressedCommand);
             e.Handled = false;
         }
         else if (e.Event.Action == MotionEventActions.Up)
@@ -69,14 +69,14 @@ public partial class StatefulContentViewHandler
     private void PlatformView_Click(object sender, EventArgs e)
     {
         GoToState(StatefulView, CommonStates.Normal);
-        ExecuteCommandIfCan(StatefulView.TappedCommand);
         StatefulView.InvokeTapped();
+        ExecuteCommandIfCan(StatefulView.TappedCommand);
     }
 
     private void PlatformView_LongClick(object sender, Android.Views.View.LongClickEventArgs e)
     {
-        ExecuteCommandIfCan(StatefulView.LongPressCommand);
         StatefulView.InvokeLongPressed();
+        ExecuteCommandIfCan(StatefulView.LongPressCommand);
     }
 
     public static void MapIsFocusable(StatefulContentViewHandler handler, StatefulContentView view)
