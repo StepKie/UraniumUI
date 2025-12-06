@@ -102,12 +102,11 @@ public class DatePickerField : InputField
         DatePickerView.Date = DatePickerView.Date.AddMonths(-1);
     #endif
 #endif
-            // End of workaround
-
-            Date = null;
+        // End of workaround
+        Date = null;
 
 #if MACCATALYST
-			DatePickerView.Unfocus();
+        DatePickerView.Unfocus();
 #endif
         }
     }
