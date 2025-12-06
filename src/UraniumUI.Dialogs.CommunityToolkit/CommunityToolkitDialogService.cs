@@ -534,7 +534,6 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
             HeightRequest = 230,
             BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
             CanBeDismissedByTappingOutsideOfPopup = false,
-            Padding = 0,
             Content = rootContainer,
         };
         rootContainer.VerticalOptions = LayoutOptions.Center;
