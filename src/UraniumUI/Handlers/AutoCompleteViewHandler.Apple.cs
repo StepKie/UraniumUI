@@ -16,7 +16,6 @@ using UraniumUI.Extensions;
 namespace UraniumUI.Handlers;
 public partial class AutoCompleteViewHandler : ViewHandler<IAutoCompleteView, UIAutoCompleteTextField>
 {
-
     protected override UIAutoCompleteTextField CreatePlatformView()
     {
         var view = new UIAutoCompleteTextField
@@ -32,15 +31,21 @@ public partial class AutoCompleteViewHandler : ViewHandler<IAutoCompleteView, UI
             view.FocusEffect = null;
         }
 
-
-        view.AutoCompleteViewSource.Selected += AutoCompleteViewSourceOnSelected;
         return view;
     }
 
     public override void PlatformArrange(Rect rect)
     {
         base.PlatformArrange(rect);
-        Render(rect);
+        
+        if (PlatformView.IsInitialized)
+        {
+            UpdateDropdownPosition();
+        }
+        else
+        {
+            InitializeDropdown(rect);
+        }
     }
 
     protected override void ConnectHandler(UIAutoCompleteTextField platformView)
@@ -49,6 +54,7 @@ public partial class AutoCompleteViewHandler : ViewHandler<IAutoCompleteView, UI
         platformView.EditingDidBegin += PlatformView_EditingDidBegin;
         platformView.EditingDidEndOnExit += PlatformView_EditingDidEndOnExit;
         platformView.EditingDidEnd += PlatformView_EditingDidEnd;
+        platformView.AutoCompleteViewSource.Selected += AutoCompleteViewSourceOnSelected;
     }
 
     protected override void DisconnectHandler(UIAutoCompleteTextField platformView)
@@ -57,6 +63,8 @@ public partial class AutoCompleteViewHandler : ViewHandler<IAutoCompleteView, UI
         platformView.EditingDidBegin -= PlatformView_EditingDidBegin;
         platformView.EditingDidEndOnExit -= PlatformView_EditingDidEndOnExit;
         platformView.EditingDidEnd -= PlatformView_EditingDidEnd;
+        platformView.AutoCompleteViewSource.Selected -= AutoCompleteViewSourceOnSelected;
+        platformView.CleanupScrollViewObserver();
     }
 
     private void PlatformView_TextChanged(object sender, EventArgs e)
@@ -109,14 +117,36 @@ public partial class AutoCompleteViewHandler : ViewHandler<IAutoCompleteView, UI
         }
     }
 
-    public void Render(CGRect rect)
+    private void InitializeDropdown(CGRect rect)
     {
-        var ctrl = UIApplication.SharedApplication.GetTopViewController();
+        var ctrl = GetTopViewController();
+        if (ctrl == null) return;
 
-        var relativePosition = UIApplication.SharedApplication.KeyWindow;
-        var relativeFrame = PlatformView.Superview.ConvertRectToView(PlatformView.Frame, relativePosition);
+        PlatformView.Render(ctrl, VirtualView as AutoCompleteView);
+    }
 
-        PlatformView.Render(ctrl, PlatformView.Layer, VirtualView as AutoCompleteView, relativeFrame.X, relativeFrame.Y);
+    private void UpdateDropdownPosition()
+    {
+        PlatformView.UpdatePosition();
+    }
+
+    private UIViewController GetTopViewController()
+    {
+        // Use modern API instead of deprecated KeyWindow
+        var windowScene = UIApplication.SharedApplication.ConnectedScenes
+            .OfType<UIWindowScene>()
+            .FirstOrDefault(scene => scene.ActivationState == UISceneActivationState.ForegroundActive);
+
+        var window = windowScene?.Windows.FirstOrDefault(w => w.IsKeyWindow) 
+                     ?? UIApplication.SharedApplication.KeyWindow; // Fallback for older iOS
+
+        if (window?.RootViewController == null) return null;
+
+        var viewController = window.RootViewController;
+        while (viewController.PresentedViewController != null)
+            viewController = viewController.PresentedViewController;
+
+        return viewController;
     }
 
     private void AutoCompleteViewSourceOnSelected(object sender, SelectedItemChangedEventArgs args)
@@ -134,10 +164,10 @@ public class UIAutoCompleteTextField : MauiTextField, IUITextFieldDelegate
 {
     private AutoCompleteViewSource _autoCompleteViewSource;
     private UIView _background;
-    private CGRect _drawnFrame;
     private IList _items = new List<string>();
     private UIViewController _parentViewController;
-    private UIScrollView _scrollView;
+    private UIScrollView _parentScrollView;
+    private IDisposable _scrollObserver;
 
     public Func<string, IEnumerable<string>, IList<string>> SortingAlgorithm { get; set; } = (t, d) => d.OrderBy(x => x.Contains(t, StringComparison.InvariantCultureIgnoreCase) ? 0 : 1).ToArray();
 
@@ -163,14 +193,16 @@ public class UIAutoCompleteTextField : MauiTextField, IUITextFieldDelegate
 
     public int AutocompleteTableViewHeight { get; set; } = 150;
 
-    public void Render(UIViewController viewController, CALayer layer, AutoCompleteView virtualView, NFloat x, NFloat y)
+    public void Render(UIViewController viewController, AutoCompleteView virtualView)
     {
-        var _scrollView = GetParentScrollView(this);
-        _drawnFrame = layer.Frame;
-        _parentViewController = viewController ?? throw new ArgumentNullException(nameof(viewController), "View cannot be null");
+        if (IsInitialized)
+            return;
 
-        //Make new tableview and do some settings
-        AutoCompleteTableView = new AutoCompleteTableView(_scrollView)
+        _parentViewController = viewController ?? throw new ArgumentNullException(nameof(viewController), "View cannot be null");
+        _parentScrollView = GetParentScrollView(this);
+
+        // Make new tableview
+        AutoCompleteTableView = new AutoCompleteTableView(_parentScrollView)
         {
             DelaysContentTouches = true,
             ClipsToBounds = true,
@@ -184,36 +216,10 @@ public class UIAutoCompleteTextField : MauiTextField, IUITextFieldDelegate
             TableFooterView = new UIView()
         };
 
-        //Some textfield settings
-        AutocorrectionType = UITextAutocorrectionType.No;
-        ClearButtonMode = UITextFieldViewMode.Never;
-
-        var scrollViewIsNull = _scrollView == null;
-
-        CGRect frame;
-        UIView view;
-        if (scrollViewIsNull)
-        {
-            view = _parentViewController.View;
-            frame = new CGRect(x, y + _drawnFrame.Height, _drawnFrame.Width, AutocompleteTableViewHeight);
-        }
-        else
-        {
-            var e = (virtualView.FindInParents<ScrollView>());
-            var p = e.Padding;
-            var m = e.Margin;
-            frame = new CGRect(_drawnFrame.X + p.Left + m.Left,
-                //this.Frame.Y,
-                y - this.Frame.Y - _drawnFrame.Y - layer.Frame.Y - _drawnFrame.Height,
-                _drawnFrame.Width,
-                AutocompleteTableViewHeight);
-            view = _scrollView;
-        }
-
         AutoCompleteTableView.Layer.CornerRadius = 5;
 
-        _background = new UIView(frame) { BackgroundColor = UIColor.White, Hidden = true };
-        _background.Layer.CornerRadius = 5; //rounded corners
+        _background = new UIView { BackgroundColor = UIColor.White, Hidden = true };
+        _background.Layer.CornerRadius = 5;
         _background.Layer.MasksToBounds = false;
         _background.Layer.ShadowColor = UIColor.Black.CGColor;
         _background.Layer.ShadowOffset = new CGSize(0.0f, 4.0f);
@@ -222,22 +228,75 @@ public class UIAutoCompleteTextField : MauiTextField, IUITextFieldDelegate
         _background.Layer.BorderColor = UIColor.LightGray.CGColor;
         _background.Layer.BorderWidth = 0.1f;
 
-        AutoCompleteTableView.Frame = frame;
-        view.AddSubview(_background);
-        view.AddSubview(AutoCompleteTableView);
+        // Add to view hierarchy
+        var parentView = _parentScrollView ?? _parentViewController.View;
+        parentView.AddSubview(_background);
+        parentView.AddSubview(AutoCompleteTableView);
 
-        //listen to edit events
-        
-        EditingChanged -= OnEditingChanged;
-        EditingDidEnd -= OnEditingDidEnd;
-        EditingDidBegin -= UIAutoCompleteTextField_EditingDidBegin;
+        // Textfield settings
+        AutocorrectionType = UITextAutocorrectionType.No;
+        ClearButtonMode = UITextFieldViewMode.Never;
 
+        // Subscribe to events only once
         EditingChanged += OnEditingChanged;
         EditingDidEnd += OnEditingDidEnd;
         EditingDidBegin += UIAutoCompleteTextField_EditingDidBegin;
 
+        // Observe scroll events if in scrollview
+        if (_parentScrollView != null)
+        {
+            _scrollObserver = _parentScrollView.AddObserver("contentOffset", Foundation.NSKeyValueObservingOptions.New, _ =>
+            {
+                if (!AutoCompleteTableView.Hidden)
+                {
+                    UpdatePosition();
+                }
+            });
+        }
+
         UpdateTableViewData();
         IsInitialized = true;
+    }
+
+    public void UpdatePosition()
+    {
+        if (!IsInitialized || AutoCompleteTableView == null)
+            return;
+
+        var frame = CalculateDropdownFrame();
+        AutoCompleteTableView.Frame = frame;
+        _background.Frame = frame;
+    }
+
+    private CGRect CalculateDropdownFrame()
+    {
+        CGRect frame;
+        
+        if (_parentScrollView == null)
+        {
+            // Not in a scrollview - position relative to view controller's view
+            var windowFrame = this.ConvertRectToView(this.Bounds, _parentViewController.View);
+            frame = new CGRect(
+                windowFrame.X,
+                windowFrame.Y + windowFrame.Height,
+                windowFrame.Width,
+                AutocompleteTableViewHeight
+            );
+        }
+        else
+        {
+            // Inside a scrollview - position relative to scrollview coordinates
+            var scrollFrame = this.ConvertRectToView(this.Bounds, _parentScrollView);
+            
+            frame = new CGRect(
+                scrollFrame.X,
+                scrollFrame.Y + scrollFrame.Height,
+                scrollFrame.Width,
+                AutocompleteTableViewHeight
+            );
+        }
+
+        return frame;
     }
 
     private void UIAutoCompleteTextField_EditingDidBegin(object sender, EventArgs e)
@@ -270,11 +329,13 @@ public class UIAutoCompleteTextField : MauiTextField, IUITextFieldDelegate
 
     private void ShowAutoCompleteView()
     {
+        UpdatePosition(); // Update position before showing
         _background.Hidden = false;
         AutoCompleteTableView.Hidden = false;
-        if (_scrollView != null)
+        
+        if (_parentScrollView != null)
         {
-            _scrollView.ScrollRectToVisible(AutoCompleteTableView.Frame, true);
+            _parentScrollView.ScrollRectToVisible(AutoCompleteTableView.Frame, true);
         }
     }
 
@@ -303,11 +364,12 @@ public class UIAutoCompleteTextField : MauiTextField, IUITextFieldDelegate
 
         AutoCompleteTableView.ReloadData();
 
-        var f = AutoCompleteTableView.Frame;
+        // Adjust height based on content
         var height = Math.Min(AutocompleteTableViewHeight, (int)AutoCompleteTableView.ContentSize.Height);
-        var frame = new CGRect(f.X, f.Y, f.Width, height);
-        AutoCompleteTableView.Frame = frame;
-        _background.Frame = frame;
+        var currentFrame = AutoCompleteTableView.Frame;
+        var newFrame = new CGRect(currentFrame.X, currentFrame.Y, currentFrame.Width, height);
+        AutoCompleteTableView.Frame = newFrame;
+        _background.Frame = newFrame;
     }
 
     public void UpdateItems(IList items)
@@ -316,6 +378,11 @@ public class UIAutoCompleteTextField : MauiTextField, IUITextFieldDelegate
         AutoCompleteViewSource.UpdateSuggestions(items);
     }
 
+    public void CleanupScrollViewObserver()
+    {
+        _scrollObserver?.Dispose();
+        _scrollObserver = null;
+    }
 
     private static UIScrollView GetParentScrollView(UIView element)
     {
@@ -350,7 +417,6 @@ public abstract class AutoCompleteViewSource : UITableViewSource
         AutoCompleteTextField.ResignFirstResponder();
         var item = Suggestions[(int)indexPath.Item];
         Selected?.Invoke(tableView, new SelectedItemChangedEventArgs(item, -1));
-        // don't call base.RowSelected
     }
 }
 
@@ -362,6 +428,7 @@ public class AutoCompleteDefaultDataSource : AutoCompleteViewSource
     {
         Suggestions = suggestions;
     }
+
 
     public override UITableViewCell GetCell(UITableView tableView, NSIndexPath indexPath)
     {

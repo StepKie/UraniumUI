@@ -28,8 +28,8 @@ public partial class StatefulContentViewHandler
 
     private void OnLongPress(UILongPressGestureRecognizer recognizer)
     {
-        ExecuteCommandIfCan(StatefulView.LongPressCommand);
         StatefulView.InvokeLongPressed();
+        ExecuteCommandIfCan(StatefulView.LongPressCommand);
     }
 
     private void OnHover(UIHoverGestureRecognizer recognizer)
@@ -39,15 +39,15 @@ public partial class StatefulContentViewHandler
             case UIGestureRecognizerState.Began:
 
                 GoToState(StatefulView, CommonStates.PointerOver);
-                ExecuteCommandIfCan(StatefulView.HoverCommand);
                 StatefulView.InvokeHovered();
+                ExecuteCommandIfCan(StatefulView.HoverCommand);
                 break;
             case UIGestureRecognizerState.Ended:
             case UIGestureRecognizerState.Cancelled:
             case UIGestureRecognizerState.Failed:
                 GoToState(StatefulView, CommonStates.Normal);
-                ExecuteCommandIfCan(StatefulView.HoverExitCommand);
                 StatefulView.InvokeHoverExited();
+                ExecuteCommandIfCan(StatefulView.HoverExitCommand);
                 break;
         }
     }
@@ -58,14 +58,14 @@ public partial class StatefulContentViewHandler
         {
             case UIGestureRecognizerState.Began:
                 GoToState(StatefulView, "Pressed");
-                ExecuteCommandIfCan(StatefulView.PressedCommand);
                 StatefulView.InvokePressed();
+                ExecuteCommandIfCan(StatefulView.PressedCommand);
 
                 break;
             case UIGestureRecognizerState.Ended:
                 GoToState(StatefulView, CommonStates.Normal);
-                ExecuteCommandIfCan(StatefulView.TappedCommand);
                 StatefulView.InvokeTapped();
+                ExecuteCommandIfCan(StatefulView.TappedCommand);
 
                 //// TODO: Fix working of native gesture recognizers of MAUI
                 foreach (var item in StatefulView.GestureRecognizers)

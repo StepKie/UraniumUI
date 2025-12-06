@@ -1,4 +1,4 @@
-﻿#if NET8_0 || NET9_0
+﻿#if NET9_0 || NET10_0
 
 using Microsoft.Maui.Handlers;
 using System.Windows.Input;

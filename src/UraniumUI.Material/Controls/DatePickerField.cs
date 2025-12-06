@@ -96,18 +96,20 @@ public class DatePickerField : InputField
                 dp.Date = null;
             }
 #elif ANDROID
-            DatePickerView.Date = DatePickerView.Date.AddMonths(-1);
+    #if NET10_0_OR_GREATER
+        // No workaround needed
+    #else
+        DatePickerView.Date = DatePickerView.Date.AddMonths(-1);
+    #endif
 #endif
-            // End of workaround
-
-            Date = null;
+        // End of workaround
+        Date = null;
 
 #if MACCATALYST
-			DatePickerView.Unfocus();
+        DatePickerView.Unfocus();
 #endif
         }
     }
-
 
 #if WINDOWS
     protected virtual void OnContentTapped(object parameter)

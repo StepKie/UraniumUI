@@ -13,7 +13,7 @@
         <Grid RowDefinitions="*,Auto">
             <CollectionView ItemsSource="{Binding ControlTypes}" SelectedItem="{Binding SelectedControlType}" SelectionMode="Single">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="x:String">
                         <Label Padding="4" Text="{Binding .}" />
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
@@ -29,7 +29,7 @@
                     <Label Text="Result Outputs:" FontSize="Medium" FontAttributes="Bold"/>
                 </CollectionView.Header>
                 <CollectionView.ItemTemplate>
-                    <DataTemplate>
+                    <DataTemplate x:DataType="x:String">
                         <Label Text="{Binding .}" />
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

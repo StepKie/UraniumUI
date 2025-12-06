@@ -47,15 +47,15 @@ public partial class StatefulContentViewHandler
     private void PlatformView_PointerExited(object sender, PointerRoutedEventArgs e)
     {
         GoToState(StatefulView, CommonStates.Normal);
-        ExecuteCommandIfCan(StatefulView.HoverExitCommand);
         StatefulView.InvokeHoverExited();
+        ExecuteCommandIfCan(StatefulView.HoverExitCommand);
     }
 
     private void PlatformView_PointerEntered(object sender, PointerRoutedEventArgs e)
     {
         GoToState(StatefulView, CommonStates.PointerOver);
-        ExecuteCommandIfCan(StatefulView.HoverCommand);
         StatefulView.InvokeHovered();
+        ExecuteCommandIfCan(StatefulView.HoverCommand);
     }
 
     long lastPressed;
@@ -65,8 +65,8 @@ public partial class StatefulContentViewHandler
         lastPressed = DateTime.Now.Ticks;
 
         GoToState(StatefulView, "Pressed");
-        ExecuteCommandIfCan(StatefulView.PressedCommand);
         StatefulView.InvokePressed();
+        ExecuteCommandIfCan(StatefulView.PressedCommand);
     }
 
     private void PlatformView_PointerReleased(object sender, PointerRoutedEventArgs e)
@@ -78,8 +78,8 @@ public partial class StatefulContentViewHandler
         }
 
         GoToState(StatefulView, CommonStates.Normal);
-        ExecuteCommandIfCan(StatefulView.TappedCommand);
         StatefulView.InvokeTapped();
+        ExecuteCommandIfCan(StatefulView.TappedCommand);
     }
 
     private void PlatformView_KeyDown(object sender, KeyRoutedEventArgs e)
@@ -87,8 +87,8 @@ public partial class StatefulContentViewHandler
         if (IsActionKey(e.Key))
         {
             GoToState(StatefulView, "Pressed");
-            ExecuteCommandIfCan(StatefulView.PressedCommand);
             StatefulView.InvokePressed();
+            ExecuteCommandIfCan(StatefulView.PressedCommand);
         }
     }
 
@@ -96,9 +96,9 @@ public partial class StatefulContentViewHandler
     {
         if (IsActionKey(e.Key))
         {
-            ExecuteCommandIfCan(StatefulView.TappedCommand);
-            StatefulView.InvokeTapped();
             GoToState(StatefulView, CommonStates.Normal);
+            StatefulView.InvokeTapped();
+            ExecuteCommandIfCan(StatefulView.TappedCommand);
         }
     }
 
