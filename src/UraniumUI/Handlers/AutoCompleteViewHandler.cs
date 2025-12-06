@@ -12,22 +12,22 @@ namespace UraniumUI.Handlers;
 
 public partial class AutoCompleteViewHandler
 {
-    public static IPropertyMapper<AutoCompleteView, AutoCompleteViewHandler> IconViewMapper 
+    public static IPropertyMapper<AutoCompleteView, AutoCompleteViewHandler> AutoCompleteViewMapper 
         => new PropertyMapper<AutoCompleteView, AutoCompleteViewHandler>(ViewHandler.ViewMapper)
         {
             [nameof(AutoCompleteView.Text)] = MapText,
             [nameof(AutoCompleteView.ItemsSource)] = MapItemsSource,
             [nameof(AutoCompleteView.Threshold)] = MapThreshold,
         };
-    public AutoCompleteViewHandler() : base(IconViewMapper)
+    public AutoCompleteViewHandler() : base(AutoCompleteViewMapper)
     {
     }
 }
 
-#if (NET8_0 || NET9_0) && !ANDROID && !IOS && !MACCATALYST && !WINDOWS
+#if (NET9_0 || NET10_0) && !ANDROID && !IOS && !MACCATALYST && !WINDOWS
 public partial class AutoCompleteViewHandler : ViewHandler<AutoCompleteView, object>
 {
-    public AutoCompleteViewHandler(IPropertyMapper mapper, CommandMapper commandMapper = null) : base(IconViewMapper, commandMapper)
+    public AutoCompleteViewHandler(IPropertyMapper mapper, CommandMapper commandMapper = null) : base(AutoCompleteViewMapper, commandMapper)
     {
     }
     
