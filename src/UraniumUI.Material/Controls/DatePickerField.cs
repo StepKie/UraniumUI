@@ -111,7 +111,6 @@ public class DatePickerField : InputField
         }
     }
 
-
 #if WINDOWS
     protected virtual void OnContentTapped(object parameter)
     {
