@@ -110,6 +110,11 @@ public partial class MultiplePickerField : InputField
 
         return layout;
     }
+    
+    protected override object GetValueForValidator()
+    {
+        return SelectedItems;
+    }
 
     protected virtual void OnItemsSourceSet()
     {
