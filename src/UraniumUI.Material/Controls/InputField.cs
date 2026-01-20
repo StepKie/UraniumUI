@@ -559,7 +559,14 @@ public partial class InputField : ContentView
 
     public static readonly BindableProperty FontAutoScalingEnabledProperty = BindableProperty.Create(
         nameof(FontAutoScalingEnabled), typeof(bool), typeof(InputField), Picker.FontAutoScalingEnabledProperty.DefaultValue,
-        propertyChanged: (bindable, oldValue, newValue) => (bindable as InputField).labelTitle.FontAutoScalingEnabled = (bool)newValue);
+        propertyChanged: (bindable, oldValue, newValue) =>
+        {
+            var inputField = bindable as InputField;
+            if (inputField?.labelTitle != null)
+            {
+                inputField.labelTitle.FontAutoScalingEnabled = (bool)newValue;
+            }
+        });
 
     public string ContentAutomationId { get => (string)GetValue(ContentAutomationIdProperty); set => SetValue(ContentAutomationIdProperty, value); }
 
