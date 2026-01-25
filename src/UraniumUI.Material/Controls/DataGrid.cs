@@ -1,3 +1,4 @@
+
 using Microsoft.Maui.Controls;
 using System.Collections;
 using System.Collections.ObjectModel;
@@ -6,6 +7,7 @@ using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 using UraniumUI.Extensions;
+using UraniumUI.Material.Converters;
 
 namespace UraniumUI.Material.Controls;
 
@@ -191,7 +193,6 @@ public partial class DataGrid : Border
         {
             return;
         }
-
         for (int i = 0; i < Columns.Count; i++)
         {
             var column = Columns[i];
@@ -202,6 +203,11 @@ public partial class DataGrid : Border
                 ?? LabelFactory(binding)
                 ?? CreateLabel(binding);
 
+            if (!string.IsNullOrEmpty(column.HeaderStyleClass))
+            {
+                ApplyStyleClassToView(titleView, column.HeaderStyleClass, new List<string> { "DataGridHeaderColumn"});
+
+            }
             if (titleView is Label label)
             {
                 label.FontAttributes = FontAttributes.Bold;
@@ -210,12 +216,26 @@ public partial class DataGrid : Border
             // TODO: Use an attribute to localize it.
             titleView.BindingContext = column;
             titleView.SetBinding(View.IsVisibleProperty, nameof(DataGridColumn.IsVisible));
-			titleView.SetBinding(View.WidthProperty, nameof(DataGridColumn.Width));
-
             _rootGrid.Add(titleView, column: i, row);
         }
     }
 
+
+    private void ApplyStyleClassToView(View view, string styleClasses,List<string> extClasses)
+    {
+        if (view == null) return;
+        List<string>  nc=new List<string>();
+        if (extClasses != null)
+        {
+            nc.AddRange(extClasses);
+        }
+        if (!string.IsNullOrEmpty(styleClasses))
+        {
+            var classes = styleClasses.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            nc.AddRange(classes);
+        }
+        view.StyleClass = nc;
+    }
     protected virtual void AddRow(int row, object item, bool isLastRow)
     {
         var actualRow = row * 2;
@@ -236,11 +256,9 @@ public partial class DataGrid : Border
                 Content = created,
                 BindingContext = item,
             };
-
+            ApplyStyleClassToView(cell, column.CellStyleClass, new List<string> { "DataGridCellColumn"});
             if (column.CellItemTemplate is null && CellItemTemplate is not null && column.ValueBinding is not null)
             {
-                // TODO: This is a workaround, we need to find a better way to do this.
-                // Check DataGridValueBindingExtension.cs to see how it works.
                 var binding = (column.ValueBinding as Binding);
                 cell.BindingContext = new Binding(binding.Path, source: item);
             }
@@ -295,11 +313,22 @@ public partial class DataGrid : Border
         _rootGrid.ColumnDefinitions.Clear();
         for (int i = 0; i < Columns.Count; i++)
         {
-         	var columnDefinition = new ColumnDefinition();
-        	// Set the binding
-        	columnDefinition.SetBinding(
-        		ColumnDefinition.WidthProperty,
-        		new Binding("Width", source: Columns[i])); // Replace `viewModel` with your binding source
+
+            // Создайте ресурс конвертера
+            var converter = new UniversalGridLengthConverter();
+
+                var columnDefinition = new ColumnDefinition();
+            // Set the binding
+
+            // Устанавливаем привязку с конвертером
+            columnDefinition.SetBinding(
+                ColumnDefinition.WidthProperty,
+                new Binding("Width", source: Columns[i])
+                {
+                    Converter = converter,
+                    Mode = BindingMode.TwoWay // если нужно двустороннее связывание
+                }
+             ); 
         	_rootGrid.ColumnDefinitions.Add(columnDefinition);
         }
     }
@@ -309,9 +338,20 @@ public partial class DataGrid : Border
         _rootGrid.RowDefinitions.Clear();
         var actualRows = (rows * 2) - 1;
 
-        for (int i = 0; i < actualRows; i++)
+        if (rows == 1)
         {
-            _rootGrid.AddRowDefinition(new RowDefinition(GridLength.Auto));
+            //Место для пустой
+            _rootGrid.AddRowDefinition(new RowDefinition(GridLength.Auto)); //Header
+            _rootGrid.AddRowDefinition(new RowDefinition(GridLength.Auto)); //Separator
+            _rootGrid.AddRowDefinition(new RowDefinition(GridLength.Star)); //EmptyView
+
+        }
+        else
+        {
+            for (int i = 0; i < actualRows; i++)
+            {
+                _rootGrid.AddRowDefinition(new RowDefinition(GridLength.Auto));
+            }
         }
     }
 
