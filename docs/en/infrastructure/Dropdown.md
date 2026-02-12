@@ -31,3 +31,21 @@ Then you can use it like this:
 | `PlaceholderColor` | The color of the placeholder text. |
 | `TextColor` | The color of the text in the dropdown. |
 | `HorizontalTextAlignment` | The horizontal alignment of the text in the dropdown. |
+
+## Methods
+
+| Method | Description |
+| --- | --- |
+| `Close()` | Programmatically closes the dropdown if it's currently open. |
+
+### Close Method
+
+The `Close()` method allows you to programmatically close an open dropdown. This is particularly useful when you need to close the dropdown during programmatic navigation or in response to other application events.
+
+```csharp
+// Close the dropdown programmatically
+myDropdown.Close();
+```
+
+> [!NOTE]
+> When navigating between pages, MAUI does not automatically close native popups. You can call the `Close()` method in your navigation logic to ensure the dropdown is closed before navigating.
