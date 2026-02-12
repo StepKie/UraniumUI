@@ -45,8 +45,17 @@ public partial class DropdownHandler : ButtonHandler
             }
         }
 
-        currentPopupMenu.DismissEvent += (s, args) => currentPopupMenu = null;
+        currentPopupMenu.DismissEvent += OnPopupMenuDismissed;
         currentPopupMenu.Show();
+    }
+
+    private void OnPopupMenuDismissed(object sender, EventArgs e)
+    {
+        if (sender is Android.Widget.PopupMenu menu)
+        {
+            menu.DismissEvent -= OnPopupMenuDismissed;
+        }
+        currentPopupMenu = null;
     }
 
     private GravityFlags GetGravityFlags(Microsoft.Maui.TextAlignment textAlignment)
@@ -145,8 +154,12 @@ public partial class DropdownHandler : ButtonHandler
 
     protected override void PlatformClose()
     {
-        currentPopupMenu?.Dismiss();
-        currentPopupMenu = null;
+        var menu = currentPopupMenu;
+        if (menu != null)
+        {
+            currentPopupMenu = null;
+            menu.Dismiss();
+        }
     }
 }
 #endif
