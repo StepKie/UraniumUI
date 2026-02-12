@@ -14,11 +14,22 @@ public partial class DropdownHandler
             [nameof(Dropdown.PlaceholderColor)] = MapPlaceholderColor,
             [nameof(Dropdown.HorizontalTextAlignment)] = MapHorizontalTextAlignment,
             [nameof(Dropdown.TextColor)] = MapTextColor,
-            [nameof(Dropdown.ItemDisplayBinding)] = MapItemDisplayBinding
+            [nameof(Dropdown.ItemDisplayBinding)] = MapItemDisplayBinding,
+            [nameof(Dropdown.Close)] = MapClose
         };
 
     public DropdownHandler() : base(DropdownPropertyMapper)
     {
+    }
+
+    public static void MapClose(DropdownHandler handler, Dropdown dropdown)
+    {
+        handler.PlatformClose();
+    }
+
+    protected virtual void PlatformClose()
+    {
+        // Platform-specific implementations will override this
     }
 }
 
@@ -68,6 +79,11 @@ public partial class DropdownHandler : ViewHandler<Dropdown, object>
     public static void MapItemDisplayBinding(DropdownHandler handler, Dropdown dropdown)
     {
 
+    }
+
+    protected override void PlatformClose()
+    {
+        // No implementation for unsupported platforms
     }
 }
 

@@ -64,4 +64,9 @@ public class Dropdown : Button, IDropdown
     {
         ItemsSourceCollectionChangedCallback(e);
     }
+
+    public void Close()
+    {
+        Handler?.Invoke(nameof(Close));
+    }
 }

@@ -177,5 +177,13 @@ public partial class DropdownHandler : ButtonHandler
         }
         return item?.ToString();
     }
+
+    protected override void PlatformClose()
+    {
+        // On iOS/MacCatalyst, the UIMenu is shown as a context menu when the button is pressed
+        // and is automatically dismissed by the system. There's no direct way to programmatically
+        // close it, as it's managed by UIButton's menu system.
+        // The menu will close automatically when the user taps outside or selects an item.
+    }
 }
 #endif

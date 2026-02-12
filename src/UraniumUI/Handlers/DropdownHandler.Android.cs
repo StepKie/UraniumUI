@@ -10,6 +10,8 @@ using UraniumUI.Platforms.Android;
 namespace UraniumUI.Handlers;
 public partial class DropdownHandler : ButtonHandler
 {
+    private Android.Widget.PopupMenu currentPopupMenu;
+
     public DropdownHandler(IPropertyMapper mapper, CommandMapper commandMapper = null) : base(DropdownPropertyMapper, commandMapper)
     {
 
@@ -28,13 +30,13 @@ public partial class DropdownHandler : ButtonHandler
     {
         var activity = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity;
 
-        var popupMenu = new Android.Widget.PopupMenu(activity, PlatformView, GetGravityFlags(VirtualViewDropdown.HorizontalTextAlignment));
+        currentPopupMenu = new Android.Widget.PopupMenu(activity, PlatformView, GetGravityFlags(VirtualViewDropdown.HorizontalTextAlignment));
 
         if (VirtualViewDropdown.ItemsSource is not null)
         {
             foreach (var item in VirtualViewDropdown.ItemsSource)
             {
-                var menuItem = popupMenu.Menu.Add(new Java.Lang.String(GetTextForItem(VirtualViewDropdown, item)));
+                var menuItem = currentPopupMenu.Menu.Add(new Java.Lang.String(GetTextForItem(VirtualViewDropdown, item)));
 
                 menuItem.SetOnMenuItemClickListener(new MenuItemOnMenuItemClickListener((menuitem) =>
                 {
@@ -43,7 +45,8 @@ public partial class DropdownHandler : ButtonHandler
             }
         }
 
-        popupMenu.Show();
+        currentPopupMenu.DismissEvent += (s, args) => currentPopupMenu = null;
+        currentPopupMenu.Show();
     }
 
     private GravityFlags GetGravityFlags(Microsoft.Maui.TextAlignment textAlignment)
@@ -138,6 +141,12 @@ public partial class DropdownHandler : ButtonHandler
     public static void MapItemDisplayBinding(DropdownHandler handler, Dropdown dropdown)
     {
         // Do nothing on Android.
+    }
+
+    protected override void PlatformClose()
+    {
+        currentPopupMenu?.Dismiss();
+        currentPopupMenu = null;
     }
 }
 #endif
