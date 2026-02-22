@@ -103,7 +103,7 @@ public class DatePickerField : InputField
     #endif
 #endif
         // End of workaround
-        Date = default;
+        Date = (DateTime)DatePicker.DateProperty.DefaultValue;
 
 #if MACCATALYST
         DatePickerView.Unfocus();
@@ -170,14 +170,15 @@ public class DatePickerField : InputField
 
     public override void ResetValidation()
     {
-        Date = default;
+        Date = DateTime.Today;
         base.ResetValidation();
     }
 
     public DateTime Date { get => (DateTime)GetValue(DateProperty); set => SetValue(DateProperty, value); }
 
     public static readonly BindableProperty DateProperty = BindableProperty.Create(
-        nameof(Date), typeof(DateTime), typeof(DatePickerField), defaultValue: default, defaultBindingMode: BindingMode.TwoWay,
+        nameof(Date), typeof(DateTime), typeof(DatePickerField),
+        defaultValue: DateTime.Today, defaultBindingMode: BindingMode.TwoWay,
         propertyChanged: (bindable, oldValue, newValue) => (bindable as DatePickerField).OnDateChanged()
         );
 
