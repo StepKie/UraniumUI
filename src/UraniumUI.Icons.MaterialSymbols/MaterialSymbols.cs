@@ -2446,7 +2446,7 @@ public static class MaterialOutlined
     public const string Electric_meter = "\uec1b";
     public const string Energy_savings_leaf = "\uec1a";
     public const string Local_gas_station = "\ue546";
-    public const string Ev_station = "\ue209";
+    public const string Ev_station = "\ue56d";
     public const string Solar_power = "\uec0f";
     public const string Wind_power = "\uec0c";
     public const string Energy = "\ue9a6";
@@ -5893,7 +5893,7 @@ public static class MaterialRounded
     public const string Electric_meter = "\uec1b";
     public const string Energy_savings_leaf = "\uec1a";
     public const string Local_gas_station = "\ue546";
-    public const string Ev_station = "\ue209";
+    public const string Ev_station = "\ue56d";
     public const string Solar_power = "\uec0f";
     public const string Wind_power = "\uec0c";
     public const string Energy = "\ue9a6";
@@ -9340,7 +9340,7 @@ public static class MaterialSharp
     public const string Electric_meter = "\uec1b";
     public const string Energy_savings_leaf = "\uec1a";
     public const string Local_gas_station = "\ue546";
-    public const string Ev_station = "\ue209";
+    public const string Ev_station = "\ue56d";
     public const string Solar_power = "\uec0f";
     public const string Wind_power = "\uec0c";
     public const string Energy = "\ue9a6";
