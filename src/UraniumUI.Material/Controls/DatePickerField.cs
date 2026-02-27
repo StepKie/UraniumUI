@@ -103,7 +103,7 @@ public class DatePickerField : InputField
     #endif
 #endif
         // End of workaround
-        Date = null;
+        Date = (DateTime)DatePicker.DateProperty.DefaultValue;
 
 #if MACCATALYST
         DatePickerView.Unfocus();
@@ -170,21 +170,22 @@ public class DatePickerField : InputField
 
     public override void ResetValidation()
     {
-        Date = null;
+        Date = DateTime.Today;
         base.ResetValidation();
     }
 
-    public DateTime? Date { get => (DateTime?)GetValue(DateProperty); set => SetValue(DateProperty, value); }
+    public DateTime Date { get => (DateTime)GetValue(DateProperty); set => SetValue(DateProperty, value); }
 
     public static readonly BindableProperty DateProperty = BindableProperty.Create(
-        nameof(Date), typeof(DateTime?), typeof(DatePickerField), defaultValue: null, defaultBindingMode: BindingMode.TwoWay,
+        nameof(Date), typeof(DateTime), typeof(DatePickerField),
+        defaultValue: DateTime.Today, defaultBindingMode: BindingMode.TwoWay,
         propertyChanged: (bindable, oldValue, newValue) => (bindable as DatePickerField).OnDateChanged()
         );
 
     public DateTime MaximumDate { get => (DateTime)GetValue(MaximumDateProperty); set => SetValue(MaximumDateProperty, value); }
 
     public static readonly BindableProperty MaximumDateProperty = BindableProperty.Create(
-         nameof(MaximumDate), typeof(DateTime?), typeof(DatePickerField),
+         nameof(MaximumDate), typeof(DateTime), typeof(DatePickerField),
          defaultValue: DatePicker.MaximumDateProperty.DefaultValue,
          propertyChanged: (bindable, oldValue, newValue) => (bindable as DatePickerField).DatePickerView.MaximumDate = (DateTime)newValue
          );
@@ -192,7 +193,7 @@ public class DatePickerField : InputField
     public DateTime MinimumDate { get => (DateTime)GetValue(MinimumDateProperty); set => SetValue(MinimumDateProperty, value); }
 
     public static readonly BindableProperty MinimumDateProperty = BindableProperty.Create(
-         nameof(MinimumDate), typeof(DateTime?), typeof(DatePickerField),
+         nameof(MinimumDate), typeof(DateTime), typeof(DatePickerField),
          defaultValue: DatePicker.MinimumDateProperty.DefaultValue,
          propertyChanged: (bindable, oldValue, newValue) => (bindable as DatePickerField).DatePickerView.MinimumDate = (DateTime)newValue
          );

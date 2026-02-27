@@ -183,7 +183,7 @@ public class DatePickerField_Test
 
     public class TestViewModel : UraniumBindableObject
     {
-        private DateTime? time;
+        private DateTime time;
         private string format;
         private Color textColor;
         private double characterSpacing;
@@ -191,7 +191,7 @@ public class DatePickerField_Test
         private string fontFamily;
         private double fontSize;
 
-        public DateTime? Date { get => time; set => SetProperty(ref time, value); }
+        public DateTime Date { get => time; set => SetProperty(ref time, value); }
 
         public string Format { get => format; set => SetProperty(ref format, value); }
 
