@@ -35,6 +35,7 @@ Then you can use it like this:
 
 ### Behavior Properties
 - `AllowClear` - Gets or sets whether a clear button is shown to clear the text
+- `ClearCommand` - Gets or sets the command to execute when the clear button is pressed
 - `DisallowClearButtonFocus` - Gets or sets whether the clear button can receive focus
 - `SelectAllTextOnFocus` - Gets or sets whether all text should be selected when the field receives focus
 - `IsReadOnly` - Gets or sets whether the TextField is read-only
