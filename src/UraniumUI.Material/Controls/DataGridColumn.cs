@@ -16,8 +16,6 @@ public class DataGridColumn : BindableObject
         typeof(string),
         typeof(DataGridColumn));
 
-
-
     public string HeaderStyleClass
     {
         get => (string)GetValue(HeaderStyleClassProperty);
@@ -28,12 +26,6 @@ public class DataGridColumn : BindableObject
         nameof(HeaderStyleClass),
         typeof(string),
         typeof(DataGridColumn));
-
-
-
-
-
-
 
     public string Title { get => (string)GetValue(TitleProperty); set => SetValue(TitleProperty, value); }
 
