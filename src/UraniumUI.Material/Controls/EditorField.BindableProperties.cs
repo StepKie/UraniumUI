@@ -1,4 +1,4 @@
-﻿using Microsoft.Maui.Converters;
+using Microsoft.Maui.Converters;
 using System.ComponentModel;
 using UraniumUI.Resources;
 
@@ -83,7 +83,6 @@ public partial class EditorField
         typeof(bool),
         typeof(EditorField),
         propertyChanged: (bindable, oldValue, newValue) => (bindable as EditorField).EditorView.IsTextPredictionEnabled = (bool)newValue);
-
 
     public int MaxLength { get => (int)GetValue(MaxLengthProperty); set => SetValue(MaxLengthProperty, value); }
 

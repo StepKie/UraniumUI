@@ -1,4 +1,4 @@
-﻿using Microsoft.Maui.Controls.Shapes;
+using Microsoft.Maui.Controls.Shapes;
 using System.ComponentModel;
 using UraniumUI.Extensions;
 using UraniumUI.Resources;
@@ -271,8 +271,6 @@ public partial class InputField : ContentView
             calculatedFirstDash += this.Width - labelTitle.Width;
         }
 #endif
-
-
 
         border.StrokeDashArray = new DoubleCollection { calculatedFirstDash * 0.9 / BorderThickness, space / BorderThickness, perimeter, 0 };
 
