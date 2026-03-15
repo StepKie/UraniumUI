@@ -1,8 +1,10 @@
-﻿using Shouldly;
+using Shouldly;
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.Linq;
 using UraniumUI.Material.Controls;
 using UraniumUI.Tests.Core;
+using UraniumUI.ViewExtensions;
 
 namespace UraniumUI.Material.Tests.Controls;
 public class PickerField_Test
@@ -202,6 +204,47 @@ public class PickerField_Test
 
         // Assert
         control.PickerView.FontSize.ShouldBe(fontSize);
+    }
+
+    [Fact]
+    public void FontAutoScalingEnabled_CanBeSetViaImplicitStyle()
+    {
+        var style = new Style(typeof(PickerField));
+        style.Setters.Add(new Setter { Property = PickerField.FontAutoScalingEnabledProperty, Value = false });
+
+        var resources = new ResourceDictionary();
+        resources.Add(style);
+
+        var control = AnimationReadyHandler.Prepare(new PickerField());
+
+        control.Resources = resources;
+
+        control.FontAutoScalingEnabled.ShouldBeFalse();
+        control.PickerView.FontAutoScalingEnabled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Icon_ShouldBeAdded_WhenSetBeforeHandler()
+    {
+        var icon = new FontImageSource
+        {
+            FontFamily = "MaterialSharp",
+            Glyph = "A",
+        };
+
+        var control = new PickerField
+        {
+            Icon = icon,
+        };
+
+        AnimationReadyHandler.Prepare(control);
+
+        var innerGrid = control.FindByViewQueryIdInVisualTreeDescendants<Grid>("InnerGrid");
+        var iconView = innerGrid?.Children.OfType<Image>().FirstOrDefault(x => ReferenceEquals(x.Source, icon));
+
+        innerGrid.ShouldNotBeNull();
+        iconView.ShouldNotBeNull();
+        control.Content.Margin.Left.ShouldBe(5);
     }
 
     public class TestViewModel : UraniumBindableObject
