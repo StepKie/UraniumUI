@@ -147,12 +147,11 @@ public class PickerField : InputField
 
     protected virtual void OnTextColorChanged()
     {
-        PickerView.TextColor = TextColor;
-
 #if WINDOWS
-        if (labelSelectedItem != null)
+        var label = labelSelectedItem;
+        if (label != null)
         {
-            labelSelectedItem.TextColor = TextColor ?? ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.Gray);
+            label.TextColor = TextColor ?? ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.Gray);
         }
 #endif
     }
