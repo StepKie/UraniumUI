@@ -76,16 +76,14 @@ public class EditorField_Test
         var resources = new ResourceDictionary();
         resources.Add(style);
 
-        // Act: Create EditorField with the style in resources (simulates implicit style application)
-        EditorField control = null;
-        Action createControl = () =>
-        {
-            control = new EditorField { Resources = resources };
-        };
+        var control = AnimationReadyHandler.Prepare(new EditorField());
 
-        // Assert: Should not throw NullReferenceException
-        createControl.ShouldNotThrow();
+        // Act
+        control.Resources = resources;
+
+        // Assert
         control.FontFamily.ShouldBe("Arial");
+        control.EditorView.FontFamily.ShouldBe("Arial");
     }
 
     [Fact]
