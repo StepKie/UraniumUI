@@ -212,14 +212,13 @@ public class PickerField_Test
         var style = new Style(typeof(PickerField));
         style.Setters.Add(new Setter { Property = PickerField.FontAutoScalingEnabledProperty, Value = false });
 
-        var originalResources = Application.Current.Resources;
-
-        var resources = new ResourceDictionary
+        var applicationResources = Application.Current.Resources ??= new ResourceDictionary();
+        var testResources = new ResourceDictionary
         {
             style,
         };
 
-        Application.Current.Resources = resources;
+        applicationResources.MergedDictionaries.Add(testResources);
 
         try
         {
@@ -235,7 +234,7 @@ public class PickerField_Test
         }
         finally
         {
-            Application.Current.Resources = originalResources;
+            applicationResources.MergedDictionaries.Remove(testResources);
         }
     }
 

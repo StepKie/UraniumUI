@@ -193,6 +193,8 @@ public partial class InputField : ContentView
 
         if (args.NewHandler is null)
         {
+            isTemplateApplied = false;
+            ResetTemplateParts();
             ReleaseEvents();
         }
     }
