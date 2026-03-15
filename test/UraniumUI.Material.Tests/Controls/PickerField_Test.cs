@@ -91,6 +91,20 @@ public class PickerField_Test
     }
 
     [Fact]
+    public void ItemDisplayBinding_ShouldBeSet_FromBindableProperty()
+    {
+        var control = AnimationReadyHandler.Prepare(new PickerField());
+        var itemDisplayBinding = new Binding(nameof(TestItem.DisplayName));
+
+        // Act
+        control.SetValue(PickerField.ItemDisplayBindingProperty, itemDisplayBinding);
+
+        // Assert
+        control.ItemDisplayBinding.ShouldBeSameAs(itemDisplayBinding);
+        control.PickerView.ItemDisplayBinding.ShouldBeSameAs(itemDisplayBinding);
+    }
+
+    [Fact]
     public void TextColor_ShouldBeSet_FromViewModel()
     {
         var control = AnimationReadyHandler.Prepare(new PickerField());
@@ -227,5 +241,10 @@ public class PickerField_Test
         public double FontSize { get => fontSize; set => SetProperty(ref fontSize, value); }
 
         public IList ItemsSource { get => itemsSource; set => SetProperty(ref itemsSource, value); }
+    }
+
+    private sealed class TestItem
+    {
+        public string DisplayName { get; set; }
     }
 }
