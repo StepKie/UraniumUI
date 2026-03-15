@@ -182,6 +182,11 @@ public class PickerField : InputField
 
     protected virtual void UpdateClearIconState()
     {
+        if (endIconsContainer is null)
+        {
+            return;
+        }
+
         var existing = endIconsContainer.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
 
         if (AllowClear)
@@ -196,6 +201,12 @@ public class PickerField : InputField
         {
             endIconsContainer?.Remove(existing);
         }
+    }
+
+    protected override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+        UpdateClearIconState();
     }
 
     public override void ResetValidation()

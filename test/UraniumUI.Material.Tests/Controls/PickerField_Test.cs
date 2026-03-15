@@ -1,10 +1,14 @@
-﻿using Shouldly;
+using Shouldly;
 using System.Collections;
 using System.Collections.ObjectModel;
+using System.Linq;
 using UraniumUI.Material.Controls;
 using UraniumUI.Tests.Core;
+using UraniumUI.ViewExtensions;
+using UraniumUI.Views;
 
 namespace UraniumUI.Material.Tests.Controls;
+[Collection("ApplicationResources")]
 public class PickerField_Test
 {
     public PickerField_Test()
@@ -216,6 +220,72 @@ public class PickerField_Test
 
         // Assert
         control.PickerView.FontSize.ShouldBe(fontSize);
+    }
+
+    [Fact]
+    public void FontAutoScalingEnabled_CanBeSetViaImplicitStyle_DuringConstruction()
+    {
+        var style = new Style(typeof(PickerField));
+        style.Setters.Add(new Setter { Property = PickerField.FontAutoScalingEnabledProperty, Value = false });
+
+        var applicationResources = Application.Current.Resources ??= new ResourceDictionary();
+        var testResources = new ResourceDictionary
+        {
+            style,
+        };
+
+        applicationResources.MergedDictionaries.Add(testResources);
+
+        try
+        {
+            PickerField control = null;
+            var exception = Record.Exception(() => control = new PickerField());
+
+            exception.ShouldBeNull();
+
+            AnimationReadyHandler.Prepare(control);
+
+            control.FontAutoScalingEnabled.ShouldBeFalse();
+            control.PickerView.FontAutoScalingEnabled.ShouldBeFalse();
+        }
+        finally
+        {
+            applicationResources.MergedDictionaries.Remove(testResources);
+        }
+    }
+
+    [Fact]
+    public void Icon_ShouldBeAdded_WhenSetBeforeHandler()
+    {
+        var icon = new FontImageSource
+        {
+            FontFamily = "MaterialSharp",
+            Glyph = "A",
+        };
+
+        var control = new PickerField
+        {
+            Icon = icon,
+        };
+
+        AnimationReadyHandler.Prepare(control);
+
+        var innerGrid = control.FindByViewQueryIdInVisualTreeDescendants<Grid>("InnerGrid");
+        var iconView = innerGrid?.Children.OfType<Image>().FirstOrDefault(x => ReferenceEquals(x.Source, icon));
+
+        innerGrid.ShouldNotBeNull();
+        iconView.ShouldNotBeNull();
+        control.Content.Margin.Left.ShouldBe(5);
+    }
+
+    [Fact]
+    public void ClearIcon_ShouldBeAdded_AfterTemplateApplied_WhenAllowClearIsEnabled()
+    {
+        var control = AnimationReadyHandler.Prepare(new PickerField());
+
+        var clearIcon = control.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
+
+        clearIcon.ShouldNotBeNull();
     }
 
     public class TestViewModel : UraniumBindableObject
