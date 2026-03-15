@@ -179,6 +179,12 @@ public class PickerField : InputField
         }
     }
 
+    protected override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+        UpdateClearIconState();
+    }
+
     public override void ResetValidation()
     {
         PickerView.SelectedItem = null;

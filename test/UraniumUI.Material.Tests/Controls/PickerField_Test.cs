@@ -5,8 +5,10 @@ using System.Linq;
 using UraniumUI.Material.Controls;
 using UraniumUI.Tests.Core;
 using UraniumUI.ViewExtensions;
+using UraniumUI.Views;
 
 namespace UraniumUI.Material.Tests.Controls;
+[Collection("ApplicationResources")]
 public class PickerField_Test
 {
     public PickerField_Test()
@@ -260,6 +262,16 @@ public class PickerField_Test
         innerGrid.ShouldNotBeNull();
         iconView.ShouldNotBeNull();
         control.Content.Margin.Left.ShouldBe(5);
+    }
+
+    [Fact]
+    public void ClearIcon_ShouldBeAdded_AfterTemplateApplied_WhenAllowClearIsEnabled()
+    {
+        var control = AnimationReadyHandler.Prepare(new PickerField());
+
+        var clearIcon = control.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
+
+        clearIcon.ShouldNotBeNull();
     }
 
     public class TestViewModel : UraniumBindableObject
