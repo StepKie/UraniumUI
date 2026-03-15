@@ -17,6 +17,7 @@ public partial class InputField : ContentView
     private Grid rootGridPart;
     private Grid innerGridPart;
     private HorizontalStackLayout endIconsContainerPart;
+    private bool isTemplateApplied;
 
     public virtual new View Content { get => (View)GetValue(ContentProperty); set => SetValue(ContentProperty, value); }
 
@@ -169,14 +170,12 @@ public partial class InputField : ContentView
     private T FindTemplatePart<T>(string id)
         where T : VisualElement
     {
-        try
-        {
-            return this.FindByViewQueryIdInVisualTreeDescendants<T>(id);
-        }
-        catch (NullReferenceException)
+        if (!isTemplateApplied && Handler is null)
         {
             return null;
         }
+
+        return this.FindByViewQueryIdInVisualTreeDescendants<T>(id);
     }
 
     private void ResetTemplateParts()
@@ -453,6 +452,8 @@ public partial class InputField : ContentView
     protected override void OnApplyTemplate()
     {
         base.OnApplyTemplate();
+
+        isTemplateApplied = true;
 
         ResetTemplateParts();
 

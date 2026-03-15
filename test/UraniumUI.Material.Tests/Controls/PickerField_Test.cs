@@ -207,20 +207,36 @@ public class PickerField_Test
     }
 
     [Fact]
-    public void FontAutoScalingEnabled_CanBeSetViaImplicitStyle()
+    public void FontAutoScalingEnabled_CanBeSetViaImplicitStyle_DuringConstruction()
     {
         var style = new Style(typeof(PickerField));
         style.Setters.Add(new Setter { Property = PickerField.FontAutoScalingEnabledProperty, Value = false });
 
-        var resources = new ResourceDictionary();
-        resources.Add(style);
+        var originalResources = Application.Current.Resources;
 
-        var control = AnimationReadyHandler.Prepare(new PickerField());
+        var resources = new ResourceDictionary
+        {
+            style,
+        };
 
-        control.Resources = resources;
+        Application.Current.Resources = resources;
 
-        control.FontAutoScalingEnabled.ShouldBeFalse();
-        control.PickerView.FontAutoScalingEnabled.ShouldBeFalse();
+        try
+        {
+            PickerField control = null;
+            var exception = Record.Exception(() => control = new PickerField());
+
+            exception.ShouldBeNull();
+
+            AnimationReadyHandler.Prepare(control);
+
+            control.FontAutoScalingEnabled.ShouldBeFalse();
+            control.PickerView.FontAutoScalingEnabled.ShouldBeFalse();
+        }
+        finally
+        {
+            Application.Current.Resources = originalResources;
+        }
     }
 
     [Fact]
