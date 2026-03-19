@@ -42,14 +42,20 @@ public partial class DropdownHandler : ButtonHandler
 
     private static void SetItemsSource(Dropdown dropdown, UIKit.UIButton button)
     {
+        // Always reconstruct the menu so that it is also cleared when ItemsSource becomes null.
+        ReconstructMenu(dropdown, button);
+
         if (dropdown.ItemsSource is not null)
         {
-            ReconstructMenu(dropdown, button);
-
             dropdown.ItemsSourceCollectionChangedCallback = (e) =>
             {
                 ReconstructMenu(dropdown, button);
             };
+        }
+        else
+        {
+            // Clear any previous callback when there is no ItemsSource.
+            dropdown.ItemsSourceCollectionChangedCallback = null;
         }
     }
 
