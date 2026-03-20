@@ -161,6 +161,7 @@ public partial class DropdownHandler : ButtonHandler
     public static void MapItemDisplayBinding(DropdownHandler handler, Dropdown dropdown)
     {
         ReconstructMenu(dropdown, handler.PlatformView);
+        handler.ArrangeText();
     }
 
     private static string GetTextForItem(Dropdown dropdown, object item)
