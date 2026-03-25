@@ -35,8 +35,6 @@ public partial class TextField : InputField
     public event EventHandler<TextChangedEventArgs> TextChanged;
     public event EventHandler Completed;
 
-    public ICommand ClearCommand { get; protected set; }
-
     public TextField()
     {
         base.RegisterForEvents();
@@ -131,6 +129,12 @@ public partial class TextField : InputField
 
     protected virtual void OnClearTapped()
     {
+        if (ClearCommand?.CanExecute(this) ?? false)
+        {
+            ClearCommand.Execute(this);
+            return;
+        }
+
         EntryView.Text = string.Empty;
     }
 
