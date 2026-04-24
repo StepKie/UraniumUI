@@ -101,6 +101,7 @@ public partial class MultiplePickerField : InputField
         {
             var chip = new Chip();
             chip.SetBinding(Chip.TextProperty, new Binding("."));
+            chip.SetBinding(Chip.IsDestroyVisibleProperty, new Binding(nameof(IsChipRemoveVisible), source: this));
             chip.SelfDestruct = false;
             chip.DestroyCommand = _destroyChipCommand;
             return chip;
@@ -187,4 +188,13 @@ public partial class MultiplePickerField : InputField
         nameof(SelectedValuesChangedCommand),
         typeof(ICommand), typeof(MultiplePickerField),
         defaultValue: null);
+
+    public bool IsChipRemoveVisible { get => (bool)GetValue(IsChipRemoveVisibleProperty); set => SetValue(IsChipRemoveVisibleProperty, value); }
+
+    public static readonly BindableProperty IsChipRemoveVisibleProperty = BindableProperty.Create(
+        nameof(IsChipRemoveVisible),
+        typeof(bool),
+        typeof(MultiplePickerField),
+        defaultValue: true,
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as MultiplePickerField)?.RefreshChipLayout());
 }
