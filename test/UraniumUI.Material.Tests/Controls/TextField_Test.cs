@@ -94,6 +94,43 @@ public class TextField_Test
     }
 
     [Fact]
+    public void Attachments_Container_HasDefaultSpacingFromBorderAndBetweenChildren()
+    {
+        // The Attachments container provides a default gap to the field border and
+        // between sibling attachments. Container defaults stay independent of children.
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        var endIconsContainer = control.FindByViewQueryIdInVisualTreeDescendants<HorizontalStackLayout>("EndIconsContainer");
+
+        endIconsContainer.ShouldNotBeNull();
+        endIconsContainer.Margin.ShouldBe(new Thickness(0, 0, 10, 0));
+        endIconsContainer.Spacing.ShouldBe(8);
+
+        var first = new ActivityIndicator { IsRunning = true };
+        var second = new ActivityIndicator { IsRunning = true };
+        control.Attachments.Add(first);
+        control.Attachments.Add(second);
+
+        endIconsContainer.Margin.ShouldBe(new Thickness(0, 0, 10, 0));
+        endIconsContainer.Spacing.ShouldBe(8);
+        control.Attachments.ShouldContain(first);
+        control.Attachments.ShouldContain(second);
+    }
+
+    [Fact]
+    public void ClearIcon_HasAsymmetricLeftHitPadding()
+    {
+        // Clear X uses asymmetric Padding: right edge flush with the container margin
+        // (matching a user-supplied attachment), left side extended for a wider tap target.
+        var control = AnimationReadyHandler.Prepare(new TextField { AllowClear = true });
+        var clearIcon = control.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
+
+        clearIcon.ShouldNotBeNull();
+        clearIcon.Margin.ShouldBe(default(Thickness));
+        clearIcon.Padding.ShouldBe(new Thickness(5, 0, 0, 0));
+    }
+
+    [Fact]
     public void TextChanges_ShouldShouldCorrectlyUpdateClearButtonVisibility()
     {
         var control = AnimationReadyHandler.Prepare(new TextField() { AllowClear = true });
