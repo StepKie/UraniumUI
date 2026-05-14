@@ -45,6 +45,35 @@
             ]]>
         </x:String>
 
+        <x:String x:Key="SourceCode4">
+            <![CDATA[
+<VerticalStackLayout Spacing="12">
+
+    <material:TextField Title="With spinner" Text="Loading something">
+        <material:TextField.Attachments>
+            <ActivityIndicator HeightRequest="20" WidthRequest="20" IsRunning="True" />
+        </material:TextField.Attachments>
+    </material:TextField>
+
+    <material:TextField Title="With two attachments" Text="Some value">
+        <material:TextField.Attachments>
+            <Image HeightRequest="20" WidthRequest="20"
+                Source="{FontImageSource FontFamily=MaterialSharp, Glyph={x:Static m:MaterialSharp.Info}}" />
+            <ActivityIndicator HeightRequest="20" WidthRequest="20" IsRunning="True" />
+        </material:TextField.Attachments>
+    </material:TextField>
+
+    <material:TextField Title="With AllowClear and attachment" Text="Some value" AllowClear="True">
+        <material:TextField.Attachments>
+            <Image HeightRequest="20" WidthRequest="20"
+                Source="{FontImageSource FontFamily=MaterialSharp, Glyph={x:Static m:MaterialSharp.Info}}" />
+        </material:TextField.Attachments>
+    </material:TextField>
+
+</VerticalStackLayout>
+            ]]>
+        </x:String>
+
         <x:String x:Key="DocLink">https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/TextField</x:String>
         <x:String x:Key="SourceLink">https://github.com/enisn/UraniumUI/blob/develop/demo/UraniumApp/Pages/InputFields/TextFieldPage.xaml</x:String>
     </ContentPage.Resources>
@@ -110,6 +139,46 @@
             
             <BoxView StyleClass="Divider" />
             
+            <Border Margin="{OnIdiom 10, Phone=0}" StyleClass="SurfaceContainer, Rounded" StrokeThickness="0">
+                <VerticalStackLayout>
+                    <Label Text="TextField with Attachments" FontSize="Subtitle" Margin="20"/>
+                    <VerticalStackLayout StyleClass="ControlPreview" Spacing="12">
+                        <material:TextField Title="With spinner" Text="Loading something">
+                            <material:TextField.Attachments>
+                                <ActivityIndicator HeightRequest="20" WidthRequest="20" IsRunning="True" />
+                            </material:TextField.Attachments>
+                        </material:TextField>
+
+                        <material:TextField Title="With two attachments" Text="Some value">
+                            <material:TextField.Attachments>
+                                <Image HeightRequest="20" WidthRequest="20"
+                                    Source="{FontImageSource FontFamily=MaterialSharp, Glyph={x:Static m:MaterialSharp.Info}, Color={AppThemeBinding {StaticResource OnBackground}, Dark={StaticResource OnBackgroundDark}}}" />
+                                <ActivityIndicator HeightRequest="20" WidthRequest="20" IsRunning="True" />
+                            </material:TextField.Attachments>
+                        </material:TextField>
+
+                        <material:TextField Title="With AllowClear and attachment" Text="Some value" AllowClear="True">
+                            <material:TextField.Attachments>
+                                <Image HeightRequest="20" WidthRequest="20"
+                                    Source="{FontImageSource FontFamily=MaterialSharp, Glyph={x:Static m:MaterialSharp.Info}, Color={AppThemeBinding {StaticResource OnBackground}, Dark={StaticResource OnBackgroundDark}}}" />
+                            </material:TextField.Attachments>
+                        </material:TextField>
+                    </VerticalStackLayout>
+
+                    <uranium:ExpanderView>
+                        <uranium:ExpanderView.Header>
+                            <Label Text="Source Code (XAML)" Padding="10" />
+                        </uranium:ExpanderView.Header>
+                        <Grid>
+                            <uranium:CodeView Language="xml" SourceCode="{StaticResource SourceCode4}" HeightRequest="240"/>
+                            <local:CopyButton TextToCopy="{StaticResource SourceCode4}" />
+                        </Grid>
+                    </uranium:ExpanderView>
+                </VerticalStackLayout>
+            </Border>
+
+            <BoxView StyleClass="Divider" />
+
             <Border Margin="{OnIdiom 10, Phone=0}" StyleClass="SurfaceContainer, Rounded" StrokeThickness="0">
                 <VerticalStackLayout>
                     <Label Text="Password show/hide Button" FontSize="Subtitle" Margin="20"/>
