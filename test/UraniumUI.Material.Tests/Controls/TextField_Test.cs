@@ -103,16 +103,16 @@ public class TextField_Test
         var endIconsContainer = control.FindByViewQueryIdInVisualTreeDescendants<HorizontalStackLayout>("EndIconsContainer");
 
         endIconsContainer.ShouldNotBeNull();
-        endIconsContainer.Margin.ShouldBe(new Thickness(0, 0, 10, 0));
-        endIconsContainer.Spacing.ShouldBe(8);
+        endIconsContainer.Margin.ShouldBe(new Thickness(0, 0, InputField.EdgePadding, 0));
+        endIconsContainer.Spacing.ShouldBe(InputField.AttachmentsSpacing);
 
         var first = new ActivityIndicator { IsRunning = true };
         var second = new ActivityIndicator { IsRunning = true };
         control.Attachments.Add(first);
         control.Attachments.Add(second);
 
-        endIconsContainer.Margin.ShouldBe(new Thickness(0, 0, 10, 0));
-        endIconsContainer.Spacing.ShouldBe(8);
+        endIconsContainer.Margin.ShouldBe(new Thickness(0, 0, InputField.EdgePadding, 0));
+        endIconsContainer.Spacing.ShouldBe(InputField.AttachmentsSpacing);
         control.Attachments.ShouldContain(first);
         control.Attachments.ShouldContain(second);
     }
