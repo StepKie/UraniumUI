@@ -11,6 +11,9 @@ public partial class InputField : ContentView
 {
     internal const double FirstDash = 6;
     internal const double MaxCornerRadius = 24;
+    internal const double EdgePadding = 10;                  // gap to the field border (leading Icon margin / trailing Attachments margin)
+    internal const double AttachmentsSpacing = 8;            // gap between sibling attachments
+    internal const double BuiltInAttachmentLeftPadding = 5;  // left tap-area extension on built-in attachments toward the text content
     public virtual new View Content { get => (View)GetValue(ContentProperty); set => SetValue(ContentProperty, value); }
 
     public static readonly new BindableProperty ContentProperty = BindableProperty.Create(
@@ -54,7 +57,7 @@ public partial class InputField : ContentView
             VerticalOptions = LayoutOptions.Center,
             WidthRequest = 20,
             HeightRequest = 20,
-            Margin = new Thickness(10, 0, 0, 0),
+            Margin = new Thickness(EdgePadding, 0, 0, 0),
         };
         image.SetId("IconImage");
 
@@ -141,6 +144,8 @@ public partial class InputField : ContentView
         var endIconsContainer = new HorizontalStackLayout
         {
             StyleClass = new[] { "InputField.Attachments" },
+            Margin = new Thickness(0, 0, EdgePadding, 0),
+            Spacing = AttachmentsSpacing,
         };
 
         endIconsContainer.SetId("EndIconsContainer");
