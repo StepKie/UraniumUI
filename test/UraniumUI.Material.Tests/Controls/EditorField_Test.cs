@@ -75,17 +75,26 @@ public class EditorField_Test
     [Fact]
     public void TextColor_ShouldOverride_ExistingThemeBinding_WhenValueMatchesLightTheme()
     {
-        Application.Current.UserAppTheme = AppTheme.Light;
+        var originalTheme = Application.Current.UserAppTheme;
 
-        var control = AnimationReadyHandler.Prepare(new EditorField());
-        control.EditorView.SetAppThemeColor(Editor.TextColorProperty, Colors.Black, Colors.White);
+        try
+        {
+            Application.Current.UserAppTheme = AppTheme.Light;
 
-        // Act
-        control.TextColor = Colors.Black;
-        Application.Current.UserAppTheme = AppTheme.Dark;
+            var control = AnimationReadyHandler.Prepare(new EditorField());
+            control.EditorView.SetAppThemeColor(Editor.TextColorProperty, Colors.Black, Colors.White);
 
-        // Assert
-        control.EditorView.TextColor.ShouldBe(Colors.Black);
+            // Act
+            control.TextColor = Colors.Black;
+            Application.Current.UserAppTheme = AppTheme.Dark;
+
+            // Assert
+            control.EditorView.TextColor.ShouldBe(Colors.Black);
+        }
+        finally
+        {
+            Application.Current.UserAppTheme = originalTheme;
+        }
     }
 
     internal class EditorFieldTestViewModel : UraniumBindableObject
