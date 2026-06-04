@@ -12,6 +12,8 @@
       href: infrastructure/AutoFormView.md
     - name: Dynamic Content View
       href: infrastructure/DynamicContentView.md
+    - name: SelectableLabel
+      href: infrastructure/SelectableLabel.md
     - name: Dropdown
       href: infrastructure/Dropdown.md
     - name: ExpanderView
@@ -35,7 +37,9 @@
     - name: Segoe Fluent Icons
       href: theming/Icons.md#segoe-fluent-icons
 - name: Web Components
-  items: []
+  items:
+    - name: CodeView
+      href: web-components/CodeView.md
 - name: Styling
   items:
     - name: Color System
@@ -58,6 +62,8 @@
       href: themes/material/ButtonView.md
     - name: Buttons
       href: themes/material/Buttons.md
+    - name: Chip
+      href: themes/material/Chip.md
     - name: InputFields
       href: themes/material/components/InputField.md
       items:

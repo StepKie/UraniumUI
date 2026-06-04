@@ -58,10 +58,9 @@ Or watch the video:
   - [Data Annotations](https://enisn-projects.io/docs/en/uranium/latest/validations/DataAnnotations)
   - [InputKit](https://enisn-projects.io/docs/en/inputkit/latest/components/controls/FormView#validations)
 - Font icon support.
-  - [FontAwesome](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons#fontawesome)
-  - [Material](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons#material-icons)
   - [Material Symbols](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons#material-symbols)
-  - [Fluent](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons#segoe-fluent-icons)
+  - [Fluent Icons](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons#segoe-fluent-icons)
+  - [FontAwesome](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons#fontawesome)
 - Theming
   - [Material Theme](https://enisn-projects.io/docs/en/uranium/latest/themes/material/Index)
 
