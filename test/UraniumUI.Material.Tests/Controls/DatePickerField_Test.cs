@@ -118,6 +118,19 @@ public class DatePickerField_Test
     }
 
     [Fact]
+    public void Clear_ShouldResetDatePickerViewDate()
+    {
+        var fallbackDate = DateTime.Today;
+        var control = AnimationReadyHandler.Prepare(new TestDatePickerField { Date = fallbackDate.AddDays(7) });
+
+        // Act
+        control.Clear();
+
+        // Assert
+        control.DatePickerView.Date.ShouldBe(fallbackDate);
+    }
+
+    [Fact]
     public void Date_ShouldUpdateDisplayText()
     {
         var control = AnimationReadyHandler.Prepare(new DatePickerField());
@@ -132,12 +145,37 @@ public class DatePickerField_Test
     }
 
     [Fact]
+    public void Date_ShouldUpdateDatePickerViewDate()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+        var date = DateTime.Today.AddDays(2);
+
+        // Act
+        control.Date = date;
+
+        // Assert
+        control.DatePickerView.Date.ShouldBe(date.Date);
+    }
+
+    [Fact]
     public void DateLabel_ShouldCenterTextVertically()
     {
         var control = AnimationReadyHandler.Prepare(new DatePickerField());
 
         // Assert
         ((Label)control.Content).VerticalTextAlignment.ShouldBe(TextAlignment.Center);
+    }
+
+    [Fact]
+    public void DateLabel_ShouldOwnPromptTapGesture()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+        var dateLabel = (Label)control.Content;
+
+        // Assert
+        control.GestureRecognizers.ShouldBeEmpty();
+        dateLabel.InputTransparent.ShouldBeFalse();
+        dateLabel.GestureRecognizers.Count.ShouldBe(1);
     }
 
     [Fact]
