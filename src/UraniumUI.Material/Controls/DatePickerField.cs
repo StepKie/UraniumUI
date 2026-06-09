@@ -1,7 +1,8 @@
-﻿using Microsoft.Maui.Platform;
-using Plainer.Maui.Controls;
+﻿using Plainer.Maui.Controls;
 using System.ComponentModel;
+using System.Globalization;
 using UraniumUI.Controls;
+using UraniumUI.Dialogs;
 using UraniumUI.Pages;
 using UraniumUI.Resources;
 using UraniumUI.Views;
@@ -12,8 +13,9 @@ namespace UraniumUI.Material.Controls;
 [ContentProperty(nameof(Validations))]
 public class DatePickerField : InputField
 {
-    public DatePickerView DatePickerView => Content as DatePickerView;
-    public override View Content { get; set; } = new DatePickerView
+    private bool isDatePromptOpen;
+
+    public DatePickerView DatePickerView { get; } = new DatePickerView
     {
         VerticalOptions = LayoutOptions.Center,
 #if ANDROID
@@ -22,6 +24,16 @@ public class DatePickerField : InputField
         Margin = new Thickness(10, 0),
 #endif
         Opacity = 0,
+    };
+
+    public override View Content { get; set; } = new Label
+    {
+        VerticalOptions = LayoutOptions.Center,
+        HorizontalOptions = LayoutOptions.Fill,
+        LineBreakMode = LineBreakMode.TailTruncation,
+        MinimumHeightRequest = 40,
+        Margin = new Thickness(10, 0),
+        InputTransparent = true,
     };
 
     protected StatefulContentView iconClear = new StatefulContentView
@@ -39,65 +51,29 @@ public class DatePickerField : InputField
 
     public override bool HasValue => Date != null;
 
+    protected IDialogService DialogService { get; }
+
     public DatePickerField()
     {
         base.RegisterForEvents();
         iconClear.TappedCommand = new Command(OnClearTapped);
-#if WINDOWS
-        if (DatePickerView.Parent is Microsoft.Maui.Controls.ContentView cv)
-        {
-            cv.GestureRecognizers.Add(new TapGestureRecognizer
-            {
-                Command = new Command(OnContentTapped)
-            });
-            cv.BackgroundColor = Colors.Transparent; // Workaround for tap gesture recognizer
-        }
-#endif
-        UpdateClearIconState();
+        DialogService = UraniumServiceProvider.Current.GetRequiredService<IDialogService>();
 
-        DatePickerView.SetBinding(DatePicker.IsEnabledProperty, new Binding(nameof(IsEnabled), source: this));
-        DatePickerView.SetBinding(DatePicker.FontSizeProperty, new Binding(nameof(FontSize), source: this));
-        DatePickerView.SetBinding(DatePicker.FontAutoScalingEnabledProperty, new Binding(nameof(FontAutoScalingEnabled), source: this));
-        DatePickerView.SetBinding(DatePicker.FontFamilyProperty, new Binding(nameof(FontFamily), source: this));
-
-#if MACCATALYST || IOS
-        labelTitle.InputTransparent = true;
-        base.border.GestureRecognizers.Add(new TapGestureRecognizer
+        GestureRecognizers.Add(new TapGestureRecognizer
         {
-            Command = new Command(() =>
-            {
-#if MACCATALYST
-                if (!HasValue)
-                {
-                    Date = (DateTime)DatePicker.DateProperty.DefaultValue;
-                }
-#else
-                DatePickerView.Focus();
-#endif
-            })
+            Command = new Command(async () => await OpenDatePromptAsync())
         });
-#endif
+
+        UpdateClearIconState();
     }
 
-    protected override void OnHandlerChanging(HandlerChangingEventArgs args)
+    protected Label DateLabel => Content as Label;
+
+    protected override void OnApplyTemplate()
     {
-        base.OnHandlerChanging(args);
-
-        if (args.OldHandler is not null)
-        {
-            DatePickerView.DateSelected -= OnDateSelected;
-        }
-    }
-
-    protected override void OnHandlerChanged()
-    {
-        base.OnHandlerChanged();
-
-        if (Handler is not null)
-        {
-            DatePickerView.DateSelected -= OnDateSelected;
-            DatePickerView.DateSelected += OnDateSelected;
-        }
+        base.OnApplyTemplate();
+        UpdateClearIconState();
+        UpdateDateText();
     }
 
     protected override object GetValueForValidator()
@@ -109,54 +85,34 @@ public class DatePickerField : InputField
     {
         if (IsEnabled)
         {
-            // Workaround for the selecting the same date again:
-#if WINDOWS
-            if (DatePickerView.Handler?.PlatformView is Microsoft.UI.Xaml.Controls.CalendarDatePicker dp)
-            {
-                dp.Date = null;
-            }
-#elif ANDROID
-    #if NET10_0_OR_GREATER
-        // No workaround needed
-    #else
-        DatePickerView.Date = DatePickerView.Date.AddMonths(-1);
-    #endif
-#endif
-        // End of workaround
-        Date = null;
-
-#if MACCATALYST
-        DatePickerView.Unfocus();
-#endif
+            Date = null;
         }
     }
 
-    protected virtual void OnDateSelected(object sender, DateChangedEventArgs e)
+    protected virtual async Task OpenDatePromptAsync()
     {
-        Date = e.NewDate;
-    }
-
-#if WINDOWS
-    protected virtual void OnContentTapped(object parameter)
-    {
-        if (IsEnabled && DatePickerView.Handler is Microsoft.Maui.Handlers.IDatePickerHandler handler)
+        if (!IsEnabled || isDatePromptOpen)
         {
-            handler.PlatformView.IsCalendarOpen = true;
+            return;
+        }
+
+        try
+        {
+            isDatePromptOpen = true;
+            Date = await DialogService.DisplayDatePromptAsync(Title, Date, MinimumDate, MaximumDate);
+        }
+        finally
+        {
+            isDatePromptOpen = false;
         }
     }
-#endif
 
     protected virtual void OnDateChanged()
     {
         OnPropertyChanged(nameof(Date));
         CheckAndShowValidations();
+        UpdateDateText();
 
-        if (Date is DateTime date && DatePickerView.Date != date)
-        {
-            DatePickerView.Date = date;
-        }
-
-        DatePickerView.Opacity = Date == null ? 0 : 1;
         if (AllowClear)
         {
             iconClear.IsVisible = Date != null;
@@ -183,8 +139,21 @@ public class DatePickerField : InputField
         UpdateClearIconState();
     }
 
+    protected virtual void UpdateDateText()
+    {
+        if (DateLabel is not null)
+        {
+            DateLabel.Text = Date?.ToString(Format, CultureInfo.CurrentCulture) ?? string.Empty;
+        }
+    }
+
     protected virtual void UpdateClearIconState()
     {
+        if (endIconsContainer is null)
+        {
+            return;
+        }
+
         if (AllowClear)
         {
             if (!endIconsContainer.Contains(iconClear))
@@ -232,44 +201,79 @@ public class DatePickerField : InputField
 
     public static readonly BindableProperty FormatProperty = BindableProperty.Create(
             nameof(Format), typeof(string), typeof(DatePickerField), DatePicker.FormatProperty.DefaultValue,
-            propertyChanged: (bindable, oldValue, newValue) => (bindable as DatePickerField).DatePickerView.Format = (string)newValue);
+            propertyChanged: (bindable, oldValue, newValue) =>
+            {
+                var datePickerField = bindable as DatePickerField;
+                datePickerField.DatePickerView.Format = (string)newValue;
+                datePickerField.UpdateDateText();
+            });
 
     public Color TextColor { get => (Color)GetValue(TextColorProperty); set => SetValue(TextColorProperty, value); }
 
     public static readonly BindableProperty TextColorProperty = BindableProperty.Create(
         nameof(TextColor), typeof(Color), typeof(DatePickerField), DatePicker.TextColorProperty.DefaultValue,
-        propertyChanged: (bindable, oldValue, newValue) => (bindable as DatePickerField).DatePickerView.TextColor = (Color)newValue);
+        propertyChanged: (bindable, oldValue, newValue) =>
+        {
+            var datePickerField = bindable as DatePickerField;
+            datePickerField.DatePickerView.TextColor = (Color)newValue;
+            datePickerField.DateLabel?.SetValue(Label.TextColorProperty, newValue);
+        });
 
     public double CharacterSpacing { get => (double)GetValue(CharacterSpacingProperty); set => SetValue(CharacterSpacingProperty, value); }
 
     public static readonly BindableProperty CharacterSpacingProperty = BindableProperty.Create(
         nameof(CharacterSpacing), typeof(double), typeof(DatePickerField), DatePicker.CharacterSpacingProperty.DefaultValue,
-        propertyChanged: (bindable, oldValue, newValue) => (bindable as DatePickerField).DatePickerView.CharacterSpacing = (double)newValue);
+        propertyChanged: (bindable, oldValue, newValue) =>
+        {
+            var datePickerField = bindable as DatePickerField;
+            datePickerField.DatePickerView.CharacterSpacing = (double)newValue;
+            datePickerField.DateLabel?.SetValue(Label.CharacterSpacingProperty, newValue);
+        });
 
     public FontAttributes FontAttributes { get => (FontAttributes)GetValue(FontAttributesProperty); set => SetValue(FontAttributesProperty, value); }
 
     public static readonly BindableProperty FontAttributesProperty = BindableProperty.Create(
         nameof(FontAttributes), typeof(FontAttributes), typeof(DatePickerField), TimePicker.FontAttributesProperty.DefaultValue,
-        propertyChanged: (bindable, oldValue, newValue) => (bindable as DatePickerField).DatePickerView.FontAttributes = (FontAttributes)newValue);
+        propertyChanged: (bindable, oldValue, newValue) =>
+        {
+            var datePickerField = bindable as DatePickerField;
+            datePickerField.DatePickerView.FontAttributes = (FontAttributes)newValue;
+            datePickerField.DateLabel?.SetValue(Label.FontAttributesProperty, newValue);
+        });
 
     public string FontFamily { get => (string)GetValue(FontFamilyProperty); set => SetValue(FontFamilyProperty, value); }
 
     public static readonly BindableProperty FontFamilyProperty = BindableProperty.Create(
         nameof(FontFamily), typeof(string), typeof(DatePickerField), TimePicker.FontFamilyProperty.DefaultValue,
-        propertyChanged: (bindable, oldValue, newValue) => (bindable as DatePickerField).DatePickerView.FontFamily = (string)newValue);
+        propertyChanged: (bindable, oldValue, newValue) =>
+        {
+            var datePickerField = bindable as DatePickerField;
+            datePickerField.DatePickerView.FontFamily = (string)newValue;
+            datePickerField.DateLabel?.SetValue(Label.FontFamilyProperty, newValue);
+        });
 
     [TypeConverter(typeof(FontSizeConverter))]
     public double FontSize { get => (double)GetValue(FontSizeProperty); set => SetValue(FontSizeProperty, value); }
 
     public static readonly BindableProperty FontSizeProperty = BindableProperty.Create(
         nameof(FontSize), typeof(double), typeof(DatePickerField), TimePicker.FontSizeProperty.DefaultValue,
-        propertyChanged: (bindable, oldValue, newValue) => (bindable as DatePickerField).DatePickerView.FontSize = (double)newValue);
+        propertyChanged: (bindable, oldValue, newValue) =>
+        {
+            var datePickerField = bindable as DatePickerField;
+            datePickerField.DatePickerView.FontSize = (double)newValue;
+            datePickerField.DateLabel?.SetValue(Label.FontSizeProperty, newValue);
+        });
 
     public bool FontAutoScalingEnabled { get => (bool)GetValue(FontAutoScalingEnabledProperty); set => SetValue(FontAutoScalingEnabledProperty, value); }
 
     public static readonly BindableProperty FontAutoScalingEnabledProperty = BindableProperty.Create(
         nameof(FontAutoScalingEnabled), typeof(bool), typeof(DatePickerField), TimePicker.FontAutoScalingEnabledProperty.DefaultValue,
-        propertyChanged: (bindable, oldValue, newValue) => (bindable as DatePickerField).DatePickerView.FontAutoScalingEnabled = (bool)newValue);
+        propertyChanged: (bindable, oldValue, newValue) =>
+        {
+            var datePickerField = bindable as DatePickerField;
+            datePickerField.DatePickerView.FontAutoScalingEnabled = (bool)newValue;
+            datePickerField.DateLabel?.SetValue(Label.FontAutoScalingEnabledProperty, newValue);
+        });
     public bool AllowClear { get => (bool)GetValue(AllowClearProperty); set => SetValue(AllowClearProperty, value); }
 
     public static BindableProperty AllowClearProperty = BindableProperty.Create(
