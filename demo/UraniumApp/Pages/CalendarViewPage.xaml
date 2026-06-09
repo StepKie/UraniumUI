@@ -12,8 +12,8 @@
 
             <Label Text="A custom MAUI calendar layout that supports nullable single-date selection without relying on native date picker behavior." />
 
-            <Border StyleClass="SurfaceContainer, Rounded" StrokeThickness="0" Padding="16">
-                <uranium:CalendarView x:Name="calendarView" />
+            <Border StyleClass="SurfaceContainer, Rounded" StrokeThickness="0" Padding="16" MaximumWidthRequest="480">
+                <uranium:CalendarView x:Name="calendarView" MinimumDate="01.01.1970" />
             </Border>
 
             <Label Text="{Binding Source={x:Reference calendarView}, Path=SelectedDate, StringFormat='Selected date: {0:yyyy-MM-dd}'}" />
