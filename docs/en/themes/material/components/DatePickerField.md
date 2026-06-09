@@ -9,6 +9,7 @@ DatePickerField is included in the `UraniumUI.Material.Controls` namespace. You 
 
 ```xml
 xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
 ```
 
 Then you can use it like this:
@@ -26,7 +27,7 @@ Then you can use it like this:
 DatePickerFields support setting an icon on the left side of the control. You can set the icon by setting the `Icon` property. The icon can be any `ImageSource` object. FontImageSource is recommended as Icon since its color can be changed when focused.
 
 ```xml
-<material:DatePickerField Title="Pick a Date" Icon="{FontImageSource FontFamily=MaterialRegular, Glyph={x:Static m:MaterialRegular.Calendar_month}}"  />
+<material:DatePickerField Title="Pick a Date" Icon="{FontImageSource FontFamily=MaterialOutlined, Glyph={x:Static m:MaterialOutlined.Calendar_month}}"  />
 ```
 
 | Light | Dark |
@@ -35,6 +36,8 @@ DatePickerFields support setting an icon on the left side of the control. You ca
 
 ## AllowClear
 DatePickerFields support clearing the selected date by setting the `AllowClear` property to `true`. Default value is `true`. You can make it `false` to disable clearing.
+
+Clearing the field sets `Date` to `null`. `Date`, `MinimumDate`, and `MaximumDate` support nullable `DateTime` values, so they can be bound to `DateTime?` view-model properties.
 
 ```xml
 <material:DatePickerField 
@@ -54,7 +57,7 @@ DatePickerFields support clearing the selected date by setting the `AllowClear` 
 DatePickerField supports validation rules such as `MinValueValidation` and `MaxValueValidation`. You can use them like this:
 
 ```xml
-<material:DatePickerField Title="Pick a date" Icon="{FontImageSource FontFamily=MaterialRegular, Glyph={x:Static m:MaterialRegular.Alarm}}">
+<material:DatePickerField Title="Pick a date" Icon="{FontImageSource FontFamily=MaterialOutlined, Glyph={x:Static m:MaterialOutlined.Alarm}}">
     <validation:MinValueValidation MinValue="9/18/2022" />
     <validation:MaxValueValidation MaxValue="12/31/2022" />
 </material:DatePickerField>
@@ -70,7 +73,7 @@ DatePickerField is fully compatible with [FormView](https://enisn-projects.io/do
 
 ```xml
  <input:FormView Spacing="20">
-    <material:DatePickerField Title="Pick a time" Icon="{FontImageSource FontFamily=MaterialRegular, Glyph={x:Static m:MaterialRegular.Alarm}}">
+    <material:DatePickerField Title="Pick a time" Icon="{FontImageSource FontFamily=MaterialOutlined, Glyph={x:Static m:MaterialOutlined.Alarm}}">
         <validation:MinValueValidation MinValue="9/18/2022"  />
         <validation:MaxValueValidation MaxValue="12/31/2022" />
     </material:DatePickerField>

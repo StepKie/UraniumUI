@@ -129,6 +129,12 @@ public partial class TextField : InputField
 
     protected virtual void OnClearTapped()
     {
+        if (ClearCommand?.CanExecute(this) ?? false)
+        {
+            ClearCommand.Execute(this);
+            return;
+        }
+
         EntryView.Text = string.Empty;
     }
 
@@ -170,8 +176,7 @@ public partial class TextField : InputField
             VerticalOptions = LayoutOptions.Center,
             HorizontalOptions = LayoutOptions.End,
             IsVisible = true, // this is important; having initial state of false will have SetBinding have no effect, since it will not receive input events
-            Padding = new Thickness(5, 0),
-            Margin = new Thickness(0, 0, 5, 0),
+            Padding = new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0),
             TappedCommand = new Command(OnClearTapped),
             Content = new Path
             {
