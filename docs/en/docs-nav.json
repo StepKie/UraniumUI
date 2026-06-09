@@ -20,6 +20,10 @@
           "path": "infrastructure/GridLayout.md"
         },
         {
+          "text": "CalendarView",
+          "path": "infrastructure/CalendarView.md"
+        },
+        {
           "text": "Auto Form View",
           "path": "infrastructure/AutoFormView.md"
         },
