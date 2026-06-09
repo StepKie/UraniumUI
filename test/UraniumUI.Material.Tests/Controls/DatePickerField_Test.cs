@@ -53,6 +53,107 @@ public class DatePickerField_Test
     }
 
     [Fact]
+    public void Date_Binding_ShouldSupportNonNullableDateTime()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+        var viewModel = new NonNullableDateViewModel { Date = DateTime.Now.AddDays(2) };
+        control.BindingContext = viewModel;
+        control.SetBinding(DatePickerField.DateProperty, new Binding(nameof(NonNullableDateViewModel.Date)));
+
+        // Assert source to control binding.
+        control.Date.ShouldBe(viewModel.Date);
+
+        // Act
+        control.Date = DateTime.Parse("09:05");
+
+        // Assert control to source binding.
+        viewModel.Date.ShouldBe(control.Date.Value);
+    }
+
+    [Fact]
+    public void Date_Binding_ShouldAcceptNull_FromSource()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+        var viewModel = new TestViewModel { Date = null };
+        control.BindingContext = viewModel;
+
+        // Act
+        control.SetBinding(DatePickerField.DateProperty, new Binding(nameof(TestViewModel.Date)));
+
+        // Assert
+        control.Date.ShouldBeNull();
+        control.HasValue.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Date_Binding_ShouldAcceptNull_ToSource()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+        var viewModel = new TestViewModel { Date = DateTime.Now.AddDays(2) };
+        control.BindingContext = viewModel;
+        control.SetBinding(DatePickerField.DateProperty, new Binding(nameof(TestViewModel.Date)));
+
+        // Act
+        control.Date = null;
+
+        // Assert
+        viewModel.Date.ShouldBeNull();
+        control.HasValue.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void Clear_ShouldSetDateToNull()
+    {
+        var control = AnimationReadyHandler.Prepare(new TestDatePickerField { Date = DateTime.Today });
+
+        // Act
+        control.Clear();
+
+        // Assert
+        control.Date.ShouldBeNull();
+        control.HasValue.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void DatePickerView_DateSelected_ShouldUpdateDate()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+        var date = DateTime.Today.AddDays(2);
+
+        // Act
+        control.DatePickerView.Date = date;
+
+        // Assert
+        control.Date.ShouldBe(date);
+    }
+
+    [Fact]
+    public void MaximumDate_ShouldUseDatePickerDefault_WhenSetToNull()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+
+        // Act
+        control.MaximumDate = DateTime.Today.AddDays(1);
+        control.MaximumDate = null;
+
+        // Assert
+        control.DatePickerView.MaximumDate.ShouldBe((DateTime)DatePicker.MaximumDateProperty.DefaultValue);
+    }
+
+    [Fact]
+    public void MinimumDate_ShouldUseDatePickerDefault_WhenSetToNull()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+
+        // Act
+        control.MinimumDate = DateTime.Today.AddDays(-1);
+        control.MinimumDate = null;
+
+        // Assert
+        control.DatePickerView.MinimumDate.ShouldBe((DateTime)DatePicker.MinimumDateProperty.DefaultValue);
+    }
+
+    [Fact]
     public void Format_ShouldBeSet_FromViewModel()
     {
         var control = AnimationReadyHandler.Prepare(new DatePickerField());
@@ -183,7 +284,7 @@ public class DatePickerField_Test
 
     public class TestViewModel : UraniumBindableObject
     {
-        private DateTime time;
+        private DateTime? time;
         private string format;
         private Color textColor;
         private double characterSpacing;
@@ -191,7 +292,7 @@ public class DatePickerField_Test
         private string fontFamily;
         private double fontSize;
 
-        public DateTime Date { get => time; set => SetProperty(ref time, value); }
+        public DateTime? Date { get => time; set => SetProperty(ref time, value); }
 
         public string Format { get => format; set => SetProperty(ref format, value); }
 
@@ -204,5 +305,20 @@ public class DatePickerField_Test
         public string FontFamily { get => fontFamily; set => SetProperty(ref fontFamily, value); }
 
         public double FontSize { get => fontSize; set => SetProperty(ref fontSize, value); }
+    }
+
+    private class TestDatePickerField : DatePickerField
+    {
+        public void Clear()
+        {
+            OnClearTapped(this);
+        }
+    }
+
+    private class NonNullableDateViewModel : UraniumBindableObject
+    {
+        private DateTime date;
+
+        public DateTime Date { get => date; set => SetProperty(ref date, value); }
     }
 }
