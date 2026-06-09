@@ -419,13 +419,14 @@ public class DefaultDialogService : IDialogService
         string today = "Today")
     {
         var tcs = new TaskCompletionSource<DateTime?>();
-        selectedDate = selectedDate?.Date;
+        var originalSelectedDate = selectedDate;
+        var normalizedSelectedDate = selectedDate?.Date;
 
-        var calendarView = CreateDatePromptCalendar(selectedDate, minimumDate, maximumDate);
+        var calendarView = CreateDatePromptCalendar(normalizedSelectedDate, minimumDate, maximumDate);
         var footerButtons = CreateDatePromptFooterButtons(
             calendarView,
             tcs,
-            selectedDate,
+            originalSelectedDate,
             accept,
             cancel,
             clear,

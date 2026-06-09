@@ -332,9 +332,10 @@ public class MopupsDialogService : IDialogService
         string today = "Today")
     {
         var tcs = new TaskCompletionSource<DateTime?>();
-        selectedDate = selectedDate?.Date;
+        var originalSelectedDate = selectedDate;
+        var normalizedSelectedDate = selectedDate?.Date;
 
-        var calendarView = CreateDatePromptCalendar(selectedDate, minimumDate, maximumDate);
+        var calendarView = CreateDatePromptCalendar(normalizedSelectedDate, minimumDate, maximumDate);
         var popup = new PopupPage
         {
             BackgroundColor = DialogOptions.GetBackdropColor(),
@@ -356,7 +357,7 @@ public class MopupsDialogService : IDialogService
                 GetFooter(CreateDatePromptFooterButtons(
                     calendarView,
                     tcs,
-                    selectedDate,
+                    originalSelectedDate,
                     accept,
                     cancel,
                     clear,

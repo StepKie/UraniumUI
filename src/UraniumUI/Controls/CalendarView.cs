@@ -501,10 +501,12 @@ public class CalendarView : ContentView
 
     private void UpdateYearButton(Button button, int year)
     {
-        var isEnabled = year <= 9999 && CanNavigateToYear(year);
+        var isValidYear = year <= 9999;
+        var isEnabled = isValidYear && CanNavigateToYear(year);
         var isSelected = year == DisplayDate.Year;
 
-        button.Text = year.ToString(CultureInfo.CurrentCulture);
+        button.IsVisible = isValidYear;
+        button.Text = isValidYear ? year.ToString(CultureInfo.CurrentCulture) : string.Empty;
         button.CommandParameter = year;
         button.IsEnabled = isEnabled;
         button.Opacity = isEnabled ? 1 : .25;

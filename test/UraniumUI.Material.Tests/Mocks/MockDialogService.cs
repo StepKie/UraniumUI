@@ -39,6 +39,19 @@ internal class MockDialogService : IDialogService
         return Task.FromResult(string.Empty);
     }
 
+    public Task<DateTime?> DisplayDatePromptAsync(
+        string title,
+        DateTime? selectedDate = null,
+        DateTime? minimumDate = null,
+        DateTime? maximumDate = null,
+        string accept = "OK",
+        string cancel = "Cancel",
+        string clear = "Clear",
+        string today = "Today")
+    {
+        return Task.FromResult(selectedDate);
+    }
+
     public Task DisplayViewAsync(string title, View content, string okText = "OK")
     {
         return Task.CompletedTask;

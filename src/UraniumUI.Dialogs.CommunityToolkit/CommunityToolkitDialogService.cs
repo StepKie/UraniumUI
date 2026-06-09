@@ -464,7 +464,8 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         var calculatedSize = CalculateSize(Page);
         var popupHeight = GetDatePromptPopupHeight(Page, calculatedSize.Height);
         var rootContainer = new VerticalStackLayout();
-        selectedDate = selectedDate?.Date;
+        var originalSelectedDate = selectedDate;
+        var normalizedSelectedDate = selectedDate?.Date;
 
 #if IOS || MACCATALYST
         var popup = new Popup
@@ -492,11 +493,11 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         };
 #endif
 
-        var calendarView = CreateDatePromptCalendar(selectedDate, minimumDate, maximumDate);
+        var calendarView = CreateDatePromptCalendar(normalizedSelectedDate, minimumDate, maximumDate);
         var footer = GetFooter(CreateDatePromptFooterButtons(
             calendarView,
             tcs,
-            selectedDate,
+            originalSelectedDate,
             accept,
             cancel,
             clear,
