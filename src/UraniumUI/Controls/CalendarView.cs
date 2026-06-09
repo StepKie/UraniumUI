@@ -210,9 +210,13 @@ public class CalendarView : ContentView
             var button = new Button
             {
                 Padding = 0,
+                WidthRequest = 40,
+                HeightRequest = 40,
                 MinimumHeightRequest = 40,
                 MinimumWidthRequest = 40,
                 CornerRadius = 20,
+                HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center,
                 StyleClass = new[] { "CalendarView.DayButton" },
                 Command = new Command<CalendarDay>(day =>
                 {
