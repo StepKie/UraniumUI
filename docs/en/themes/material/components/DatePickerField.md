@@ -37,6 +37,8 @@ DatePickerFields support setting an icon on the left side of the control. You ca
 ## AllowClear
 DatePickerFields support clearing the selected date by setting the `AllowClear` property to `true`. Default value is `true`. You can make it `false` to disable clearing.
 
+Clearing the field sets `Date` to `null`. `Date`, `MinimumDate`, and `MaximumDate` support nullable `DateTime` values, so they can be bound to `DateTime?` view-model properties.
+
 ```xml
 <material:DatePickerField 
     Title="Pick a Date (Clearable)"
