@@ -252,6 +252,8 @@ private async void Button_Clicked(object sender, EventArgs e)
 
 Date prompt can be used to select a nullable date with the custom `CalendarView`. It supports OK, Cancel, Clear, and Today actions. Tap the month/year header to jump by year, which is useful for birthdates and other historical dates.
 
+![MAUI Date Prompt Dialog](../images/dialogs-date-prompt-dark-windows.png)
+
 ```csharp
 private DateTime? selectedDate = DateTime.Today;
 
