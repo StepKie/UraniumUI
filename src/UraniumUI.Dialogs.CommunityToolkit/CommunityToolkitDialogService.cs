@@ -507,7 +507,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         rootContainer.Add(new ScrollView
         {
             Content = calendarView,
-            Margin = new Thickness(20, 20, 20, 0),
+            Margin = new Thickness(12, 16, 12, 0),
             VerticalOptions = LayoutOptions.Start,
             MaximumHeightRequest = popupHeight - 120,
         });

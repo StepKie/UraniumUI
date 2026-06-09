@@ -46,6 +46,10 @@ calendarView.TrySelectDate(DateTime.Today);
 calendarView.ClearSelection();
 ```
 
+## Year Selection
+
+Tap the month/year header to switch from the day grid to a year grid. This is useful for birthdate and other historical-date flows where navigating month-by-month would be too slow. The previous/next navigation buttons move between year pages while the year grid is visible. Selecting a year returns to the day grid and keeps the current month where possible.
+
 ## Styling
 
 The view exposes style classes for common parts:
@@ -63,3 +67,7 @@ The view exposes style classes for common parts:
 - `CalendarView.DayButton.OutsideMonth`
 - `CalendarView.DayButton.Disabled`
 - `CalendarView.DayButton.Selected`
+- `CalendarView.YearGrid`
+- `CalendarView.YearButton`
+- `CalendarView.YearButton.Disabled`
+- `CalendarView.YearButton.Selected`

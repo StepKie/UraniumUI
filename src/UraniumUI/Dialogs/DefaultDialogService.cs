@@ -443,7 +443,7 @@ public class DefaultDialogService : IDialogService
                     new ScrollView
                     {
                         Content = calendarView,
-                        Margin = new Thickness(20, 20, 20, 0),
+                        Margin = new Thickness(12, 16, 12, 0),
                         MaximumHeightRequest = Page.Height * .75,
                     },
                     GetDivider(),
@@ -662,6 +662,8 @@ public class DefaultDialogService : IDialogService
         var layout = new FlexLayout
         {
             JustifyContent = Microsoft.Maui.Layouts.FlexJustify.End,
+            AlignItems = Microsoft.Maui.Layouts.FlexAlignItems.Center,
+            Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap,
             Margin = new Thickness(10),
         };
 
@@ -672,13 +674,16 @@ public class DefaultDialogService : IDialogService
 
         foreach (var item in footerButtons.Reverse())
         {
-            layout.Children.Add(new Button
+            var button = new Button
             {
                 Text = item.Key,
                 // Can be styled with StyleClass `Dialog.Button0`, `Dialog.Button1`, etc
                 StyleClass = new[] { "TextButton", "Dialog.Button" + layout.Children.Count },
                 Command = item.Value
-            });
+            };
+
+            FlexLayout.SetShrink(button, 0);
+            layout.Children.Add(button);
         }
 
         return layout;

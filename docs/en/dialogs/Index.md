@@ -250,7 +250,7 @@ private async void Button_Clicked(object sender, EventArgs e)
 
 ### Date Prompt
 
-Date prompt can be used to select a nullable date with the custom `CalendarView`. It supports OK, Cancel, Clear, and Today actions.
+Date prompt can be used to select a nullable date with the custom `CalendarView`. It supports OK, Cancel, Clear, and Today actions. Tap the month/year header to jump by year, which is useful for birthdates and other historical dates.
 
 ```csharp
 private DateTime? selectedDate = DateTime.Today;

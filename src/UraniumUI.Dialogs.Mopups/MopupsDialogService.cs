@@ -349,7 +349,7 @@ public class MopupsDialogService : IDialogService
                 new ScrollView
                 {
                     Content = calendarView,
-                    Margin = new Thickness(20, 20, 20, 0),
+                    Margin = new Thickness(12, 16, 12, 0),
                     MaximumHeightRequest = Page.Height * .75,
                 },
                 GetDivider(),
@@ -615,6 +615,8 @@ public class MopupsDialogService : IDialogService
         var layout = new FlexLayout
         {
             JustifyContent = Microsoft.Maui.Layouts.FlexJustify.End,
+            AlignItems = Microsoft.Maui.Layouts.FlexAlignItems.Center,
+            Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap,
             Margin = new Thickness(10),
         };
 
@@ -625,13 +627,16 @@ public class MopupsDialogService : IDialogService
 
         foreach (var (text, command) in footerButtons.Reverse())
         {
-            layout.Children.Add(new Button
+            var button = new Button
             {
                 Text = text,
                 // Can be styled with StyleClass `Dialog.Button0`, `Dialog.Button1`, etc
                 StyleClass = new[] { "TextButton", "Dialog.Button" + layout.Children.Count },
                 Command = command
-            });
+            };
+
+            FlexLayout.SetShrink(button, 0);
+            layout.Children.Add(button);
         }
 
         return layout;
