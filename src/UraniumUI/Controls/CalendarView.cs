@@ -1,6 +1,10 @@
 using System.Globalization;
 using System.Windows.Input;
+using Microsoft.Maui.Controls.Shapes;
+using UraniumUI.Pages;
 using UraniumUI.Resources;
+using UraniumUI.Views;
+using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace UraniumUI.Controls;
 
@@ -19,17 +23,9 @@ public class CalendarView : ContentView
         StyleClass = new[] { "CalendarView.MonthLabel" }
     };
 
-    private readonly Button previousMonthButton = new()
-    {
-        Text = "<",
-        StyleClass = new[] { "CalendarView.NavigationButton", "CalendarView.PreviousMonthButton" }
-    };
+    private readonly StatefulContentView previousMonthButton = CreateNavigationButton(UraniumShapes.ChevronLeft, "CalendarView.PreviousMonthButton");
 
-    private readonly Button nextMonthButton = new()
-    {
-        Text = ">",
-        StyleClass = new[] { "CalendarView.NavigationButton", "CalendarView.NextMonthButton" }
-    };
+    private readonly StatefulContentView nextMonthButton = CreateNavigationButton(UraniumShapes.ChevronRight, "CalendarView.NextMonthButton");
 
     private readonly Grid weekdayGrid = new()
     {
@@ -57,8 +53,8 @@ public class CalendarView : ContentView
         PreviousMonthCommand = new Command(() => DisplayDate = DisplayDate.AddMonths(-1), () => CanNavigateToMonth(DisplayDate.AddMonths(-1)));
         NextMonthCommand = new Command(() => DisplayDate = DisplayDate.AddMonths(1), () => CanNavigateToMonth(DisplayDate.AddMonths(1)));
 
-        previousMonthButton.Command = PreviousMonthCommand;
-        nextMonthButton.Command = NextMonthCommand;
+        previousMonthButton.TappedCommand = PreviousMonthCommand;
+        nextMonthButton.TappedCommand = NextMonthCommand;
 
         BuildLayout();
         UpdateCalendar();
@@ -255,8 +251,8 @@ public class CalendarView : ContentView
             UpdateDayButton(dayButtons[index], VisibleDates[index]);
         }
 
-        previousMonthButton.IsEnabled = CanNavigateToMonth(DisplayDate.AddMonths(-1));
-        nextMonthButton.IsEnabled = CanNavigateToMonth(DisplayDate.AddMonths(1));
+        UpdateNavigationButtonState(previousMonthButton, CanNavigateToMonth(DisplayDate.AddMonths(-1)));
+        UpdateNavigationButtonState(nextMonthButton, CanNavigateToMonth(DisplayDate.AddMonths(1)));
 
         if (PreviousMonthCommand is Command previousCommand)
         {
@@ -344,6 +340,36 @@ public class CalendarView : ContentView
         }
 
         button.StyleClass = styleClasses.ToArray();
+    }
+
+    private static StatefulContentView CreateNavigationButton(Geometry pathData, string styleClass)
+    {
+        return new StatefulContentView
+        {
+            WidthRequest = 48,
+            HeightRequest = 48,
+            Padding = 10,
+            VerticalOptions = LayoutOptions.Center,
+            HorizontalOptions = LayoutOptions.Center,
+            StyleClass = new[] { "CalendarView.NavigationButton", styleClass },
+            Content = new Path
+            {
+                Data = pathData,
+                Stroke = ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.Black),
+                StrokeThickness = 3,
+                Aspect = Stretch.Uniform,
+                WidthRequest = 24,
+                HeightRequest = 24,
+                HorizontalOptions = LayoutOptions.Center,
+                VerticalOptions = LayoutOptions.Center,
+            }
+        };
+    }
+
+    private static void UpdateNavigationButtonState(StatefulContentView button, bool isEnabled)
+    {
+        button.IsEnabled = isEnabled;
+        button.Opacity = isEnabled ? 1 : .35;
     }
 
     private bool CanNavigateToMonth(DateTime date)
