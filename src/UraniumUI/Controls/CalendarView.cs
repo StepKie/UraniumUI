@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Windows.Input;
 using Microsoft.Maui.Controls.Shapes;
+using UraniumUI.Extensions;
 using UraniumUI.Pages;
 using UraniumUI.Resources;
 using UraniumUI.Views;
@@ -18,6 +19,9 @@ public class CalendarView : ContentView
     private const int YearGridRows = 3;
     private const double MinDayButtonSize = 30;
     private const double MaxDayButtonSize = 40;
+    private const uint TransitionOutLength = 80;
+    private const uint TransitionInLength = 120;
+    private const double TransitionOffset = 18;
 
     private readonly Label monthLabel = new()
     {
@@ -58,6 +62,7 @@ public class CalendarView : ContentView
     private readonly List<Button> yearButtons = new(YearsInPage);
     private IReadOnlyList<CalendarDay> visibleDates = Array.Empty<CalendarDay>();
     private bool isYearSelectionVisible;
+    private bool isTransitioning;
     private int yearPageStart;
 
     public event EventHandler<CalendarDateSelectedEventArgs> DateSelected;
@@ -434,35 +439,46 @@ public class CalendarView : ContentView
         }
     }
 
-    private void ToggleYearSelection()
+    private async void ToggleYearSelection()
     {
-        isYearSelectionVisible = !isYearSelectionVisible;
-        yearPageStart = GetYearPageStart(DisplayDate.Year);
-        UpdateCalendar();
+        var offset = isYearSelectionVisible ? -TransitionOffset : TransitionOffset;
+
+        await AnimateCalendarUpdateAsync(() =>
+        {
+            isYearSelectionVisible = !isYearSelectionVisible;
+            yearPageStart = GetYearPageStart(DisplayDate.Year);
+            UpdateCalendar();
+        }, offset);
     }
 
-    private void NavigatePrevious()
+    private async void NavigatePrevious()
     {
         if (isYearSelectionVisible)
         {
-            yearPageStart = Math.Max(1, yearPageStart - YearsInPage);
-            UpdateCalendar();
+            await AnimateCalendarUpdateAsync(() =>
+            {
+                yearPageStart = Math.Max(1, yearPageStart - YearsInPage);
+                UpdateCalendar();
+            }, -TransitionOffset);
             return;
         }
 
-        DisplayDate = DisplayDate.AddMonths(-1);
+        await AnimateCalendarUpdateAsync(() => DisplayDate = DisplayDate.AddMonths(-1), -TransitionOffset);
     }
 
-    private void NavigateNext()
+    private async void NavigateNext()
     {
         if (isYearSelectionVisible)
         {
-            yearPageStart = Math.Min(GetYearPageStart(9999), yearPageStart + YearsInPage);
-            UpdateCalendar();
+            await AnimateCalendarUpdateAsync(() =>
+            {
+                yearPageStart = Math.Min(GetYearPageStart(9999), yearPageStart + YearsInPage);
+                UpdateCalendar();
+            }, TransitionOffset);
             return;
         }
 
-        DisplayDate = DisplayDate.AddMonths(1);
+        await AnimateCalendarUpdateAsync(() => DisplayDate = DisplayDate.AddMonths(1), TransitionOffset);
     }
 
     private bool CanNavigatePrevious()
@@ -479,16 +495,68 @@ public class CalendarView : ContentView
             : CanNavigateToMonth(DisplayDate.AddMonths(1));
     }
 
-    private void SelectYear(int year)
+    private async void SelectYear(int year)
     {
         if (!CanNavigateToYear(year))
         {
             return;
         }
 
-        isYearSelectionVisible = false;
-        DisplayDate = GetDisplayDateForYear(year);
-        UpdateCalendar();
+        await AnimateCalendarUpdateAsync(() =>
+        {
+            isYearSelectionVisible = false;
+            DisplayDate = GetDisplayDateForYear(year);
+            UpdateCalendar();
+        }, -TransitionOffset);
+    }
+
+    private async Task AnimateCalendarUpdateAsync(Action update, double incomingOffset)
+    {
+        if (isTransitioning)
+        {
+            return;
+        }
+
+        if (!IsLoaded)
+        {
+            update();
+            return;
+        }
+
+        isTransitioning = true;
+        var outgoingGrid = GetCurrentSelectionGrid();
+
+        try
+        {
+            await Task.WhenAll(
+                outgoingGrid.FadeToSafely(0, TransitionOutLength, Easing.CubicInOut),
+                outgoingGrid.TranslateToSafely(-incomingOffset, 0, TransitionOutLength, Easing.CubicInOut));
+
+            update();
+
+            var incomingGrid = GetCurrentSelectionGrid();
+            incomingGrid.Opacity = 0;
+            incomingGrid.TranslationX = incomingOffset;
+
+            await Task.WhenAll(
+                incomingGrid.FadeToSafely(1, TransitionInLength, Easing.CubicInOut),
+                incomingGrid.TranslateToSafely(0, 0, TransitionInLength, Easing.CubicInOut));
+
+            if (outgoingGrid != incomingGrid)
+            {
+                outgoingGrid.Opacity = 1;
+                outgoingGrid.TranslationX = 0;
+            }
+        }
+        finally
+        {
+            isTransitioning = false;
+        }
+    }
+
+    private Grid GetCurrentSelectionGrid()
+    {
+        return isYearSelectionVisible ? yearGrid : daysGrid;
     }
 
     private void UpdateYearButtons()
