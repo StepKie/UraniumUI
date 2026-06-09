@@ -418,7 +418,7 @@ public class CalendarView : ContentView
             return;
         }
 
-        var availableWidth = width - daysGrid.ColumnSpacing * (DaysInWeek - 1);
+        var availableWidth = width - (daysGrid.ColumnSpacing * (DaysInWeek - 1));
         var size = Math.Clamp(Math.Floor(availableWidth / DaysInWeek), MinDayButtonSize, MaxDayButtonSize);
 
         foreach (var button in dayButtons)
@@ -620,7 +620,9 @@ public class CalendarView : ContentView
 
     private static int GetYearPageStart(int year)
     {
-        return ((year - 1) / YearsInPage) * YearsInPage + 1;
+        var pageIndex = (year - 1) / YearsInPage;
+
+        return (pageIndex * YearsInPage) + 1;
     }
 
     private static bool IsSameMonth(DateTime first, DateTime second)
