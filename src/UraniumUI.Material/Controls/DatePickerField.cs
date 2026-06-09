@@ -29,6 +29,7 @@ public class DatePickerField : InputField
     public override View Content { get; set; } = new Label
     {
         VerticalOptions = LayoutOptions.Center,
+        VerticalTextAlignment = TextAlignment.Center,
         HorizontalOptions = LayoutOptions.Fill,
         LineBreakMode = LineBreakMode.TailTruncation,
         MinimumHeightRequest = 40,

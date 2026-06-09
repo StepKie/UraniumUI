@@ -132,6 +132,15 @@ public class DatePickerField_Test
     }
 
     [Fact]
+    public void DateLabel_ShouldCenterTextVertically()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+
+        // Assert
+        ((Label)control.Content).VerticalTextAlignment.ShouldBe(TextAlignment.Center);
+    }
+
+    [Fact]
     public async Task DatePrompt_ShouldUpdateDate_WhenDialogReturnsDate()
     {
         var dialogService = UseMockDialogService();
