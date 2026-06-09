@@ -23,9 +23,9 @@ public class CalendarView : ContentView
         StyleClass = new[] { "CalendarView.MonthLabel" }
     };
 
-    private readonly StatefulContentView previousMonthButton = CreateNavigationButton(UraniumShapes.ChevronLeft, "CalendarView.PreviousMonthButton");
+    private readonly StatefulContentView previousMonthButton = CreateNavigationButton(UraniumShapes.ChevronLeft, "CalendarView.PreviousMonthButton", "Previous month");
 
-    private readonly StatefulContentView nextMonthButton = CreateNavigationButton(UraniumShapes.ChevronRight, "CalendarView.NextMonthButton");
+    private readonly StatefulContentView nextMonthButton = CreateNavigationButton(UraniumShapes.ChevronRight, "CalendarView.NextMonthButton", "Next month");
 
     private readonly Grid weekdayGrid = new()
     {
@@ -265,7 +265,7 @@ public class CalendarView : ContentView
         }
     }
 
-    protected virtual IReadOnlyList<CalendarDay> BuildVisibleDates()
+    protected IReadOnlyList<CalendarDay> BuildVisibleDates()
     {
         var firstOfMonth = new DateTime(DisplayDate.Year, DisplayDate.Month, 1);
         var offset = ((int)firstOfMonth.DayOfWeek - (int)FirstDayOfWeek + DaysInWeek) % DaysInWeek;
@@ -342,9 +342,9 @@ public class CalendarView : ContentView
         button.StyleClass = styleClasses.ToArray();
     }
 
-    private static StatefulContentView CreateNavigationButton(Geometry pathData, string styleClass)
+    private static StatefulContentView CreateNavigationButton(Geometry pathData, string styleClass, string description)
     {
-        return new StatefulContentView
+        var button = new StatefulContentView
         {
             WidthRequest = 48,
             HeightRequest = 48,
@@ -364,6 +364,10 @@ public class CalendarView : ContentView
                 VerticalOptions = LayoutOptions.Center,
             }
         };
+
+        SemanticProperties.SetDescription(button, description);
+
+        return button;
     }
 
     private static void UpdateNavigationButtonState(StatefulContentView button, bool isEnabled)
