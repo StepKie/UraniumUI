@@ -34,7 +34,7 @@ public class DatePickerField : InputField
         LineBreakMode = LineBreakMode.TailTruncation,
         MinimumHeightRequest = 40,
         Margin = new Thickness(10, 0),
-        InputTransparent = true,
+        InputTransparent = false,
     };
 
     protected StatefulContentView iconClear = new StatefulContentView
@@ -60,7 +60,7 @@ public class DatePickerField : InputField
         iconClear.TappedCommand = new Command(OnClearTapped);
         DialogService = UraniumServiceProvider.Current.GetRequiredService<IDialogService>();
 
-        GestureRecognizers.Add(new TapGestureRecognizer
+        Content.GestureRecognizers.Add(new TapGestureRecognizer
         {
             Command = new Command(async () => await OpenDatePromptAsync())
         });
@@ -113,6 +113,7 @@ public class DatePickerField : InputField
         OnPropertyChanged(nameof(Date));
         CheckAndShowValidations();
         UpdateDateText();
+        UpdateDatePickerViewDate();
 
         if (AllowClear)
         {
@@ -146,6 +147,28 @@ public class DatePickerField : InputField
         {
             DateLabel.Text = Date?.ToString(Format, CultureInfo.CurrentCulture) ?? string.Empty;
         }
+    }
+
+    protected virtual void UpdateDatePickerViewDate()
+    {
+        var date = (Date ?? GetDatePickerViewFallbackDate()).Date;
+
+        if (MinimumDate.HasValue && date < MinimumDate.Value.Date)
+        {
+            date = MinimumDate.Value.Date;
+        }
+
+        if (MaximumDate.HasValue && date > MaximumDate.Value.Date)
+        {
+            date = MaximumDate.Value.Date;
+        }
+
+        DatePickerView.Date = date;
+    }
+
+    protected virtual DateTime GetDatePickerViewFallbackDate()
+    {
+        return DatePicker.DateProperty.DefaultValue is DateTime date ? date.Date : DateTime.Today;
     }
 
     protected virtual void UpdateClearIconState()
@@ -187,7 +210,12 @@ public class DatePickerField : InputField
     public static readonly BindableProperty MaximumDateProperty = BindableProperty.Create(
          nameof(MaximumDate), typeof(DateTime?), typeof(DatePickerField),
          defaultValue: null,
-         propertyChanged: (bindable, oldValue, newValue) => (bindable as DatePickerField).DatePickerView.MaximumDate = (DateTime)(newValue ?? DatePicker.MaximumDateProperty.DefaultValue)
+         propertyChanged: (bindable, oldValue, newValue) =>
+         {
+             var datePickerField = bindable as DatePickerField;
+             datePickerField.DatePickerView.MaximumDate = (DateTime)(newValue ?? DatePicker.MaximumDateProperty.DefaultValue);
+             datePickerField.UpdateDatePickerViewDate();
+         }
          );
 
     public DateTime? MinimumDate { get => (DateTime?)GetValue(MinimumDateProperty); set => SetValue(MinimumDateProperty, value); }
@@ -195,7 +223,12 @@ public class DatePickerField : InputField
     public static readonly BindableProperty MinimumDateProperty = BindableProperty.Create(
          nameof(MinimumDate), typeof(DateTime?), typeof(DatePickerField),
          defaultValue: null,
-         propertyChanged: (bindable, oldValue, newValue) => (bindable as DatePickerField).DatePickerView.MinimumDate = (DateTime)(newValue ?? DatePicker.MinimumDateProperty.DefaultValue)
+         propertyChanged: (bindable, oldValue, newValue) =>
+         {
+             var datePickerField = bindable as DatePickerField;
+             datePickerField.DatePickerView.MinimumDate = (DateTime)(newValue ?? DatePicker.MinimumDateProperty.DefaultValue);
+             datePickerField.UpdateDatePickerViewDate();
+         }
          );
 
     public string Format { get => (string)GetValue(FormatProperty); set => SetValue(FormatProperty, value); }

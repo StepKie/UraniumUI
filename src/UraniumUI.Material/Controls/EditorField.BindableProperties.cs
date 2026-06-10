@@ -20,8 +20,7 @@ public partial class EditorField
         nameof(TextColor),
         typeof(Color),
         typeof(EditorField),
-        ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.DarkGray),
-        propertyChanged: (bindable, oldValue, newValue) => (bindable as EditorField).EditorView.TextColor = (Color)newValue);
+        ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.DarkGray));
 
     public string FontFamily { get => (string)GetValue(FontFamilyProperty); set => SetValue(FontFamilyProperty, value); }
 
