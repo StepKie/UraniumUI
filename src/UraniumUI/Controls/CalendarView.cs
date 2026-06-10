@@ -550,6 +550,9 @@ public class CalendarView : ContentView
         }
         finally
         {
+            // Ensure we don't leave the grid faded/translated if update/animation fails.
+            outgoingGrid.Opacity = 1;
+            outgoingGrid.TranslationX = 0;
             isTransitioning = false;
         }
     }
