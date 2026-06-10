@@ -19,6 +19,9 @@ public partial class TreeView : ContentView
     private readonly CollectionView rootView;
     private readonly TreeViewDataController dataController;
     private readonly ConditionalWeakTable<object, CheckStateHolder> hierarchicalCheckStates = new();
+    private TreeViewNode pendingScrollAnchorNode;
+    private int firstVisibleNodeIndex = -1;
+    private int pendingScrollAnchorIndex = -1;
     private bool isSelectedItemsUpdating;
 
     public TreeView()
@@ -32,12 +35,17 @@ public partial class TreeView : ContentView
         rootView = new CollectionView
         {
             ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical),
+            ItemsUpdatingScrollMode = ItemsUpdatingScrollMode.KeepScrollOffset,
             SelectionMode = SelectionMode.None,
             ItemsSource = dataController.VisibleNodes,
         };
 
+        dataController.VisibleNodesChanging = CaptureScrollAnchor;
+        dataController.VisibleNodesChanged = RestoreScrollAnchor;
+
         Content = rootView;
         ApplyItemTemplate();
+        rootView.Scrolled += RootView_Scrolled;
         rootView.HandlerChanged += (_, _) => UpdatePlatformAnimationState();
     }
 
@@ -298,6 +306,46 @@ public partial class TreeView : ContentView
         RefreshAncestorCheckStates(node.Parent);
     }
 
+    private void RootView_Scrolled(object sender, ItemsViewScrolledEventArgs e)
+    {
+        firstVisibleNodeIndex = e.FirstVisibleItemIndex;
+    }
+
+    private void CaptureScrollAnchor()
+    {
+        pendingScrollAnchorNode = null;
+        pendingScrollAnchorIndex = -1;
+
+        if (dataController.VisibleNodes.Count == 0)
+        {
+            return;
+        }
+
+        var index = firstVisibleNodeIndex;
+        if (index < 0 || index >= dataController.VisibleNodes.Count)
+        {
+            index = 0;
+        }
+
+        pendingScrollAnchorNode = dataController.VisibleNodes[index];
+        pendingScrollAnchorIndex = index;
+        CapturePlatformScrollAnchor();
+    }
+
+    private void RestoreScrollAnchor()
+    {
+        var anchorNode = pendingScrollAnchorNode;
+        var anchorIndex = pendingScrollAnchorIndex;
+
+        pendingScrollAnchorNode = null;
+        pendingScrollAnchorIndex = -1;
+
+        if (anchorNode is not null)
+        {
+            RestorePlatformScrollAnchor(anchorNode, anchorIndex);
+        }
+    }
+
     private void ApplyItemTemplate()
     {
         if (rootView is null)
@@ -548,6 +596,10 @@ public partial class TreeView : ContentView
     }
 
     partial void UpdatePlatformAnimationState();
+
+    partial void CapturePlatformScrollAnchor();
+
+    partial void RestorePlatformScrollAnchor(TreeViewNode anchorNode, int anchorIndex);
 
     private sealed class CheckStateHolder
     {

@@ -373,6 +373,37 @@ public class TreeView_Test
     }
 
     [Fact]
+    public void TreeView_ShouldKeepScrollOffset_WhenVisibleNodesChange()
+    {
+        var control = AnimationReadyHandler.Prepare(new TreeView());
+
+        control.Content.ShouldBeOfType<CollectionView>()
+            .ItemsUpdatingScrollMode.ShouldBe(ItemsUpdatingScrollMode.KeepScrollOffset);
+    }
+
+    [Fact]
+    public void ExpandingLargeBranch_ShouldNotifyAroundVisibleNodeChanges()
+    {
+        var root = Node("root");
+        for (var i = 0; i < 10_000; i++)
+        {
+            root.Children.Add(Node($"child-{i}"));
+        }
+
+        var controller = CreateController();
+        var changingCount = 0;
+        var changedCount = 0;
+        controller.VisibleNodesChanging = () => changingCount++;
+        controller.VisibleNodesChanged = () => changedCount++;
+        controller.SetItemsSource(new[] { root });
+
+        controller.VisibleNodes[0].IsExpanded = true;
+
+        changingCount.ShouldBe(1);
+        changedCount.ShouldBe(1);
+    }
+
+    [Fact]
     public void HierarchicalCheckState_ShouldApplyParentState_ToVisibleChildren()
     {
         var root = Node("A", Node("A.1"), Node("A.2"));

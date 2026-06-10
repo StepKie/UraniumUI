@@ -30,6 +30,10 @@ internal sealed class TreeViewDataController : IDisposable
 
     public Func<TreeViewNode, TreeViewNodeCheckState> GetCheckState { get; set; } = _ => TreeViewNodeCheckState.Unchecked;
 
+    public Action VisibleNodesChanging { get; set; } = () => { };
+
+    public Action VisibleNodesChanged { get; set; } = () => { };
+
     public void SetItemsSource(IEnumerable value)
     {
         if (ReferenceEquals(itemsSource, value))
@@ -259,7 +263,10 @@ internal sealed class TreeViewDataController : IDisposable
         }
 
         var children = CreateExpandedChildren(node);
-        VisibleNodes.InsertRange(nodeIndex + 1, children);
+        if (children.Count > 0)
+        {
+            UpdateVisibleNodes(() => VisibleNodes.InsertRange(nodeIndex + 1, children));
+        }
     }
 
     private void CollapseNode(TreeViewNode node)
@@ -271,7 +278,13 @@ internal sealed class TreeViewDataController : IDisposable
         }
 
         var count = CountVisibleDescendants(nodeIndex, node.Depth);
-        var removed = VisibleNodes.RemoveRange(nodeIndex + 1, count);
+        if (count <= 0)
+        {
+            return;
+        }
+
+        IReadOnlyList<TreeViewNode> removed = Array.Empty<TreeViewNode>();
+        UpdateVisibleNodes(() => removed = VisibleNodes.RemoveRange(nodeIndex + 1, count));
         DisposeNodes(removed);
     }
 
@@ -284,16 +297,42 @@ internal sealed class TreeViewDataController : IDisposable
         }
 
         var count = CountVisibleDescendants(nodeIndex, node.Depth);
-        var removed = VisibleNodes.RemoveRange(nodeIndex + 1, count);
-        DisposeNodes(removed);
+        var children = !node.IsExpanded || node.IsLeaf
+            ? Array.Empty<TreeViewNode>()
+            : CreateExpandedChildren(node);
 
-        if (!node.IsExpanded || node.IsLeaf)
+        if (count <= 0 && children.Count == 0)
         {
             return;
         }
 
-        var children = CreateExpandedChildren(node);
-        VisibleNodes.InsertRange(nodeIndex + 1, children);
+        IReadOnlyList<TreeViewNode> removed = Array.Empty<TreeViewNode>();
+        UpdateVisibleNodes(() =>
+        {
+            if (count > 0)
+            {
+                removed = VisibleNodes.RemoveRange(nodeIndex + 1, count);
+            }
+
+            if (children.Count > 0)
+            {
+                VisibleNodes.InsertRange(nodeIndex + 1, children);
+            }
+        });
+        DisposeNodes(removed);
+    }
+
+    private void UpdateVisibleNodes(Action update)
+    {
+        VisibleNodesChanging();
+        try
+        {
+            update();
+        }
+        finally
+        {
+            VisibleNodesChanged();
+        }
     }
 
     private IReadOnlyList<TreeViewNode> CreateExpandedChildren(TreeViewNode parent)
