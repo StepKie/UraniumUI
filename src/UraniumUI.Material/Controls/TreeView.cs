@@ -22,6 +22,7 @@ public partial class TreeView : ContentView
     private TreeViewNode pendingScrollAnchorNode;
     private int firstVisibleNodeIndex = -1;
     private int pendingScrollAnchorIndex = -1;
+    private long checkStateVersion;
     private bool isSelectedItemsUpdating;
 
     public TreeView()
@@ -300,8 +301,9 @@ public partial class TreeView : ContentView
             return;
         }
 
-        SetStoredCheckState(node.Item, state);
-        ClearDescendantCheckStates(node.Item);
+        var version = ++checkStateVersion;
+        SetBaselineCheckState(node.Item, state, version);
+        SetVisualCheckState(node.Item, state, version);
         dataController.RefreshVisibleCheckStates(node);
         RefreshAncestorCheckStates(node.Parent);
     }
@@ -381,44 +383,25 @@ public partial class TreeView : ContentView
             return TreeViewNodeCheckState.Unchecked;
         }
 
-        if (TryGetStoredCheckState(node.Item, out var state))
-        {
-            return state;
-        }
-
-        return GetInheritedCheckState(node.Parent);
+        return GetEffectiveCheckState(node.Item, node.Parent);
     }
 
     private TreeViewNodeCheckState GetEffectiveCheckState(object item, TreeViewNode parent)
     {
-        if (TryGetStoredCheckState(item, out var state))
+        var baseline = GetEffectiveBaselineCheckState(item, parent);
+        if (TryGetCheckStateHolder(item, out var holder) && holder.VisualVersion >= baseline.Version)
         {
-            return state;
+            return holder.VisualState;
         }
 
-        return GetInheritedCheckState(parent);
-    }
-
-    private TreeViewNodeCheckState GetInheritedCheckState(TreeViewNode parent)
-    {
-        while (parent is not null)
-        {
-            if (TryGetStoredCheckState(parent.Item, out var state) && state != TreeViewNodeCheckState.Indeterminate)
-            {
-                return state;
-            }
-
-            parent = parent.Parent;
-        }
-
-        return TreeViewNodeCheckState.Unchecked;
+        return baseline.State;
     }
 
     private void RefreshAncestorCheckStates(TreeViewNode parent)
     {
         while (parent is not null)
         {
-            SetStoredCheckState(parent.Item, GetStateFromDirectChildren(parent));
+            SetVisualCheckState(parent.Item, GetStateFromDirectChildren(parent), checkStateVersion);
             dataController.RefreshCheckStateForItem(parent.Item);
             parent = parent.Parent;
         }
@@ -459,49 +442,76 @@ public partial class TreeView : ContentView
         return GetEffectiveCheckState(parent.Item, parent.Parent);
     }
 
-    private void ClearDescendantCheckStates(object item)
+    private (TreeViewNodeCheckState State, long Version) GetEffectiveBaselineCheckState(object item, TreeViewNode parent)
     {
-        foreach (var childItem in dataController.EnumerateChildItems(item))
+        var state = TreeViewNodeCheckState.Unchecked;
+        var version = 0L;
+
+        if (TryGetCheckStateHolder(item, out var itemHolder) && itemHolder.BaselineVersion > version)
         {
-            RemoveStoredCheckState(childItem);
-            ClearDescendantCheckStates(childItem);
+            state = itemHolder.BaselineState;
+            version = itemHolder.BaselineVersion;
         }
+
+        while (parent is not null)
+        {
+            if (TryGetCheckStateHolder(parent.Item, out var parentHolder) && parentHolder.BaselineVersion > version)
+            {
+                state = parentHolder.BaselineState;
+                version = parentHolder.BaselineVersion;
+            }
+
+            parent = parent.Parent;
+        }
+
+        return (state, version);
     }
 
-    private bool TryGetStoredCheckState(object item, out TreeViewNodeCheckState state)
+    private bool TryGetCheckStateHolder(object item, out CheckStateHolder holder)
     {
-        if (item is not null && hierarchicalCheckStates.TryGetValue(item, out var holder))
+        if (item is not null && hierarchicalCheckStates.TryGetValue(item, out holder))
         {
-            state = holder.State;
             return true;
         }
 
-        state = TreeViewNodeCheckState.Unchecked;
+        holder = null;
         return false;
     }
 
-    private void SetStoredCheckState(object item, TreeViewNodeCheckState state)
+    private void SetBaselineCheckState(object item, TreeViewNodeCheckState state, long version)
     {
         if (item is null)
         {
             return;
         }
 
-        if (hierarchicalCheckStates.TryGetValue(item, out var holder))
+        var holder = GetOrCreateCheckStateHolder(item);
+        holder.BaselineState = state;
+        holder.BaselineVersion = version;
+    }
+
+    private void SetVisualCheckState(object item, TreeViewNodeCheckState state, long version)
+    {
+        if (item is null)
         {
-            holder.State = state;
             return;
         }
 
-        hierarchicalCheckStates.Add(item, new CheckStateHolder { State = state });
+        var holder = GetOrCreateCheckStateHolder(item);
+        holder.VisualState = state;
+        holder.VisualVersion = version;
     }
 
-    private void RemoveStoredCheckState(object item)
+    private CheckStateHolder GetOrCreateCheckStateHolder(object item)
     {
-        if (item is not null)
+        if (hierarchicalCheckStates.TryGetValue(item, out var holder))
         {
-            hierarchicalCheckStates.Remove(item);
+            return holder;
         }
+
+        holder = new CheckStateHolder();
+        hierarchicalCheckStates.Add(item, holder);
+        return holder;
     }
 
     private void OnSelectionModeChanged()
@@ -603,6 +613,12 @@ public partial class TreeView : ContentView
 
     private sealed class CheckStateHolder
     {
-        public TreeViewNodeCheckState State { get; set; }
+        public TreeViewNodeCheckState BaselineState { get; set; }
+
+        public long BaselineVersion { get; set; }
+
+        public TreeViewNodeCheckState VisualState { get; set; }
+
+        public long VisualVersion { get; set; }
     }
 }

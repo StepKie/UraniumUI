@@ -435,6 +435,63 @@ public class TreeView_Test
     }
 
     [Fact]
+    public void HierarchicalCheckState_ShouldPreserveInheritedSiblingState_WhenRowsAreRecreated()
+    {
+        var root = Node("A", Node("A.1"), Node("A.2"));
+        var control = AnimationReadyHandler.Prepare(new TreeView { ItemsSource = new[] { root } });
+        control.VisibleNodes[0].IsExpanded = true;
+
+        control.ApplyHierarchicalCheckState(control.VisibleNodes[0], TreeViewNodeCheckState.Checked);
+        control.ApplyHierarchicalCheckState(control.VisibleNodes[1], TreeViewNodeCheckState.Unchecked);
+        control.VisibleNodes[0].IsExpanded = false;
+        control.VisibleNodes[0].IsExpanded = true;
+
+        control.VisibleNodes[0].CheckState.ShouldBe(TreeViewNodeCheckState.Indeterminate);
+        control.VisibleNodes[1].CheckState.ShouldBe(TreeViewNodeCheckState.Unchecked);
+        control.VisibleNodes[2].CheckState.ShouldBe(TreeViewNodeCheckState.Checked);
+    }
+
+    [Fact]
+    public void HierarchicalCheckState_ShouldLetNewerAncestorStateOverrideOlderDescendantState()
+    {
+        var child = Node("A.1", Node("A.1.a"));
+        var root = Node("A", child);
+        var control = AnimationReadyHandler.Prepare(new TreeView { ItemsSource = new[] { root } });
+        control.VisibleNodes[0].IsExpanded = true;
+        control.VisibleNodes[1].IsExpanded = true;
+
+        control.ApplyHierarchicalCheckState(control.VisibleNodes[1], TreeViewNodeCheckState.Unchecked);
+        control.ApplyHierarchicalCheckState(control.VisibleNodes[0], TreeViewNodeCheckState.Checked);
+        control.VisibleNodes[1].IsExpanded = false;
+        control.VisibleNodes[1].IsExpanded = true;
+
+        control.VisibleNodes.Select(x => x.CheckState).ToArray().ShouldBe([
+            TreeViewNodeCheckState.Checked,
+            TreeViewNodeCheckState.Checked,
+            TreeViewNodeCheckState.Checked,
+        ]);
+    }
+
+    [Fact]
+    public void HierarchicalCheckState_ShouldHandleDeepCollapsedDescendants_WhenParentChanges()
+    {
+        var root = Node("root");
+        var current = root;
+        for (var i = 0; i < 5_000; i++)
+        {
+            var child = Node($"child-{i}");
+            current.Children.Add(child);
+            current = child;
+        }
+
+        var control = AnimationReadyHandler.Prepare(new TreeView { ItemsSource = new[] { root } });
+
+        control.ApplyHierarchicalCheckState(control.VisibleNodes[0], TreeViewNodeCheckState.Checked);
+
+        control.VisibleNodes[0].CheckState.ShouldBe(TreeViewNodeCheckState.Checked);
+    }
+
+    [Fact]
     public void HierarchicalCheckState_ShouldBeInherited_ByChildrenExpandedLater()
     {
         var child = Node("A.1", Node("A.1.a"));
