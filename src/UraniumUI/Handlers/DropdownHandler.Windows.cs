@@ -216,7 +216,7 @@ public partial class DropdownHandler : ButtonHandler
         menuItem.Text = GetTextForItem(dropdown, item);
     }
 
-    protected override void PlatformClose()
+    partial void PlatformClose()
     {
         if (PlatformView.Flyout is Microsoft.UI.Xaml.Controls.MenuFlyout flyout)
         {

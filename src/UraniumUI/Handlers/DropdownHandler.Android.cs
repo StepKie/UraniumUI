@@ -30,13 +30,16 @@ public partial class DropdownHandler : ButtonHandler
     {
         var activity = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity;
 
-        currentPopupMenu = new Android.Widget.PopupMenu(activity, PlatformView, GetGravityFlags(VirtualViewDropdown.HorizontalTextAlignment));
+        PlatformClose();
+
+        var popupMenu = new Android.Widget.PopupMenu(activity, PlatformView, GetGravityFlags(VirtualViewDropdown.HorizontalTextAlignment));
+        currentPopupMenu = popupMenu;
 
         if (VirtualViewDropdown.ItemsSource is not null)
         {
             foreach (var item in VirtualViewDropdown.ItemsSource)
             {
-                var menuItem = currentPopupMenu.Menu.Add(new Java.Lang.String(GetTextForItem(VirtualViewDropdown, item)));
+                var menuItem = popupMenu.Menu.Add(new Java.Lang.String(GetTextForItem(VirtualViewDropdown, item)));
 
                 menuItem.SetOnMenuItemClickListener(new MenuItemOnMenuItemClickListener((menuitem) =>
                 {
@@ -45,8 +48,8 @@ public partial class DropdownHandler : ButtonHandler
             }
         }
 
-        currentPopupMenu.DismissEvent += OnPopupMenuDismissed;
-        currentPopupMenu.Show();
+        popupMenu.DismissEvent += OnPopupMenuDismissed;
+        popupMenu.Show();
     }
 
     private void OnPopupMenuDismissed(object sender, EventArgs e)
@@ -78,8 +81,9 @@ public partial class DropdownHandler : ButtonHandler
 
     protected override void DisconnectHandler(MaterialButton platformView)
     {
-        base.DisconnectHandler(platformView);
+        PlatformClose();
         platformView.Click -= Button_Click;
+        base.DisconnectHandler(platformView);
     }
 
     public static void MapItemsSource(DropdownHandler handler, Dropdown dropdown)
@@ -152,7 +156,7 @@ public partial class DropdownHandler : ButtonHandler
         // Do nothing on Android.
     }
 
-    protected override void PlatformClose()
+    partial void PlatformClose()
     {
         var menu = currentPopupMenu;
         if (menu != null)

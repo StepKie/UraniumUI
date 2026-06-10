@@ -32,10 +32,7 @@ public partial class DropdownHandler
         handler.PlatformClose();
     }
 
-    protected virtual void PlatformClose()
-    {
-        // Platform-specific implementations will override this
-    }
+    partial void PlatformClose();
 }
 
 #if (NET9_0 || NET10_0) && !ANDROID && !IOS && !MACCATALYST && !WINDOWS
@@ -86,10 +83,6 @@ public partial class DropdownHandler : ViewHandler<Dropdown, object>
 
     }
 
-    protected override void PlatformClose()
-    {
-        // No implementation for unsupported platforms
-    }
 }
 
 #endif
