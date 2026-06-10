@@ -1,49 +1,43 @@
-﻿using System.Collections;
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Windows.Input;
-using UraniumUI.Extensions;
 using UraniumUI.Resources;
 
 namespace UraniumUI.Material.Controls;
+
 public partial class TreeView : ContentView
 {
-    public static DataTemplate DefaultItemTemplate = new DataTemplate(() =>
+    public static DataTemplate DefaultItemTemplate = new(() =>
     {
         var label = new Label { VerticalOptions = LayoutOptions.Center };
         label.SetBinding(Label.TextProperty, new Binding("Name"));
         return label;
     });
 
-    private readonly List<TreeViewNodeHolderView> registeredNodes = new();
-    public IEnumerable<TreeViewNodeHolderView> AllNodeViews => registeredNodes;
-    private List<TreeViewNodeHolderView> GetChildViews() => registeredNodes.ToList();
     private readonly CollectionView rootView;
-    private bool isTemplateUpdating;
-    private DataTemplate nodeTemplate;
-
-    internal void RegisterNode(TreeViewNodeHolderView node)
-    {
-        registeredNodes.Add(node);
-    }
-
-    internal IEnumerable<TreeViewNodeHolderView> GetChildViewsOf(TreeViewNodeHolderView parent)
-    {
-        return registeredNodes.Where(x => x.ParentHolderView == parent);
-    }
+    private readonly TreeViewDataController dataController;
+    private bool isSelectedItemsUpdating;
 
     public TreeView()
     {
+        dataController = new TreeViewDataController
+        {
+            IsItemSelected = IsItemSelected
+        };
+
         rootView = new CollectionView
         {
             ItemsLayout = new LinearItemsLayout(ItemsLayoutOrientation.Vertical),
-            SelectionMode = SelectionMode.None
+            SelectionMode = SelectionMode.None,
+            ItemsSource = dataController.VisibleNodes,
         };
 
         Content = rootView;
-
-        OnItemTemplateChanged(DefaultItemTemplate);
+        ApplyItemTemplate();
     }
+
+    internal IReadOnlyList<TreeViewNode> VisibleNodes => dataController.VisibleNodes;
 
     protected override void OnHandlerChanged()
     {
@@ -51,14 +45,28 @@ public partial class TreeView : ContentView
 
         if (SelectedItems is INotifyCollectionChanged observableSelectedItems)
         {
+            observableSelectedItems.CollectionChanged -= SelectedItemsChanged;
+
             if (Handler is null)
-                observableSelectedItems.CollectionChanged -= SelectedItemsChanged;
+            {
+                dataController.Detach();
+            }
             else
+            {
                 observableSelectedItems.CollectionChanged += SelectedItemsChanged;
+                dataController.Attach();
+            }
+        }
+        else if (Handler is null)
+        {
+            dataController.Detach();
+        }
+        else
+        {
+            dataController.Attach();
         }
     }
 
-    // TODO: Remove default value and make default value as null in the next major version.
     private BindingBase childrenBinding = new Binding("Children");
     public BindingBase ChildrenBinding
     {
@@ -66,10 +74,7 @@ public partial class TreeView : ContentView
         set
         {
             childrenBinding = value;
-            foreach (TreeViewNodeHolderView view in GetChildViews())
-            {
-                view.ChildrenBinding = value;
-            }
+            dataController.SetChildrenBinding(value);
         }
     }
 
@@ -80,10 +85,8 @@ public partial class TreeView : ContentView
         set
         {
             isExpandedPropertyName = value;
-            foreach (TreeViewNodeHolderView view in GetChildViews())
-            {
-                view.ApplyIsExpandedPropertyBindings();
-            }
+            dataController.IsExpandedPropertyName = value;
+            dataController.Rebuild();
         }
     }
 
@@ -94,93 +97,8 @@ public partial class TreeView : ContentView
         set
         {
             isLeafPropertyName = value;
-            foreach (TreeViewNodeHolderView view in GetChildViews())
-            {
-                view.ApplyIsLeafPropertyBindings();
-            }
-        }
-    }
-
-    private void OnItemTemplateChanged(DataTemplate newTemplate)
-    {
-        if (isTemplateUpdating || newTemplate == null)
-            return;
-
-        try
-        {
-            isTemplateUpdating = true;
-
-            nodeTemplate = newTemplate;
-
-            rootView.ItemTemplate = new DataTemplate(() =>
-            {
-                var holder = new TreeViewNodeHolderView(nodeTemplate, this, ChildrenBinding)
-                {
-                    TreeView = this
-                };
-                return holder;
-            });
-        }
-        finally
-        {
-            isTemplateUpdating = false;
-        }
-    }
-
-    private void OnExpanderTemplateChanged()
-    {
-        OnItemTemplateChanged(ItemTemplate);
-    }
-
-    protected virtual void SelectedItemChanged()
-    {
-        if (SelectionMode == SelectionMode.None)
-            return;
-
-        foreach (TreeViewNodeHolderView childHolder in GetChildViews())
-        {
-            childHolder.OnSelectedItemChanged();
-        }
-    }
-
-    protected virtual void OnSelectedItemsChanged(IList oldValue, IList newValue)
-    {
-        if (oldValue is INotifyCollectionChanged observableOld)
-            observableOld.CollectionChanged -= SelectedItemsChanged;
-
-        if (newValue is INotifyCollectionChanged observableNew)
-            observableNew.CollectionChanged += SelectedItemsChanged;
-
-        foreach (TreeViewNodeHolderView childNode in registeredNodes)
-        {
-            if (newValue.Contains(childNode.BindingContext) && !childNode.IsSelected)
-            {
-                childNode.IsSelected = true;
-            }
-        }
-    }
-
-    private void SelectedItemsChanged(object sender, NotifyCollectionChangedEventArgs e)
-    {
-        if (e.Action == NotifyCollectionChangedAction.Add)
-        {
-            foreach (var item in e.NewItems)
-            {
-                var node = registeredNodes
-                    .FirstOrDefault(x => x.BindingContext == item);
-                if (node != null && !node.IsSelected)
-                    node.IsSelected = true;
-            }
-        }
-        else if (e.Action == NotifyCollectionChangedAction.Remove)
-        {
-            foreach (var item in e.OldItems)
-            {
-                var node = registeredNodes
-                    .FirstOrDefault(x => x.BindingContext == item);
-                if (node != null && node.IsSelected)
-                    node.IsSelected = false;
-            }
+            dataController.IsLeafPropertyName = value;
+            dataController.Rebuild();
         }
     }
 
@@ -191,7 +109,8 @@ public partial class TreeView : ContentView
     }
 
     public static readonly BindableProperty SelectionModeProperty = BindableProperty.Create(
-        nameof(SelectionMode), typeof(SelectionMode), typeof(TreeView), SelectionMode.None);
+        nameof(SelectionMode), typeof(SelectionMode), typeof(TreeView), SelectionMode.None,
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as TreeView)?.OnSelectionModeChanged());
 
     public bool UseAnimation
     {
@@ -216,7 +135,7 @@ public partial class TreeView : ContentView
         {
             if (bindable is TreeView tree)
             {
-                tree.rootView.ItemsSource = (IEnumerable)newValue;
+                tree.dataController.SetItemsSource((IEnumerable)newValue);
             }
         });
 
@@ -228,7 +147,7 @@ public partial class TreeView : ContentView
 
     public static readonly BindableProperty SelectedItemProperty = BindableProperty.Create(
         nameof(SelectedItem), typeof(object), typeof(TreeView), default, BindingMode.TwoWay,
-        propertyChanged: (bo, ov, nv) => (bo as TreeView)?.SelectedItemChanged());
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as TreeView)?.OnSelectedItemChanged(oldValue, newValue));
 
     public IList SelectedItems
     {
@@ -238,8 +157,8 @@ public partial class TreeView : ContentView
 
     public static readonly BindableProperty SelectedItemsProperty = BindableProperty.Create(
         nameof(SelectedItems), typeof(IList), typeof(TreeView),
-        defaultValueCreator: bindable => new ObservableCollection<object>(),
-        propertyChanged: (bo, ov, nv) => (bo as TreeView)?.OnSelectedItemsChanged((IList)ov, (IList)nv));
+        defaultValueCreator: _ => new ObservableCollection<object>(),
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as TreeView)?.OnSelectedItemsChanged((IList)oldValue, (IList)newValue));
 
     public DataTemplate ExpanderTemplate
     {
@@ -249,7 +168,7 @@ public partial class TreeView : ContentView
 
     public static readonly BindableProperty ExpanderTemplateProperty = BindableProperty.Create(
         nameof(ExpanderTemplate), typeof(DataTemplate), typeof(TreeView), null,
-        propertyChanged: (b, o, v) => (b as TreeView)?.OnExpanderTemplateChanged());
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as TreeView)?.ApplyItemTemplate());
 
     public DataTemplate ItemTemplate
     {
@@ -260,7 +179,7 @@ public partial class TreeView : ContentView
     public static readonly BindableProperty ItemTemplateProperty = BindableProperty.Create(
         nameof(ItemTemplate), typeof(DataTemplate), typeof(TreeView),
         defaultValue: DefaultItemTemplate,
-        propertyChanged: (b, o, n) => (b as TreeView)?.OnItemTemplateChanged((DataTemplate)n));
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as TreeView)?.ApplyItemTemplate());
 
     public ICommand LoadChildrenCommand
     {
@@ -269,7 +188,14 @@ public partial class TreeView : ContentView
     }
 
     public static readonly BindableProperty LoadChildrenCommandProperty = BindableProperty.Create(
-        nameof(LoadChildrenCommand), typeof(ICommand), typeof(TreeView), null);
+        nameof(LoadChildrenCommand), typeof(ICommand), typeof(TreeView), null,
+        propertyChanged: (bindable, oldValue, newValue) =>
+        {
+            if (bindable is TreeView tree)
+            {
+                tree.dataController.LoadChildrenCommand = (ICommand)newValue;
+            }
+        });
 
     public Color SelectionColor
     {
@@ -297,5 +223,179 @@ public partial class TreeView : ContentView
     }
 
     public static readonly BindableProperty ItemSpacingProperty = BindableProperty.Create(
-        nameof(ItemSpacing), typeof(double), typeof(TreeView), 0.0);
+        nameof(ItemSpacing), typeof(double), typeof(TreeView), 0.0,
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as TreeView)?.ApplyItemsLayout());
+
+    internal void OnNodeClicked(TreeViewNode node)
+    {
+        if (node is null || SelectionMode == SelectionMode.None)
+        {
+            return;
+        }
+
+        if (SelectionMode == SelectionMode.Single)
+        {
+            SelectedItem = Equals(SelectedItem, node.Item) ? null : node.Item;
+            return;
+        }
+
+        if (SelectionMode == SelectionMode.Multiple)
+        {
+            if (SelectedItems.Contains(node.Item))
+            {
+                SelectedItems.Remove(node.Item);
+            }
+            else
+            {
+                SelectedItems.Add(node.Item);
+            }
+        }
+    }
+
+    internal void SetNodeSelection(TreeViewNode node, bool isSelected)
+    {
+        if (node is null || SelectionMode == SelectionMode.None)
+        {
+            return;
+        }
+
+        if (SelectionMode == SelectionMode.Single)
+        {
+            SelectedItem = isSelected ? node.Item : null;
+            return;
+        }
+
+        if (isSelected)
+        {
+            if (!SelectedItems.Contains(node.Item))
+            {
+                SelectedItems.Add(node.Item);
+            }
+        }
+        else if (SelectedItems.Contains(node.Item))
+        {
+            SelectedItems.Remove(node.Item);
+        }
+    }
+
+    internal IEnumerable<TreeViewNode> GetLoadedDescendants(TreeViewNode node) => dataController.EnumerateLoadedDescendants(node);
+
+    private void ApplyItemTemplate()
+    {
+        if (rootView is null)
+        {
+            return;
+        }
+
+        rootView.ItemTemplate = new DataTemplate(() => new TreeViewNodeView(this));
+    }
+
+    private void ApplyItemsLayout()
+    {
+        if (rootView?.ItemsLayout is LinearItemsLayout layout)
+        {
+            layout.ItemSpacing = ItemSpacing;
+        }
+    }
+
+    private bool IsItemSelected(object item)
+    {
+        return SelectionMode switch
+        {
+            SelectionMode.Single => Equals(SelectedItem, item),
+            SelectionMode.Multiple => SelectedItems?.Contains(item) == true,
+            _ => false,
+        };
+    }
+
+    private void OnSelectionModeChanged()
+    {
+        dataController.RefreshAllSelection();
+    }
+
+    private void OnSelectedItemChanged(object oldValue, object newValue)
+    {
+        if (SelectionMode != SelectionMode.Single)
+        {
+            return;
+        }
+
+        if (oldValue is not null)
+        {
+            dataController.RefreshSelectionForItem(oldValue);
+        }
+
+        if (newValue is not null)
+        {
+            dataController.RefreshSelectionForItem(newValue);
+        }
+    }
+
+    private void OnSelectedItemsChanged(IList oldValue, IList newValue)
+    {
+        if (oldValue is INotifyCollectionChanged observableOld)
+        {
+            observableOld.CollectionChanged -= SelectedItemsChanged;
+        }
+
+        if (newValue is INotifyCollectionChanged observableNew)
+        {
+            observableNew.CollectionChanged += SelectedItemsChanged;
+        }
+
+        dataController.RefreshAllSelection();
+    }
+
+    private void SelectedItemsChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (isSelectedItemsUpdating || SelectionMode != SelectionMode.Multiple)
+        {
+            return;
+        }
+
+        isSelectedItemsUpdating = true;
+        try
+        {
+            if (e.Action == NotifyCollectionChangedAction.Add && e.NewItems is not null)
+            {
+                foreach (var item in e.NewItems)
+                {
+                    dataController.RefreshSelectionForItem(item);
+                }
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Remove && e.OldItems is not null)
+            {
+                foreach (var item in e.OldItems)
+                {
+                    dataController.RefreshSelectionForItem(item);
+                }
+            }
+            else if (e.Action == NotifyCollectionChangedAction.Replace)
+            {
+                if (e.OldItems is not null)
+                {
+                    foreach (var item in e.OldItems)
+                    {
+                        dataController.RefreshSelectionForItem(item);
+                    }
+                }
+
+                if (e.NewItems is not null)
+                {
+                    foreach (var item in e.NewItems)
+                    {
+                        dataController.RefreshSelectionForItem(item);
+                    }
+                }
+            }
+            else
+            {
+                dataController.RefreshAllSelection();
+            }
+        }
+        finally
+        {
+            isSelectedItemsUpdating = false;
+        }
+    }
 }

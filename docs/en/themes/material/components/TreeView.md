@@ -17,6 +17,8 @@ Then you can use it like this:
 
 TreeView doesn't have any visual appearance without data. You should bind some data to see the control.
 
+> For large data sets, let `TreeView` own the scrolling surface. Do not wrap it in a `ScrollView`; place it in a constrained layout such as a `Grid` row with `*` height so the internal virtualized list can recycle rows correctly.
+
 ### Data Binding
 
 Prepare a ViewModel that contain a list of a node object. Node means a single item in the tree. It can be a folder or a file. It can be a person or a company. It can be a country or a city. It can be anything. It's up to you. So there is no type limitation or no interface implementation required for your object. It can be a simple object that should have a `Children` property that includes list of same type of the object when hierarchical data is required.
@@ -293,25 +295,35 @@ A file system is a good example of lazy-loading. When you open a folder, you don
 ```csharp
 public class TreeViewFileSystemViewModel : UraniumBindableObject
 {
+    private static readonly EnumerationOptions EnumerationOptions = new()
+    {
+        IgnoreInaccessible = true,
+        RecurseSubdirectories = false,
+        ReturnSpecialDirectories = false,
+        AttributesToSkip = 0,
+    };
+
     public ObservableCollection<NodeItem> Nodes { get; private set; }
 
-    public ICommand LoadChildrenCommand { get; set; }
+    public ICommand LoadChildrenCommand { get; }
 
     public TreeViewFileSystemViewModel()
     {
         InitializeNodes();
-        LoadChildrenCommand = new Command<NodeItem>((node) =>
-        {
-            foreach (var item in GetContent(node.Path))
-            {
-                node.Children.Add(item);
-            }
+        LoadChildrenCommand = new Command<NodeItem>(async node => await LoadChildrenAsync(node));
+    }
 
-            if (node.Children.Count == 0)
-            {
-                node.IsLeaf = true;
-            }
-        });
+    async Task LoadChildrenAsync(NodeItem node)
+    {
+        if (node is null || !node.IsDirectory || node.HasLoadedChildren)
+        {
+            return;
+        }
+
+        node.HasLoadedChildren = true;
+        var children = await Task.Run(() => GetContent(node.Path).ToArray());
+        node.Children = new ObservableCollection<NodeItem>(children);
+        node.IsLeaf = node.Children.Count == 0;
     }
 
     void InitializeNodes()
@@ -329,41 +341,41 @@ public class TreeViewFileSystemViewModel : UraniumBindableObject
 
     IEnumerable<NodeItem> GetContent(string dir)
     {
-        var directories = Directory.GetDirectories(dir);
-        foreach (string d in directories)
+        foreach (var directory in Directory.EnumerateDirectories(dir, "*", EnumerationOptions))
         {
             yield return new NodeItem
             {
-                Name = d.Split(Path.DirectorySeparatorChar).LastOrDefault(),
-                Path = d,
+                Name = Path.GetFileName(directory),
+                Path = directory,
                 IsDirectory = true,
                 IsLeaf = false,
             };
         }
-        var files = Directory.GetFiles(dir);
 
-        foreach (string f in files)
+        foreach (var file in Directory.EnumerateFiles(dir, "*", EnumerationOptions))
         {
-            var node = new NodeItem
+            yield return new NodeItem
             {
-                Name = f.Split(Path.DirectorySeparatorChar).LastOrDefault(),
-                Path = f,
+                Name = Path.GetFileName(file),
+                Path = file,
                 IsDirectory = false,
                 IsLeaf = true,
             };
-            yield return node;
         }
     }
 
     public class NodeItem : UraniumBindableObject
     {
         private bool isLeaf;
+        private bool hasLoadedChildren;
+        private IList<NodeItem> children = new ObservableCollection<NodeItem>();
 
         public string Name { get; set; }
         public string Path { get; set; }
         public bool IsDirectory { get; set; }
         public bool IsLeaf { get => isLeaf; set => SetProperty(ref isLeaf, value); }
-        public ObservableCollection<NodeItem> Children { get; } = new();
+        public bool HasLoadedChildren { get => hasLoadedChildren; set => SetProperty(ref hasLoadedChildren, value); }
+        public IList<NodeItem> Children { get => children; set => SetProperty(ref children, value); }
     }
 }
 ```
@@ -371,6 +383,7 @@ public class TreeViewFileSystemViewModel : UraniumBindableObject
 ```xml
 <material:TreeView 
         ItemsSource="{Binding Nodes}" 
+        IsLeafPropertyName="IsLeaf"
         LoadChildrenCommand="{Binding LoadChildrenCommand}">
     <material:TreeView.ItemTemplate>
         <DataTemplate>

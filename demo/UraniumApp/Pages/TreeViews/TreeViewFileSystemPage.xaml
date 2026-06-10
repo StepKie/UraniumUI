@@ -12,45 +12,44 @@
         <vm:TreeViewFileSystemViewModel />
     </ContentPage.BindingContext>
     <ContentPage.Content>
-        <ScrollView>
+        <Grid RowDefinitions="*,Auto">
+            <material:TreeView
+                x:Name="treeView"
+                Grid.Row="0"
+                IsExpandedPropertyName="IsExtended"
+                IsLeafPropertyName="IsLeaf"
+                ItemsSource="{Binding Nodes}"
+                LoadChildrenCommand="{Binding LoadChildrenCommand}"
+                SelectionMode="Multiple">
+                <material:TreeView.ItemTemplate>
+                    <DataTemplate>
+                        <HorizontalStackLayout Spacing="5" VerticalOptions="Center">
+                            <Image>
+                                <Image.Triggers>
+                                    <DataTrigger
+                                        Binding="{Binding IsDirectory}"
+                                        TargetType="Image"
+                                        Value="True">
+                                        <Setter Property="Source" Value="{FontImageSource FontFamily=MaterialSharp, Glyph={x:Static m:MaterialSharp.Folder}, Color={AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}}" />
+                                    </DataTrigger>
+                                    <DataTrigger
+                                        Binding="{Binding IsDirectory}"
+                                        TargetType="Image"
+                                        Value="False">
+                                        <Setter Property="Source" Value="{FontImageSource FontFamily=MaterialSharp, Glyph={x:Static m:MaterialSharp.File_open}, Color={AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}}" />
+                                    </DataTrigger>
+                                </Image.Triggers>
+                            </Image>
+                            <Label
+                                FontAttributes="Bold"
+                                Text="{Binding Name}"
+                                VerticalOptions="Center" />
+                        </HorizontalStackLayout>
+                    </DataTemplate>
+                </material:TreeView.ItemTemplate>
+            </material:TreeView>
 
-            <VerticalStackLayout>
-
-                <material:TreeView
-                    x:Name="treeView"
-                    IsExpandedPropertyName="IsExtended"
-                    IsLeafPropertyName="IsLeaf"
-                    ItemsSource="{Binding Nodes}"
-                    LoadChildrenCommand="{Binding LoadChildrenCommand}"
-                    SelectionMode="Multiple">
-                    <material:TreeView.ItemTemplate>
-                        <DataTemplate>
-                            <HorizontalStackLayout Spacing="5" VerticalOptions="Center">
-                                <Image>
-                                    <Image.Triggers>
-                                        <DataTrigger
-                                            Binding="{Binding IsDirectory}"
-                                            TargetType="Image"
-                                            Value="True">
-                                            <Setter Property="Source" Value="{FontImageSource FontFamily=MaterialSharp, Glyph={x:Static m:MaterialSharp.Folder}, Color={AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}}" />
-                                        </DataTrigger>
-                                        <DataTrigger
-                                            Binding="{Binding IsDirectory}"
-                                            TargetType="Image"
-                                            Value="False">
-                                            <Setter Property="Source" Value="{FontImageSource FontFamily=MaterialSharp, Glyph={x:Static m:MaterialSharp.File_open}, Color={AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}}" />
-                                        </DataTrigger>
-                                    </Image.Triggers>
-                                </Image>
-                                <Label
-                                    FontAttributes="Bold"
-                                    Text="{Binding Name}"
-                                    VerticalOptions="Center" />
-                            </HorizontalStackLayout>
-                        </DataTemplate>
-                    </material:TreeView.ItemTemplate>
-                </material:TreeView>
-
+            <VerticalStackLayout Grid.Row="1">
                 <BoxView StyleClass="Divider" />
 
                 <Border
@@ -61,6 +60,6 @@
                     <root:PropertyEditorView Value="{Binding ., Source={x:Reference treeView}}" />
                 </Border>
             </VerticalStackLayout>
-        </ScrollView>
+        </Grid>
     </ContentPage.Content>
 </ContentPage>
