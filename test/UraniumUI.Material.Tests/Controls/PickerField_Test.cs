@@ -288,6 +288,17 @@ public class PickerField_Test
         clearIcon.ShouldNotBeNull();
     }
 
+    [Fact]
+    public void ClearIcon_HasAsymmetricLeftHitPadding()
+    {
+        var control = AnimationReadyHandler.Prepare(new PickerField { AllowClear = true });
+        var clearIcon = control.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
+
+        clearIcon.ShouldNotBeNull();
+        clearIcon.Margin.ShouldBe(default(Thickness));
+        clearIcon.Padding.ShouldBe(new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0));
+    }
+
     public class TestViewModel : UraniumBindableObject
     {
         private object selectedItem;
