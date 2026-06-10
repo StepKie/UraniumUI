@@ -1,4 +1,4 @@
-﻿using Android.Content;
+using Android.Content;
 using Android.Graphics;
 using Android.OS;
 using Android.Util;
@@ -43,6 +43,11 @@ public class BlurView : FrameLayout
         blurController.UpdateBlurViewSize();
     }
 
+    public void UpdateBlurViewSize()
+    {
+        blurController.UpdateBlurViewSize();
+    }
+
     protected override void OnAttachedToWindow()
     {
         base.OnAttachedToWindow();
@@ -56,6 +61,18 @@ public class BlurView : FrameLayout
         }
     }
 
+    protected override void OnDetachedFromWindow()
+    {
+        blurController.SetBlurAutoUpdate(false);
+        base.OnDetachedFromWindow();
+    }
+
+    public void Release()
+    {
+        blurController.Destroy();
+        blurController = new NoOpController();
+    }
+
     /**
    * @param rootView  root to start blur from.
    *                  Can be Activity's root content layout (android.R.id.content)
@@ -65,23 +82,27 @@ public class BlurView : FrameLayout
    */
     public IBlurViewFacade SetupWith(ViewGroup rootView, IBlurAlgorithm algorithm)
     {
-        this.blurController.Destroy();
-        var blurController = new PreDrawBlurController(this, rootView, overlayColor, algorithm);
-        this.blurController = blurController;
+        if (rootView == null || algorithm == null)
+        {
+            Release();
+            return blurController;
+        }
 
-        return blurController;
+        this.blurController.Destroy();
+        var controller = new PreDrawBlurController(this, rootView, overlayColor, algorithm);
+        this.blurController = controller;
+
+        return controller;
     }
 
     /**
     * @param rootView root to start blur from.
     *                 Can be Activity's root content layout (android.R.id.content)
     *                 or (preferably) some of your layouts. The lower amount of Views are in the root, the better for performance.
-    *                 <p>
     *                 BlurAlgorithm is automatically picked based on the API version.
     *                 It uses RenderEffectBlur on API 31+, and RenderScriptBlur on older versions.
     * @return {@link BlurView} to setup needed params.
     */
-
     [RequiresApi(Value = (int)BuildVersionCodes.JellyBeanMr1)]
     public IBlurViewFacade SetupWith(ViewGroup rootView)
     {

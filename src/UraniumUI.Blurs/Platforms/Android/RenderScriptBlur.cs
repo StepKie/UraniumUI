@@ -1,4 +1,4 @@
-﻿using Android.OS;
+using Android.OS;
 using Android.Renderscripts;
 using Android.Graphics;
 using Android.Content;
@@ -17,6 +17,7 @@ public class RenderScriptBlur : IBlurAlgorithm
 
     private int lastBitmapWidth = -1;
     private int lastBitmapHeight = -1;
+    private bool destroyed;
 
     public RenderScriptBlur(Context context)
     {
@@ -34,10 +35,14 @@ public class RenderScriptBlur : IBlurAlgorithm
      * @param blurRadius blur radius (1..25)
      * @return blurred bitmap
      */
-
     [RequiresApi(Value = (int)BuildVersionCodes.JellyBeanMr1)]
     public Bitmap Blur(Bitmap bitmap, float blurRadius)
     {
+        if (destroyed)
+        {
+            return bitmap;
+        }
+
         //Allocation will use the same backing array of pixels as bitmap if created with USAGE_SHARED flag
         Allocation inAllocation = Allocation.CreateFromBitmap(renderScript, bitmap);
 
@@ -64,11 +69,18 @@ public class RenderScriptBlur : IBlurAlgorithm
 
     public void Destroy()
     {
+        if (destroyed)
+        {
+            return;
+        }
+
+        destroyed = true;
         blurScript.Destroy();
         renderScript.Destroy();
         if (outAllocation != null)
         {
             outAllocation.Destroy();
+            outAllocation = null;
         }
     }
 

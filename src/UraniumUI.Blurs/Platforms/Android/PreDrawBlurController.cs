@@ -24,6 +24,7 @@ public class PreDrawBlurController : IBlurController
 
     private bool blurEnabled = true;
     private bool initialized;
+    private bool destroyed;
 
     private Drawable frameClearDrawable;
 
@@ -52,17 +53,33 @@ public class PreDrawBlurController : IBlurController
 
     void Init(int measuredWidth, int measuredHeight)
     {
+        if (destroyed)
+        {
+            return;
+        }
+
         SetBlurAutoUpdate(true);
         SizeScaler sizeScaler = new SizeScaler(blurAlgorithm.ScaleFactor);
         if (sizeScaler.IsZeroSized(measuredWidth, measuredHeight))
         {
             // Will be initialized later when the View reports a size change
+            initialized = false;
             blurView.SetWillNotDraw(true);
+            ReleaseBitmap();
             return;
         }
 
         blurView.SetWillNotDraw(false);
         SizeScaler.Size bitmapSize = sizeScaler.scale(measuredWidth, measuredHeight);
+
+        if (initialized && internalBitmap != null && !internalBitmap.IsRecycled &&
+            internalBitmap.Width == bitmapSize.width && internalBitmap.Height == bitmapSize.height)
+        {
+            UpdateBlur();
+            return;
+        }
+
+        ReleaseBitmap();
         internalBitmap = Bitmap.CreateBitmap(bitmapSize.width, bitmapSize.height, blurAlgorithm.SupportedBitmapConfig);
         internalCanvas = new BlurViewCanvas(internalBitmap);
         initialized = true;
@@ -75,7 +92,7 @@ public class PreDrawBlurController : IBlurController
 
     void UpdateBlur()
     {
-        if (!blurEnabled || !initialized)
+        if (destroyed || !blurEnabled || !initialized || internalBitmap == null || internalCanvas == null || rootView == null)
         {
             return;
         }
@@ -120,7 +137,7 @@ public class PreDrawBlurController : IBlurController
 
     public bool Draw(Canvas canvas)
     {
-        if (!blurEnabled || !initialized)
+        if (destroyed || !blurEnabled || !initialized || internalBitmap == null)
         {
             return true;
         }
@@ -147,7 +164,20 @@ public class PreDrawBlurController : IBlurController
 
     private void BlurAndSave()
     {
-        internalBitmap = blurAlgorithm.Blur(internalBitmap, blurRadius);
+        var blurredBitmap = blurAlgorithm.Blur(internalBitmap, blurRadius);
+        if (blurredBitmap != internalBitmap)
+        {
+            var previousBitmap = internalBitmap;
+            internalBitmap = blurredBitmap;
+
+            if (previousBitmap != null && !previousBitmap.IsRecycled)
+            {
+                previousBitmap.Recycle();
+            }
+
+            previousBitmap?.Dispose();
+        }
+
         if (!blurAlgorithm.CanModifyBitmap)
         {
             internalCanvas.SetBitmap(internalBitmap);
@@ -164,9 +194,19 @@ public class PreDrawBlurController : IBlurController
 
     public void Destroy()
     {
+        if (destroyed)
+        {
+            return;
+        }
+
+        destroyed = true;
         SetBlurAutoUpdate(false);
         blurAlgorithm.Destroy();
+        ReleaseBitmap();
+        frameClearDrawable = null;
+        rootView = null;
         initialized = false;
+        blurView.SetWillNotDraw(true);
     }
 
     public IBlurViewFacade SetBlurRadius(float radius)
@@ -191,10 +231,16 @@ public class PreDrawBlurController : IBlurController
 
     public IBlurViewFacade SetBlurAutoUpdate(bool enabled)
     {
-        rootView.ViewTreeObserver.RemoveOnPreDrawListener(drawListener);
+        var viewTreeObserver = rootView?.ViewTreeObserver;
+        if (viewTreeObserver == null || !viewTreeObserver.IsAlive)
+        {
+            return this;
+        }
+
+        viewTreeObserver.RemoveOnPreDrawListener(drawListener);
         if (enabled)
         {
-            rootView.ViewTreeObserver.AddOnPreDrawListener(drawListener);
+            viewTreeObserver.AddOnPreDrawListener(drawListener);
         }
         return this;
     }
@@ -207,5 +253,19 @@ public class PreDrawBlurController : IBlurController
             blurView.Invalidate();
         }
         return this;
+    }
+
+    private void ReleaseBitmap()
+    {
+        internalCanvas?.Dispose();
+        internalCanvas = null;
+
+        if (internalBitmap != null && !internalBitmap.IsRecycled)
+        {
+            internalBitmap.Recycle();
+        }
+
+        internalBitmap?.Dispose();
+        internalBitmap = null;
     }
 }
