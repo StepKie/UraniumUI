@@ -358,12 +358,94 @@ public class TreeView_Test
         var controller = CreateController();
         controller.SetItemsSource(new[] { root });
         var notificationCount = 0;
-        controller.VisibleNodes.CollectionChanged += (_, _) => notificationCount++;
+        NotifyCollectionChangedAction? action = null;
+        controller.VisibleNodes.CollectionChanged += (_, e) =>
+        {
+            notificationCount++;
+            action = e.Action;
+        };
 
         controller.VisibleNodes[0].IsExpanded = true;
 
         controller.VisibleNodes.Count.ShouldBe(10_001);
         notificationCount.ShouldBe(1);
+        action.ShouldBe(NotifyCollectionChangedAction.Add);
+    }
+
+    [Fact]
+    public void HierarchicalCheckState_ShouldApplyParentState_ToVisibleChildren()
+    {
+        var root = Node("A", Node("A.1"), Node("A.2"));
+        var control = AnimationReadyHandler.Prepare(new TreeView { ItemsSource = new[] { root } });
+        control.VisibleNodes[0].IsExpanded = true;
+
+        control.ApplyHierarchicalCheckState(control.VisibleNodes[0], TreeViewNodeCheckState.Checked);
+
+        control.VisibleNodes.Select(x => x.CheckState).ToArray().ShouldBe([
+            TreeViewNodeCheckState.Checked,
+            TreeViewNodeCheckState.Checked,
+            TreeViewNodeCheckState.Checked,
+        ]);
+    }
+
+    [Fact]
+    public void HierarchicalCheckState_ShouldMakeParentIndeterminate_WhenChildDiffers()
+    {
+        var root = Node("A", Node("A.1"), Node("A.2"));
+        var control = AnimationReadyHandler.Prepare(new TreeView { ItemsSource = new[] { root } });
+        control.VisibleNodes[0].IsExpanded = true;
+
+        control.ApplyHierarchicalCheckState(control.VisibleNodes[0], TreeViewNodeCheckState.Checked);
+        control.ApplyHierarchicalCheckState(control.VisibleNodes[1], TreeViewNodeCheckState.Unchecked);
+
+        control.VisibleNodes[0].CheckState.ShouldBe(TreeViewNodeCheckState.Indeterminate);
+        control.VisibleNodes[1].CheckState.ShouldBe(TreeViewNodeCheckState.Unchecked);
+        control.VisibleNodes[2].CheckState.ShouldBe(TreeViewNodeCheckState.Checked);
+    }
+
+    [Fact]
+    public void HierarchicalCheckState_ShouldBeInherited_ByChildrenExpandedLater()
+    {
+        var child = Node("A.1", Node("A.1.a"));
+        var root = Node("A", child);
+        var control = AnimationReadyHandler.Prepare(new TreeView { ItemsSource = new[] { root } });
+        control.VisibleNodes[0].IsExpanded = true;
+
+        control.ApplyHierarchicalCheckState(control.VisibleNodes[1], TreeViewNodeCheckState.Checked);
+        control.VisibleNodes[1].IsExpanded = true;
+
+        control.VisibleNodes[2].CheckState.ShouldBe(TreeViewNodeCheckState.Checked);
+    }
+
+    [Fact]
+    public void HierarchicalSelectBehavior_ShouldReflectNodeState_OnAttachedCheckboxRows()
+    {
+        var root = Node("A", Node("A.1"), Node("A.2"));
+        var control = AnimationReadyHandler.Prepare(new TreeView
+        {
+            ItemsSource = new[] { root },
+            ItemTemplate = new DataTemplate(() =>
+            {
+                var checkBox = new UraniumUI.Material.Controls.CheckBox();
+                checkBox.Behaviors.Add(new TreeViewHierarchicalSelectBehavior());
+                return checkBox;
+            })
+        });
+        control.VisibleNodes[0].IsExpanded = true;
+        var parentCheckBox = CreateCheckBoxRow(control, control.VisibleNodes[0]);
+        var firstChildCheckBox = CreateCheckBoxRow(control, control.VisibleNodes[1]);
+        var secondChildCheckBox = CreateCheckBoxRow(control, control.VisibleNodes[2]);
+
+        control.ApplyHierarchicalCheckState(control.VisibleNodes[0], TreeViewNodeCheckState.Checked);
+
+        firstChildCheckBox.IsChecked.ShouldBeTrue();
+        secondChildCheckBox.IsChecked.ShouldBeTrue();
+
+        control.ApplyHierarchicalCheckState(control.VisibleNodes[1], TreeViewNodeCheckState.Unchecked);
+
+        parentCheckBox.IsChecked.ShouldBeTrue();
+        parentCheckBox.IconGeometry.ToString().ShouldBe(InputKit.Shared.Controls.PredefinedShapes.Line.ToString());
+        secondChildCheckBox.IsChecked.ShouldBeTrue();
     }
 
     [Fact]
@@ -418,6 +500,18 @@ public class TreeView_Test
         }
 
         return controller;
+    }
+
+    private static UraniumUI.Material.Controls.CheckBox CreateCheckBoxRow(TreeView treeView, TreeViewNode node)
+    {
+        var row = new TreeViewNodeView(treeView)
+        {
+            BindingContext = node,
+        };
+        var rowButton = row.Content.ShouldBeOfType<UraniumUI.Views.StatefulContentView>();
+        var grid = rowButton.Content.ShouldBeOfType<Grid>();
+        var itemHost = grid.Children.OfType<TreeViewNodeItemContentView>().Single();
+        return itemHost.Content.ShouldBeOfType<UraniumUI.Material.Controls.CheckBox>();
     }
 
     private static TestNode Node(string name, params TestNode[] children)

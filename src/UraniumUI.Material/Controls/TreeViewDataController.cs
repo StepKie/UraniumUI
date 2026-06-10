@@ -28,6 +28,8 @@ internal sealed class TreeViewDataController : IDisposable
 
     public Func<object, bool> IsItemSelected { get; set; } = _ => false;
 
+    public Func<TreeViewNode, TreeViewNodeCheckState> GetCheckState { get; set; } = _ => TreeViewNodeCheckState.Unchecked;
+
     public void SetItemsSource(IEnumerable value)
     {
         if (ReferenceEquals(itemsSource, value))
@@ -188,6 +190,31 @@ internal sealed class TreeViewDataController : IDisposable
         }
     }
 
+    public void RefreshCheckStateForItem(object item)
+    {
+        foreach (var node in VisibleNodes)
+        {
+            if (Equals(node.Item, item))
+            {
+                node.CheckState = GetCheckState(node);
+            }
+        }
+    }
+
+    public void RefreshVisibleCheckStates(TreeViewNode node)
+    {
+        if (node is null)
+        {
+            return;
+        }
+
+        node.CheckState = GetCheckState(node);
+        foreach (var descendant in EnumerateLoadedDescendants(node))
+        {
+            descendant.CheckState = GetCheckState(descendant);
+        }
+    }
+
     public TreeViewNode FindVisibleNode(object item)
     {
         return VisibleNodes.FirstOrDefault(x => Equals(x.Item, item));
@@ -211,6 +238,8 @@ internal sealed class TreeViewDataController : IDisposable
             yield return VisibleNodes[i];
         }
     }
+
+    public IEnumerable EnumerateChildItems(object item) => Enumerate(ReadChildren(item));
 
     private void ExpandNode(TreeViewNode node)
     {

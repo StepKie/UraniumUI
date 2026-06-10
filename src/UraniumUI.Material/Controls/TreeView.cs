@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
+using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using UraniumUI.Resources;
 
@@ -17,13 +18,15 @@ public partial class TreeView : ContentView
 
     private readonly CollectionView rootView;
     private readonly TreeViewDataController dataController;
+    private readonly ConditionalWeakTable<object, CheckStateHolder> hierarchicalCheckStates = new();
     private bool isSelectedItemsUpdating;
 
     public TreeView()
     {
         dataController = new TreeViewDataController
         {
-            IsItemSelected = IsItemSelected
+            IsItemSelected = IsItemSelected,
+            GetCheckState = GetHierarchicalCheckState,
         };
 
         rootView = new CollectionView
@@ -35,6 +38,7 @@ public partial class TreeView : ContentView
 
         Content = rootView;
         ApplyItemTemplate();
+        rootView.HandlerChanged += (_, _) => UpdatePlatformAnimationState();
     }
 
     internal IReadOnlyList<TreeViewNode> VisibleNodes => dataController.VisibleNodes;
@@ -119,7 +123,8 @@ public partial class TreeView : ContentView
     }
 
     public static readonly BindableProperty UseAnimationProperty = BindableProperty.Create(
-        nameof(UseAnimation), typeof(bool), typeof(TreeView), true);
+        nameof(UseAnimation), typeof(bool), typeof(TreeView), true,
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as TreeView)?.UpdatePlatformAnimationState());
 
     public bool IsBusy { get; set; }
 
@@ -280,6 +285,19 @@ public partial class TreeView : ContentView
 
     internal IEnumerable<TreeViewNode> GetLoadedDescendants(TreeViewNode node) => dataController.EnumerateLoadedDescendants(node);
 
+    internal void ApplyHierarchicalCheckState(TreeViewNode node, TreeViewNodeCheckState state)
+    {
+        if (node is null)
+        {
+            return;
+        }
+
+        SetStoredCheckState(node.Item, state);
+        ClearDescendantCheckStates(node.Item);
+        dataController.RefreshVisibleCheckStates(node);
+        RefreshAncestorCheckStates(node.Parent);
+    }
+
     private void ApplyItemTemplate()
     {
         if (rootView is null)
@@ -306,6 +324,136 @@ public partial class TreeView : ContentView
             SelectionMode.Multiple => SelectedItems?.Contains(item) == true,
             _ => false,
         };
+    }
+
+    private TreeViewNodeCheckState GetHierarchicalCheckState(TreeViewNode node)
+    {
+        if (node is null)
+        {
+            return TreeViewNodeCheckState.Unchecked;
+        }
+
+        if (TryGetStoredCheckState(node.Item, out var state))
+        {
+            return state;
+        }
+
+        return GetInheritedCheckState(node.Parent);
+    }
+
+    private TreeViewNodeCheckState GetEffectiveCheckState(object item, TreeViewNode parent)
+    {
+        if (TryGetStoredCheckState(item, out var state))
+        {
+            return state;
+        }
+
+        return GetInheritedCheckState(parent);
+    }
+
+    private TreeViewNodeCheckState GetInheritedCheckState(TreeViewNode parent)
+    {
+        while (parent is not null)
+        {
+            if (TryGetStoredCheckState(parent.Item, out var state) && state != TreeViewNodeCheckState.Indeterminate)
+            {
+                return state;
+            }
+
+            parent = parent.Parent;
+        }
+
+        return TreeViewNodeCheckState.Unchecked;
+    }
+
+    private void RefreshAncestorCheckStates(TreeViewNode parent)
+    {
+        while (parent is not null)
+        {
+            SetStoredCheckState(parent.Item, GetStateFromDirectChildren(parent));
+            dataController.RefreshCheckStateForItem(parent.Item);
+            parent = parent.Parent;
+        }
+    }
+
+    private TreeViewNodeCheckState GetStateFromDirectChildren(TreeViewNode parent)
+    {
+        var hasChecked = false;
+        var hasUnchecked = false;
+
+        foreach (var childItem in dataController.EnumerateChildItems(parent.Item))
+        {
+            var childState = GetEffectiveCheckState(childItem, parent);
+            if (childState == TreeViewNodeCheckState.Indeterminate)
+            {
+                return TreeViewNodeCheckState.Indeterminate;
+            }
+
+            hasChecked |= childState == TreeViewNodeCheckState.Checked;
+            hasUnchecked |= childState == TreeViewNodeCheckState.Unchecked;
+
+            if (hasChecked && hasUnchecked)
+            {
+                return TreeViewNodeCheckState.Indeterminate;
+            }
+        }
+
+        if (hasChecked)
+        {
+            return TreeViewNodeCheckState.Checked;
+        }
+
+        if (hasUnchecked)
+        {
+            return TreeViewNodeCheckState.Unchecked;
+        }
+
+        return GetEffectiveCheckState(parent.Item, parent.Parent);
+    }
+
+    private void ClearDescendantCheckStates(object item)
+    {
+        foreach (var childItem in dataController.EnumerateChildItems(item))
+        {
+            RemoveStoredCheckState(childItem);
+            ClearDescendantCheckStates(childItem);
+        }
+    }
+
+    private bool TryGetStoredCheckState(object item, out TreeViewNodeCheckState state)
+    {
+        if (item is not null && hierarchicalCheckStates.TryGetValue(item, out var holder))
+        {
+            state = holder.State;
+            return true;
+        }
+
+        state = TreeViewNodeCheckState.Unchecked;
+        return false;
+    }
+
+    private void SetStoredCheckState(object item, TreeViewNodeCheckState state)
+    {
+        if (item is null)
+        {
+            return;
+        }
+
+        if (hierarchicalCheckStates.TryGetValue(item, out var holder))
+        {
+            holder.State = state;
+            return;
+        }
+
+        hierarchicalCheckStates.Add(item, new CheckStateHolder { State = state });
+    }
+
+    private void RemoveStoredCheckState(object item)
+    {
+        if (item is not null)
+        {
+            hierarchicalCheckStates.Remove(item);
+        }
     }
 
     private void OnSelectionModeChanged()
@@ -397,5 +545,12 @@ public partial class TreeView : ContentView
         {
             isSelectedItemsUpdating = false;
         }
+    }
+
+    partial void UpdatePlatformAnimationState();
+
+    private sealed class CheckStateHolder
+    {
+        public TreeViewNodeCheckState State { get; set; }
     }
 }

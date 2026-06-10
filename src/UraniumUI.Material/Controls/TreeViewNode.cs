@@ -9,6 +9,7 @@ public sealed class TreeViewNode : UraniumBindableObject, IDisposable
     private bool isSelected;
     private bool isLoading;
     private bool hasLoadedChildren;
+    private TreeViewNodeCheckState checkState;
     private bool isDisposed;
 
     internal TreeViewNode(TreeViewDataController owner, object item, TreeViewNode parent, int depth)
@@ -21,6 +22,7 @@ public sealed class TreeViewNode : UraniumBindableObject, IDisposable
         isExpanded = owner.ReadIsExpanded(item);
         isLeaf = owner.ReadIsLeaf(item);
         isSelected = owner.IsItemSelected(item);
+        checkState = owner.GetCheckState(this);
 
         if (item is INotifyPropertyChanged notifyPropertyChanged)
         {
@@ -64,6 +66,12 @@ public sealed class TreeViewNode : UraniumBindableObject, IDisposable
     {
         get => hasLoadedChildren;
         internal set => SetProperty(ref hasLoadedChildren, value);
+    }
+
+    public TreeViewNodeCheckState CheckState
+    {
+        get => checkState;
+        internal set => SetProperty(ref checkState, value);
     }
 
     internal bool SetExpandedFromController(bool value)

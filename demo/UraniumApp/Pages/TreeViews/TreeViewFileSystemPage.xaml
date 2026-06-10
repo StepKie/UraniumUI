@@ -20,7 +20,8 @@
                 IsLeafPropertyName="IsLeaf"
                 ItemsSource="{Binding Nodes}"
                 LoadChildrenCommand="{Binding LoadChildrenCommand}"
-                SelectionMode="Multiple">
+                SelectionMode="Multiple"
+                UseAnimation="False">
                 <material:TreeView.ItemTemplate>
                     <DataTemplate>
                         <HorizontalStackLayout Spacing="5" VerticalOptions="Center">

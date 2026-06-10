@@ -1,3 +1,4 @@
+using System.Collections;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
@@ -33,7 +34,7 @@ internal sealed class TreeViewVisibleNodeCollection : ObservableCollection<TreeV
             Items.Insert(index + i, nodes[i]);
         }
 
-        RaiseReset();
+        RaiseRangeChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Add, (IList)nodes, index));
     }
 
     public IReadOnlyList<TreeViewNode> RemoveRange(int index, int count)
@@ -52,8 +53,15 @@ internal sealed class TreeViewVisibleNodeCollection : ObservableCollection<TreeV
             Items.RemoveAt(index);
         }
 
-        RaiseReset();
+        RaiseRangeChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Remove, removed, index));
         return removed;
+    }
+
+    private void RaiseRangeChanged(NotifyCollectionChangedEventArgs args)
+    {
+        OnPropertyChanged(new PropertyChangedEventArgs(nameof(Count)));
+        OnPropertyChanged(new PropertyChangedEventArgs("Item[]"));
+        OnCollectionChanged(args);
     }
 
     private void RaiseReset()

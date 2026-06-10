@@ -270,7 +270,7 @@ You can use following binding properties in the `ExpanderTemplate`:
 ![Treeview Expander](../../../../images/treeview-expander-dark-android.gif)
 
 ### UseAnimation
-Determines whether to use animations when expanding and collapsing nodes. Default value is `true`. You may want to disable animations if you want to improve performance while working with huge amount of tree nodes.
+Determines whether to use animations when expanding and collapsing nodes. Default value is `true`. You may want to disable animations if you want to improve performance while working with huge amount of tree nodes. On Windows, setting this property to `false` also disables the native `CollectionView` item transition animations used by the virtualized TreeView surface.
 
 ```xml
 <material:TreeView ItemsSource="{Binding Nodes}" UseAnimation="False"/>
