@@ -15,7 +15,7 @@
             <CollectionView ItemsSource="{Binding ControlTypes}" SelectedItem="{Binding SelectedControlType}" SelectionMode="Single">
                 <CollectionView.ItemTemplate>
                     <DataTemplate x:DataType="sys:Type">
-                        <Label Padding="4" Text="{Binding Name}" />
+                        <Label Padding="4" Text="{Binding .}" />
                     </DataTemplate>
                 </CollectionView.ItemTemplate>
             </CollectionView>
