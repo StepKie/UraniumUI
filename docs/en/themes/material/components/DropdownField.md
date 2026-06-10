@@ -65,3 +65,24 @@ DropdownFields support validation rules. **SelectedItem**_(object)_ will be used
     </material:DropdownField.Validations>
 </material:DropdownField>
 ```
+
+## Close Method
+The `Close()` method allows you to programmatically close an open dropdown. This is useful when you need to close the dropdown during navigation or in response to other events.
+
+```csharp
+// Close the dropdown programmatically
+dropdownField.Close();
+```
+
+> [!NOTE]
+> When navigating between pages, MAUI does not automatically close native popups. You can call the `Close()` method in your navigation logic to ensure the dropdown is closed before navigating.
+
+**Example: Closing dropdown on navigation**
+
+```csharp
+protected override void OnDisappearing()
+{
+    base.OnDisappearing();
+    myDropdownField.Close();
+}
+```

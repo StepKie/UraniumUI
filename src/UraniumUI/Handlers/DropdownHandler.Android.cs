@@ -10,7 +10,9 @@ using UraniumUI.Platforms.Android;
 namespace UraniumUI.Handlers;
 public partial class DropdownHandler : ButtonHandler
 {
-    public DropdownHandler(IPropertyMapper mapper, CommandMapper commandMapper = null) : base(DropdownPropertyMapper, commandMapper)
+    private Android.Widget.PopupMenu currentPopupMenu;
+
+    public DropdownHandler(IPropertyMapper mapper, CommandMapper commandMapper = null) : base(DropdownPropertyMapper, DropdownCommandMapper)
     {
 
     }
@@ -28,7 +30,10 @@ public partial class DropdownHandler : ButtonHandler
     {
         var activity = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity;
 
+        PlatformClose();
+
         var popupMenu = new Android.Widget.PopupMenu(activity, PlatformView, GetGravityFlags(VirtualViewDropdown.HorizontalTextAlignment));
+        currentPopupMenu = popupMenu;
 
         if (VirtualViewDropdown.ItemsSource is not null)
         {
@@ -43,7 +48,17 @@ public partial class DropdownHandler : ButtonHandler
             }
         }
 
+        popupMenu.DismissEvent += OnPopupMenuDismissed;
         popupMenu.Show();
+    }
+
+    private void OnPopupMenuDismissed(object sender, EventArgs e)
+    {
+        if (sender is Android.Widget.PopupMenu menu)
+        {
+            menu.DismissEvent -= OnPopupMenuDismissed;
+        }
+        currentPopupMenu = null;
     }
 
     private GravityFlags GetGravityFlags(Microsoft.Maui.TextAlignment textAlignment)
@@ -66,8 +81,9 @@ public partial class DropdownHandler : ButtonHandler
 
     protected override void DisconnectHandler(MaterialButton platformView)
     {
-        base.DisconnectHandler(platformView);
+        PlatformClose();
         platformView.Click -= Button_Click;
+        base.DisconnectHandler(platformView);
     }
 
     public static void MapItemsSource(DropdownHandler handler, Dropdown dropdown)
@@ -138,6 +154,16 @@ public partial class DropdownHandler : ButtonHandler
     public static void MapItemDisplayBinding(DropdownHandler handler, Dropdown dropdown)
     {
         // Do nothing on Android.
+    }
+
+    partial void PlatformClose()
+    {
+        var menu = currentPopupMenu;
+        if (menu != null)
+        {
+            currentPopupMenu = null;
+            menu.Dismiss();
+        }
     }
 }
 #endif

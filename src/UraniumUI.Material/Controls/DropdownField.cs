@@ -110,6 +110,11 @@ public class DropdownField : InputField
         UpdateClearIconState();
     }
 
+    public void Close()
+    {
+        DropdownView?.Close();
+    }
+
     #region BindableProperties
 
     public BindingBase ItemDisplayBinding { get => DropdownView?.ItemDisplayBinding; set => DropdownView.ItemDisplayBinding = value; }
