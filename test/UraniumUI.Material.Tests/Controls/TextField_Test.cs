@@ -127,7 +127,7 @@ public class TextField_Test
 
         clearIcon.ShouldNotBeNull();
         clearIcon.Margin.ShouldBe(default(Thickness));
-        clearIcon.Padding.ShouldBe(new Thickness(5, 0, 0, 0));
+        clearIcon.Padding.ShouldBe(new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0));
     }
   
     [Fact]

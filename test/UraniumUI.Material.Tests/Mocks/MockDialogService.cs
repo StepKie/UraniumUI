@@ -4,6 +4,20 @@ using UraniumUI.Infrastructure;
 namespace UraniumUI.Material.Tests.Mocks;
 internal class MockDialogService : IDialogService
 {
+    public bool UseDatePromptResult { get; set; }
+
+    public DateTime? DatePromptResult { get; set; }
+
+    public int DatePromptCallCount { get; private set; }
+
+    public string DatePromptTitle { get; private set; }
+
+    public DateTime? DatePromptSelectedDate { get; private set; }
+
+    public DateTime? DatePromptMinimumDate { get; private set; }
+
+    public DateTime? DatePromptMaximumDate { get; private set; }
+
     public Task<bool> ConfirmAsync(string title, string message, string okText = "OK", string cancelText = "Cancel")
     {
         return Task.FromResult(default(bool));
@@ -49,7 +63,13 @@ internal class MockDialogService : IDialogService
         string clear = "Clear",
         string today = "Today")
     {
-        return Task.FromResult(selectedDate);
+        DatePromptCallCount++;
+        DatePromptTitle = title;
+        DatePromptSelectedDate = selectedDate;
+        DatePromptMinimumDate = minimumDate;
+        DatePromptMaximumDate = maximumDate;
+
+        return Task.FromResult(UseDatePromptResult ? DatePromptResult : selectedDate);
     }
 
     public Task DisplayViewAsync(string title, View content, string okText = "OK")

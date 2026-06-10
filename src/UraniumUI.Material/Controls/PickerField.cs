@@ -231,7 +231,7 @@ public class PickerField : InputField
             VerticalOptions = LayoutOptions.Center,
             HorizontalOptions = LayoutOptions.End,
             IsVisible = false,
-            Padding = 10,
+            Padding = new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0),
             TappedCommand = new Command(OnClearTapped),
             ControlTemplate = clearIconPathControlTemplate
         };

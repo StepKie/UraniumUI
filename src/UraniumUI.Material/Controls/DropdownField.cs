@@ -28,7 +28,7 @@ public class DropdownField : InputField
         VerticalOptions = LayoutOptions.Center,
         HorizontalOptions = LayoutOptions.End,
         IsVisible = false,
-        Padding = 10,
+        Padding = new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0),
         Content = new Path
         {
             Data = UraniumShapes.X,

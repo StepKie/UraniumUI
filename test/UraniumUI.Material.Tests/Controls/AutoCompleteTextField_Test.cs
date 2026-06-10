@@ -52,6 +52,19 @@ public class AutoCompleteTextField_Test
         viewModel.Text.ShouldBe(control.Text);
     }
 
+    [Fact]
+    public void ClearIcon_HasAsymmetricLeftHitPadding()
+    {
+        var control = AnimationReadyHandler.Prepare(new AutoCompleteTextField());
+
+        control.AllowClear = true;
+
+        var clearIcon = control.Attachments.OfType<ContentView>().Single();
+
+        clearIcon.Margin.ShouldBe(default(Thickness));
+        clearIcon.Padding.ShouldBe(new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0));
+    }
+
     internal class AutoCompleteTextFieldTestViewModel : UraniumBindableObject
     {
         private string text;

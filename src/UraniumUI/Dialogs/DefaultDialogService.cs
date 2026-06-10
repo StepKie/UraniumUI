@@ -46,12 +46,7 @@ public class DefaultDialogService : IDialogService
                         {
                             okText, new Command(async () =>
                             {
-                                tcs.SetResult(true);
-
-                                if (Page.Navigation.ModalStack.LastOrDefault() is DefaultDialogAnimatedContentPage _popupPage)
-                                {
-                                   await _popupPage.CloseAsync();
-                                }
+                                await ClosePopupAndSetResult(tcs, true);
                             })
                         }
                     })
@@ -154,15 +149,13 @@ public class DefaultDialogService : IDialogService
                         {
                             okText, new Command(async () =>
                             {
-                                tcs.SetResult(true);
-                                await ClosePopup();
+                                await ClosePopupAndSetResult(tcs, true);
                             })
                         },
                         {
                             cancelText, new Command(async() =>
                             {
-                                tcs.SetResult(false);
-                                await ClosePopup();
+                                await ClosePopupAndSetResult(tcs, false);
                             })
                         }
                     })
@@ -182,6 +175,18 @@ public class DefaultDialogService : IDialogService
             await popupPage.CloseAsync();
         }
     }
+
+private async Task ClosePopupAndSetResult<T>(TaskCompletionSource<T> tcs, T result)
+{
+    try
+    {
+        await ClosePopup();
+    }
+    finally
+    {
+        tcs.TrySetResult(result);
+    }
+}
 
     public virtual Task<IEnumerable<T>> DisplayCheckBoxPromptAsync<T>(
         string message,
@@ -232,15 +237,19 @@ public class DefaultDialogService : IDialogService
             {
                 accept, new Command(async() =>
                 {
-                    tcs.TrySetResult(checkBoxGroup.Children.Where(x => x is CheckBox checkbox && checkbox.IsChecked).Select(s => (T)(s as CheckBox).CommandParameter));
-                    await ClosePopup();
+var selected = checkBoxGroup.Children
+    .OfType<CheckBox>()
+    .Where(cb => cb.IsChecked)
+    .Select(cb => (T)cb.CommandParameter)
+    .ToList();
+
+await ClosePopupAndSetResult(tcs, selected);
                 })
             },
             {
                 cancel, new Command(async() =>
                 {
-                    tcs.TrySetResult(null);
-                    await ClosePopup();
+                    await ClosePopupAndSetResult<IEnumerable<T>>(tcs, null);
                 })
             }
         }
@@ -305,15 +314,13 @@ public class DefaultDialogService : IDialogService
             {
                 accept, new Command(async () =>
                 {
-                    tcs.TrySetResult((T)rbGroup.SelectedItem);
-                    await ClosePopup();
+                    await ClosePopupAndSetResult(tcs, (T)rbGroup.SelectedItem);
                 })
             },
             {
                 cancel, new Command(async () =>
                 {
-                    tcs.TrySetResult(default);
-                    await ClosePopup();
+                    await ClosePopupAndSetResult(tcs, default);
                 })
             }
         }), row: 3);
@@ -387,15 +394,13 @@ public class DefaultDialogService : IDialogService
                         {
                             accept, new Command(async() =>
                             {
-                                tcs.TrySetResult(entry.Text);
-                                await ClosePopup();
+                                await ClosePopupAndSetResult(tcs, entry.Text);
                             })
                         },
                         {
                             cancel, new Command(async() =>
                             {
-                                tcs.TrySetResult(initialValue);
-                                await ClosePopup();
+                                await ClosePopupAndSetResult(tcs, initialValue);
                             })
                         }
                     })
@@ -425,13 +430,12 @@ public class DefaultDialogService : IDialogService
         var calendarView = CreateDatePromptCalendar(normalizedSelectedDate, minimumDate, maximumDate);
         var footerButtons = CreateDatePromptFooterButtons(
             calendarView,
-            tcs,
             originalSelectedDate,
             accept,
             cancel,
             clear,
             today,
-            ClosePopup);
+            result => ClosePopupAndSetResult(tcs, result));
 
         var popupPage = new DefaultDialogAnimatedContentPage
         {
@@ -489,16 +493,14 @@ public class DefaultDialogService : IDialogService
                                 formView.Submit();
                                 if (formView.IsValidated)
                                 {
-                                    await ClosePopup();
-                                    tcs.SetResult(viewModel);
+await ClosePopupAndSetResult(tcs, (TViewModel)formView.Source);
                                 }
                             })
                         },
                         {
                             cancel, new Command(async() =>
                             {
-                                await ClosePopup();
-                                tcs.SetResult(null);
+                                await ClosePopupAndSetResult<TViewModel>(tcs, null);
                             })
                         }
                     })
@@ -540,28 +542,25 @@ public class DefaultDialogService : IDialogService
 
     private static Dictionary<string, Command> CreateDatePromptFooterButtons(
         CalendarView calendarView,
-        TaskCompletionSource<DateTime?> tcs,
         DateTime? selectedDate,
         string accept,
         string cancel,
         string clear,
         string today,
-        Func<Task> close)
+        Func<DateTime?, Task> closeWithResult)
     {
         var footerButtons = new Dictionary<string, Command>
         {
             {
                 accept, new Command(async () =>
                 {
-                    tcs.TrySetResult(calendarView.SelectedDate);
-                    await close();
+                    await closeWithResult(calendarView.SelectedDate);
                 })
             },
             {
                 cancel, new Command(async () =>
                 {
-                    tcs.TrySetResult(selectedDate);
-                    await close();
+                    await closeWithResult(selectedDate);
                 })
             }
         };
@@ -575,8 +574,7 @@ public class DefaultDialogService : IDialogService
         {
             footerButtons.Add(clear, new Command(async () =>
             {
-                tcs.TrySetResult(null);
-                await close();
+                await closeWithResult(null);
             }));
         }
 
