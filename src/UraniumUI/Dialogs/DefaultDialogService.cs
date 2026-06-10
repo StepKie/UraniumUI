@@ -176,11 +176,17 @@ public class DefaultDialogService : IDialogService
         }
     }
 
-    private async Task ClosePopupAndSetResult<T>(TaskCompletionSource<T> tcs, T result)
+private async Task ClosePopupAndSetResult<T>(TaskCompletionSource<T> tcs, T result)
+{
+    try
     {
         await ClosePopup();
+    }
+    finally
+    {
         tcs.TrySetResult(result);
     }
+}
 
     public virtual Task<IEnumerable<T>> DisplayCheckBoxPromptAsync<T>(
         string message,
@@ -231,7 +237,13 @@ public class DefaultDialogService : IDialogService
             {
                 accept, new Command(async() =>
                 {
-                    await ClosePopupAndSetResult(tcs, checkBoxGroup.Children.Where(x => x is CheckBox checkbox && checkbox.IsChecked).Select(s => (T)(s as CheckBox).CommandParameter));
+var selected = checkBoxGroup.Children
+    .OfType<CheckBox>()
+    .Where(cb => cb.IsChecked)
+    .Select(cb => (T)cb.CommandParameter)
+    .ToList();
+
+await ClosePopupAndSetResult(tcs, selected);
                 })
             },
             {
@@ -481,7 +493,7 @@ public class DefaultDialogService : IDialogService
                                 formView.Submit();
                                 if (formView.IsValidated)
                                 {
-                                    await ClosePopupAndSetResult(tcs, viewModel);
+await ClosePopupAndSetResult(tcs, (TViewModel)formView.Source);
                                 }
                             })
                         },
