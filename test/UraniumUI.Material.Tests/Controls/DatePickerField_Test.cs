@@ -3,6 +3,7 @@ using UraniumUI.Material.Controls;
 using UraniumUI.Material.Tests.Mocks;
 using UraniumUI.Dialogs;
 using UraniumUI.Tests.Core;
+using UraniumUI.Views;
 using System.Globalization;
 
 namespace UraniumUI.Material.Tests.Controls;
@@ -176,6 +177,16 @@ public class DatePickerField_Test
         control.GestureRecognizers.ShouldBeEmpty();
         dateLabel.InputTransparent.ShouldBeFalse();
         dateLabel.GestureRecognizers.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void ClearIcon_HasAsymmetricLeftHitPadding()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField { AllowClear = true });
+        var clearIcon = control.Attachments.OfType<StatefulContentView>().Single();
+
+        clearIcon.Margin.ShouldBe(default(Thickness));
+        clearIcon.Padding.ShouldBe(new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0));
     }
 
     [Fact]
