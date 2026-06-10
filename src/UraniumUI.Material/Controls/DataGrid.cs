@@ -77,6 +77,12 @@ public partial class DataGrid : Border
 
     private void ItemsSource_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
+        if (!ShowHeaders)
+        {
+            Render();
+            return;
+        }
+
         if (ItemsSource.Count == 0)
         {
             ResetGrid();
@@ -152,10 +158,10 @@ public partial class DataGrid : Border
             return; // Not ready yet.
         }
 
-        var tableHeaderRows = 1;
+        var tableHeaderRows = ShowHeaders ? 1 : 0;
         ResetGrid();
         ConfigureGridColumnDefinitions(Columns.Count);
-        ConfigureGridRowDefinitions(ItemsSource.Count + tableHeaderRows);
+        ConfigureGridRowDefinitions(ItemsSource.Count + tableHeaderRows, ItemsSource.Count == 0);
 
         AddTableHeaders();
 
@@ -187,11 +193,10 @@ public partial class DataGrid : Border
 
     protected virtual void AddTableHeaders(int row = 0)
     {
-        if (Columns is null)
+        if (!ShowHeaders || Columns is null)
         {
             return;
         }
-
         for (int i = 0; i < Columns.Count; i++)
         {
             var column = Columns[i];
@@ -202,6 +207,8 @@ public partial class DataGrid : Border
                 ?? LabelFactory(binding)
                 ?? CreateLabel(binding);
 
+            ApplyStyleClassToView(titleView, column.HeaderStyleClass);
+
             if (titleView is Label label)
             {
                 label.FontAttributes = FontAttributes.Bold;
@@ -210,17 +217,37 @@ public partial class DataGrid : Border
             // TODO: Use an attribute to localize it.
             titleView.BindingContext = column;
             titleView.SetBinding(View.IsVisibleProperty, nameof(DataGridColumn.IsVisible));
-			titleView.SetBinding(View.WidthProperty, nameof(DataGridColumn.Width));
-
             _rootGrid.Add(titleView, column: i, row);
         }
+    }
+
+    private static void ApplyStyleClassToView(View view, string styleClasses)
+    {
+        if (view is null || string.IsNullOrWhiteSpace(styleClasses))
+        {
+            return;
+        }
+
+        var styleClassList = view.StyleClass?.ToList() ?? new List<string>();
+        foreach (var styleClass in styleClasses.Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            if (!styleClassList.Contains(styleClass))
+            {
+                styleClassList.Add(styleClass);
+            }
+        }
+
+        view.StyleClass = styleClassList;
     }
 
     protected virtual void AddRow(int row, object item, bool isLastRow)
     {
         var actualRow = row * 2;
 
-        AddSeparator(actualRow - 1);
+        if (row > 0)
+        {
+            AddSeparator(actualRow - 1);
+        }
 
         for (int columnNumber = 0; columnNumber < Columns.Count; columnNumber++)
         {
@@ -236,7 +263,7 @@ public partial class DataGrid : Border
                 Content = created,
                 BindingContext = item,
             };
-
+            ApplyStyleClassToView(cell, column.CellStyleClass);
             if (column.CellItemTemplate is null && CellItemTemplate is not null && column.ValueBinding is not null)
             {
                 // TODO: This is a workaround, we need to find a better way to do this.
@@ -295,19 +322,31 @@ public partial class DataGrid : Border
         _rootGrid.ColumnDefinitions.Clear();
         for (int i = 0; i < Columns.Count; i++)
         {
-         	var columnDefinition = new ColumnDefinition();
-        	// Set the binding
-        	columnDefinition.SetBinding(
-        		ColumnDefinition.WidthProperty,
-        		new Binding("Width", source: Columns[i])); // Replace `viewModel` with your binding source
+            var columnDefinition = new ColumnDefinition();
+            // Set the binding
+            columnDefinition.SetBinding(
+                ColumnDefinition.WidthProperty,
+                new Binding("Width", source: Columns[i])); // Replace `viewModel` with your binding source
         	_rootGrid.ColumnDefinitions.Add(columnDefinition);
         }
     }
 
-    private void ConfigureGridRowDefinitions(int rows)
+    private void ConfigureGridRowDefinitions(int rows, bool isEmpty)
     {
         _rootGrid.RowDefinitions.Clear();
-        var actualRows = (rows * 2) - 1;
+        var actualRows = Math.Max(0, (rows * 2) - 1);
+
+        if (isEmpty)
+        {
+            if (ShowHeaders)
+            {
+                _rootGrid.AddRowDefinition(new RowDefinition(GridLength.Auto));
+                _rootGrid.AddRowDefinition(new RowDefinition(GridLength.Auto));
+            }
+
+            _rootGrid.AddRowDefinition(new RowDefinition(GridLength.Star));
+            return;
+        }
 
         for (int i = 0; i < actualRows; i++)
         {
@@ -361,8 +400,16 @@ public partial class DataGrid : Border
         EmptyView ??= (View)EmptyViewTemplate?.CreateContent() ?? new BoxView { HorizontalOptions = LayoutOptions.Fill, Margin = 40 };
         if (!_rootGrid.Contains(EmptyView))
         {
-            AddSeparator(1);
-            _rootGrid.Add(EmptyView, column: 0, row: 2);
+            if (ShowHeaders)
+            {
+                AddSeparator(1);
+                _rootGrid.Add(EmptyView, column: 0, row: 2);
+            }
+            else
+            {
+                _rootGrid.Add(EmptyView, column: 0, row: 0);
+            }
+
             Grid.SetColumnSpan(EmptyView, Columns.Count);
         }
     }
@@ -379,8 +426,7 @@ public partial class DataGrid : Border
     {
         if (_rootGrid.Children.Any())
         {
-            RemoveRow(0);
-            AddTableHeaders();
+            Render();
         }
     }
 

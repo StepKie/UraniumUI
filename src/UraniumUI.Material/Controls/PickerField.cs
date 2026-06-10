@@ -122,22 +122,25 @@ public class PickerField : InputField
         CheckAndShowValidations();
 
 #if WINDOWS
-        if (ItemDisplayBinding != null)
-        {
-            Binding itemDisplayBinding = (Binding)ItemDisplayBinding;
-            string nameOfDisplayProperty = itemDisplayBinding.Path;
-            labelSelectedItem.SetBinding(Label.TextProperty, new Binding(nameof(SelectedItem) + '.' + nameOfDisplayProperty, source: this));
-        }
-        else
-        {
-            labelSelectedItem.Text = SelectedItem?.ToString();
-        }
+        UpdateSelectedItemLabel();
 #endif
 
         UpdateState();
 
         SelectedValueChangedCommand?.Execute(SelectedItem);
         SelectedValueChanged?.Invoke(this, SelectedItem);
+    }
+
+    protected virtual void OnItemDisplayBindingChanged()
+    {
+        if (Content is PickerView pickerView)
+        {
+            pickerView.ItemDisplayBinding = ItemDisplayBinding;
+        }
+
+#if WINDOWS
+        UpdateSelectedItemLabel();
+#endif
     }
 
     protected virtual void OnAllowClearChanged()
@@ -156,8 +159,34 @@ public class PickerField : InputField
 #endif
     }
 
+#if WINDOWS
+    private void UpdateSelectedItemLabel()
+    {
+        var selectedLabel = labelSelectedItem;
+
+        if (selectedLabel == null)
+        {
+            return;
+        }
+
+        if (ItemDisplayBinding is Binding itemDisplayBinding)
+        {
+            selectedLabel.SetBinding(Label.TextProperty, new Binding($"{nameof(SelectedItem)}.{itemDisplayBinding.Path}", source: this));
+            return;
+        }
+
+        selectedLabel.RemoveBinding(Label.TextProperty);
+        selectedLabel.Text = SelectedItem?.ToString();
+    }
+#endif
+
     protected virtual void UpdateClearIconState()
     {
+        if (endIconsContainer is null)
+        {
+            return;
+        }
+
         var existing = endIconsContainer.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
 
         if (AllowClear)
@@ -172,6 +201,12 @@ public class PickerField : InputField
         {
             endIconsContainer?.Remove(existing);
         }
+    }
+
+    protected override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+        UpdateClearIconState();
     }
 
     public override void ResetValidation()
@@ -196,7 +231,7 @@ public class PickerField : InputField
             VerticalOptions = LayoutOptions.Center,
             HorizontalOptions = LayoutOptions.End,
             IsVisible = false,
-            Padding = 10,
+            Padding = new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0),
             TappedCommand = new Command(OnClearTapped),
             ControlTemplate = clearIconPathControlTemplate
         };
@@ -231,7 +266,11 @@ public class PickerField : InputField
        nameof(ItemsSource), typeof(IList), typeof(PickerField),
        defaultValue: Picker.ItemsSourceProperty.DefaultValue);
 
-    public BindingBase ItemDisplayBinding { get => PickerView.ItemDisplayBinding; set => PickerView.ItemDisplayBinding = value; }
+    public BindingBase ItemDisplayBinding { get => (BindingBase)GetValue(ItemDisplayBindingProperty); set => SetValue(ItemDisplayBindingProperty, value); }
+
+    public static readonly BindableProperty ItemDisplayBindingProperty = BindableProperty.Create(
+        nameof(ItemDisplayBinding), typeof(BindingBase), typeof(PickerField),
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as PickerField).OnItemDisplayBindingChanged());
 
     public Color TextColor { get => (Color)GetValue(TextColorProperty); set => SetValue(TextColorProperty, value); }
 
