@@ -14,15 +14,20 @@ public partial class DropdownHandler
             [nameof(Dropdown.PlaceholderColor)] = MapPlaceholderColor,
             [nameof(Dropdown.HorizontalTextAlignment)] = MapHorizontalTextAlignment,
             [nameof(Dropdown.TextColor)] = MapTextColor,
-            [nameof(Dropdown.ItemDisplayBinding)] = MapItemDisplayBinding,
+            [nameof(Dropdown.ItemDisplayBinding)] = MapItemDisplayBinding
+        };
+
+    public static CommandMapper<Dropdown, DropdownHandler> DropdownCommandMapper =>
+        new CommandMapper<Dropdown, DropdownHandler>(ButtonHandler.CommandMapper)
+        {
             [nameof(Dropdown.Close)] = MapClose
         };
 
-    public DropdownHandler() : base(DropdownPropertyMapper)
+    public DropdownHandler() : base(DropdownPropertyMapper, DropdownCommandMapper)
     {
     }
 
-    public static void MapClose(DropdownHandler handler, Dropdown dropdown)
+    public static void MapClose(DropdownHandler handler, Dropdown dropdown, object args)
     {
         handler.PlatformClose();
     }
@@ -36,7 +41,7 @@ public partial class DropdownHandler
 #if (NET9_0 || NET10_0) && !ANDROID && !IOS && !MACCATALYST && !WINDOWS
 public partial class DropdownHandler : ViewHandler<Dropdown, object>
 {
-	public DropdownHandler(IPropertyMapper mapper, CommandMapper commandMapper = null) : base(DropdownPropertyMapper, commandMapper)
+	public DropdownHandler(IPropertyMapper mapper, CommandMapper commandMapper = null) : base(DropdownPropertyMapper, DropdownCommandMapper)
     {
 
 	}

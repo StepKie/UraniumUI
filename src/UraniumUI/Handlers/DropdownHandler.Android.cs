@@ -12,7 +12,7 @@ public partial class DropdownHandler : ButtonHandler
 {
     private Android.Widget.PopupMenu currentPopupMenu;
 
-    public DropdownHandler(IPropertyMapper mapper, CommandMapper commandMapper = null) : base(DropdownPropertyMapper, commandMapper)
+    public DropdownHandler(IPropertyMapper mapper, CommandMapper commandMapper = null) : base(DropdownPropertyMapper, DropdownCommandMapper)
     {
 
     }

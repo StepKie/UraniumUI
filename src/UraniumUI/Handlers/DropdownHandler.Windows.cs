@@ -10,7 +10,7 @@ using UraniumUI.Extensions;
 namespace UraniumUI.Handlers;
 public partial class DropdownHandler : ButtonHandler
 {
-    public DropdownHandler(IPropertyMapper mapper, CommandMapper commandMapper = null) : base(DropdownPropertyMapper, commandMapper)
+    public DropdownHandler(IPropertyMapper mapper, CommandMapper commandMapper = null) : base(DropdownPropertyMapper, DropdownCommandMapper)
     {
 
     }
