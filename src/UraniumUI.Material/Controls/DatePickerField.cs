@@ -32,7 +32,6 @@ public class DatePickerField : InputField
         VerticalTextAlignment = TextAlignment.Center,
         HorizontalOptions = LayoutOptions.Fill,
         LineBreakMode = LineBreakMode.TailTruncation,
-        MinimumHeightRequest = 40,
         Margin = new Thickness(10, 0),
         InputTransparent = false,
     };
