@@ -1,4 +1,5 @@
 ﻿
+using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Maui.Views;
 using InputKit.Shared.Controls;
@@ -46,7 +47,6 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         {
             WidthRequest = calculatedSize.Width,
             HeightRequest = calculatedSize.Height,
-            Color = Colors.Transparent,
             BackgroundColor = Colors.Transparent,
             Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
@@ -92,7 +92,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         rootContainer.Add(GetDivider());
         rootContainer.Add(footer);
 
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return tcs.Task;
     }
@@ -143,7 +143,6 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         {
             WidthRequest = calculatedSize.Width,
             HeightRequest = calculatedSize.Height,
-            Color = Colors.Transparent,
             BackgroundColor = Colors.Transparent,
             Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
@@ -158,7 +157,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         var cancelAction = new DisposableAction(async () => await popup.CloseAsync());
         tokenSource.Token.Register(cancelAction.Dispose);
 
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return Task.FromResult<IDisposable>(cancelAction);
     }
@@ -190,7 +189,6 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         {
             WidthRequest = calculatedSize.Width,
             HeightRequest = calculatedSize.Height,
-            Color = Colors.Transparent,
             BackgroundColor = Colors.Transparent,
             Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
@@ -253,7 +251,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         rootContainer.Add(footer);
 #endif
 
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return tcs.Task;
     }
@@ -285,7 +283,6 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         {
             WidthRequest = calculatedSize.Width,
             HeightRequest = calculatedSize.Height,
-            Color = Colors.Transparent,
             BackgroundColor = Colors.Transparent,
             Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
@@ -345,7 +342,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         rootContainer.Add(GetDivider());
         rootContainer.Add(footer);
 #endif
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return tcs.Task;
     }
@@ -372,7 +369,6 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         {
             WidthRequest = Page.Width,
             HeightRequest = Page.Height,
-            Color = Colors.Transparent,
             BackgroundColor = Colors.Transparent,
             CanBeDismissedByTappingOutsideOfPopup = false,
             Content = new ContentView
@@ -450,7 +446,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         rootContainer.Add(GetDivider());
         rootContainer.Add(footer);
 
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return tcs.Task;
     }
@@ -488,7 +484,6 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         {
             WidthRequest = Page.Width,
             HeightRequest = Page.Height,
-            Color = Colors.Transparent,
             BackgroundColor = Colors.Transparent,
             CanBeDismissedByTappingOutsideOfPopup = false,
             Content = new ContentView
@@ -521,7 +516,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         rootContainer.Add(GetDivider());
         rootContainer.Add(footer);
 
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return tcs.Task;
     }
@@ -548,7 +543,6 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         {
             WidthRequest = calculatedSize.Width,
             HeightRequest = calculatedSize.Height,
-            Color = Colors.Transparent,
             BackgroundColor = Colors.Transparent,
             Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
@@ -583,7 +577,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         rootContainer.Add(GetDivider());
         rootContainer.Add(footer);
 
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return tcs.Task;
     }
@@ -619,7 +613,6 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         {
             WidthRequest = calculatedSize.Width,
             HeightRequest = calculatedSize.Height,
-            Color = Colors.Transparent,
             BackgroundColor = Colors.Transparent,
             Padding = 0,
             CanBeDismissedByTappingOutsideOfPopup = false,
@@ -659,7 +652,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         rootContainer.Add(GetDivider());
         rootContainer.Add(footer);
 
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return tcs.Task;
     }
