@@ -13,6 +13,8 @@ public class BlurEffect : RoutingEffect
 
     public float AccentOpacity { get => accentOpacity; set { accentOpacity = value; UpdateEffectCommand?.Execute(this); } }
 
+    internal float EffectiveAccentOpacity => Math.Clamp(AccentOpacity, 0f, 1f);
+
     internal ICommand UpdateEffectCommand { get; set; }
 
     public BlurEffect()
