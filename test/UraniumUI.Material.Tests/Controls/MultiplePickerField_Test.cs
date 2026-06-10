@@ -1,5 +1,6 @@
 ﻿using Shouldly;
 using System.Collections.ObjectModel;
+using System.Linq;
 using UraniumUI.Dialogs;
 using UraniumUI.Material.Controls;
 using UraniumUI.Material.Tests.Mocks;
@@ -59,9 +60,30 @@ public class MultiplePickerField_Test
         control.RefreshChipLayoutCallCount.ShouldBe(2);
     }
 
+    [Fact]
+    public void IsChipRemoveVisible_ShouldUpdateGeneratedChipVisibility()
+    {
+        var control = AnimationReadyHandler.Prepare(new TestMultiplePickerField());
+        control.SelectedItems = new ObservableCollection<object> { "Option 1" };
+
+        var chip = control.GetSingleChip();
+        chip.IsDestroyVisible.ShouldBeTrue();
+
+        control.IsChipRemoveVisible = false;
+        chip.IsDestroyVisible.ShouldBeFalse();
+
+        control.IsChipRemoveVisible = true;
+        chip.IsDestroyVisible.ShouldBeTrue();
+    }
+
     private sealed class TestMultiplePickerField : MultiplePickerField
     {
         public int RefreshChipLayoutCallCount { get; private set; }
+
+        public Chip GetSingleChip()
+        {
+            return chipsHolderLayout.Children.OfType<Chip>().Single();
+        }
 
         protected override void RefreshChipLayout()
         {

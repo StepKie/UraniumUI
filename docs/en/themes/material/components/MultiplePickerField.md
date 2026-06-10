@@ -48,3 +48,11 @@ The color that is used to fill border and icon of control when it's focused. You
     Title="Pick some options"
     AccentColor="DeepSkyBlue"/>
 ```
+## Hide Chip Remove Icon
+You can hide the remove icon shown on selected chips by setting `IsChipRemoveVisible` to `False`. This keeps the field editable through the picker dialog while removing the inline chip delete action.
+
+```xml
+<material:MultiplePickerField
+    Title="Pick some options"
+    IsChipRemoveVisible="False" />
+```
