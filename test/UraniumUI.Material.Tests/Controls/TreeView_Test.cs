@@ -537,6 +537,33 @@ public class TreeView_Test
     }
 
     [Fact]
+    public void HierarchicalSelectBehavior_ShouldSuppressProgrammaticChildCheckChanged()
+    {
+        var root = Node("A", Node("A.1"), Node("A.2"));
+        var handledChanges = 0;
+        var control = AnimationReadyHandler.Prepare(new TreeView
+        {
+            ItemsSource = new[] { root },
+            ItemTemplate = new DataTemplate(() =>
+            {
+                var checkBox = new UraniumUI.Material.Controls.CheckBox();
+                checkBox.Behaviors.Add(new CountingHierarchicalSelectBehavior(() => handledChanges++));
+                return checkBox;
+            })
+        });
+        control.VisibleNodes[0].IsExpanded = true;
+        var parentCheckBox = CreateCheckBoxRow(control, control.VisibleNodes[0]);
+        var firstChildCheckBox = CreateCheckBoxRow(control, control.VisibleNodes[1]);
+        var secondChildCheckBox = CreateCheckBoxRow(control, control.VisibleNodes[2]);
+
+        parentCheckBox.IsChecked = true;
+
+        handledChanges.ShouldBe(1);
+        firstChildCheckBox.IsChecked.ShouldBeTrue();
+        secondChildCheckBox.IsChecked.ShouldBeTrue();
+    }
+
+    [Fact]
     public void TreeView_ShouldExposeFlatVisibleNodes_WhenExpanded()
     {
         var root = Node("A", Node("A.1"));
@@ -686,5 +713,21 @@ public class TreeView_Test
         public bool CanExecute(object parameter) => true;
 
         public void Execute(object parameter) => execute((T)parameter);
+    }
+
+    private sealed class CountingHierarchicalSelectBehavior : TreeViewHierarchicalSelectBehavior
+    {
+        private readonly Action handled;
+
+        public CountingHierarchicalSelectBehavior(Action handled)
+        {
+            this.handled = handled;
+        }
+
+        protected override void ApplyHierarchicalSelection(UraniumUI.Material.Controls.CheckBox checkBox)
+        {
+            handled();
+            base.ApplyHierarchicalSelection(checkBox);
+        }
     }
 }

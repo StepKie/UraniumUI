@@ -7,6 +7,7 @@ public class TreeViewHierarchicalSelectBehavior : Behavior<CheckBox>
 {
     private CheckBox checkBox;
     private TreeViewNode node;
+    private int suppressCheckChanged;
 
     protected override void OnAttachedTo(CheckBox bindable)
     {
@@ -15,7 +16,7 @@ public class TreeViewHierarchicalSelectBehavior : Behavior<CheckBox>
         bindable.CheckChanged += CheckBox_CheckChanged;
         bindable.BindingContextChanged += CheckBox_BindingContextChanged;
         bindable.ParentChanged += CheckBox_ParentChanged;
-        AttachNode(bindable);
+        AttachNode(bindable, syncCheckBox: true);
     }
 
     protected override void OnDetachingFrom(CheckBox bindable)
@@ -30,16 +31,21 @@ public class TreeViewHierarchicalSelectBehavior : Behavior<CheckBox>
 
     private void CheckBox_BindingContextChanged(object sender, EventArgs e)
     {
-        AttachNode((CheckBox)sender);
+        AttachNode((CheckBox)sender, syncCheckBox: true);
     }
 
     private void CheckBox_ParentChanged(object sender, EventArgs e)
     {
-        AttachNode((CheckBox)sender);
+        AttachNode((CheckBox)sender, syncCheckBox: true);
     }
 
     private void CheckBox_CheckChanged(object sender, EventArgs e)
     {
+        if (suppressCheckChanged > 0)
+        {
+            return;
+        }
+
         var checkBox = sender as CheckBox;
         var row = FindRow(checkBox);
         if (row is null)
@@ -47,23 +53,9 @@ public class TreeViewHierarchicalSelectBehavior : Behavior<CheckBox>
             throw new InvalidOperationException("CheckBox isn't in a TreeView ItemTemplate");
         }
 
-        AttachNode(checkBox);
-
-        if (row.TreeView.IsBusy)
-        {
-            return;
-        }
-
-        row.TreeView.IsBusy = true;
-        try
-        {
-            ApplyHierarchicalSelection(checkBox);
-            CheckStateItself(row);
-        }
-        finally
-        {
-            row.TreeView.IsBusy = false;
-        }
+        AttachNode(checkBox, syncCheckBox: false);
+        ApplyHierarchicalSelection(checkBox);
+        CheckStateItself(row);
     }
 
     protected virtual void ApplyHierarchicalSelection(CheckBox checkBox)
@@ -81,12 +73,12 @@ public class TreeViewHierarchicalSelectBehavior : Behavior<CheckBox>
         }
     }
 
-    private void AttachNode(CheckBox checkBox)
+    private void AttachNode(CheckBox checkBox, bool syncCheckBox)
     {
         var row = FindRow(checkBox);
         if (row?.Node is null || ReferenceEquals(node, row.Node))
         {
-            if (node is not null)
+            if (syncCheckBox && node is not null)
             {
                 ApplyCheckState(checkBox, node.CheckState);
             }
@@ -97,7 +89,10 @@ public class TreeViewHierarchicalSelectBehavior : Behavior<CheckBox>
         DetachNode();
         node = row.Node;
         node.PropertyChanged += Node_PropertyChanged;
-        ApplyCheckState(checkBox, node.CheckState);
+        if (syncCheckBox)
+        {
+            ApplyCheckState(checkBox, node.CheckState);
+        }
     }
 
     private void DetachNode()
@@ -117,26 +112,29 @@ public class TreeViewHierarchicalSelectBehavior : Behavior<CheckBox>
         }
     }
 
-    private static void ApplyCheckState(CheckBox checkBox, TreeViewNodeCheckState state)
+    private void ApplyCheckState(CheckBox checkBox, TreeViewNodeCheckState state)
     {
-        var row = FindRow(checkBox);
-        if (row is null)
+        if (checkBox is null)
         {
             return;
         }
 
-        var wasBusy = row.TreeView.IsBusy;
-        row.TreeView.IsBusy = true;
+        suppressCheckChanged++;
         try
         {
-            checkBox.IsChecked = state != TreeViewNodeCheckState.Unchecked;
             checkBox.IconGeometry = state == TreeViewNodeCheckState.Indeterminate
                 ? InputKit.Shared.Controls.PredefinedShapes.Line
                 : InputKit.Shared.Controls.PredefinedShapes.Check;
+
+            var isChecked = state != TreeViewNodeCheckState.Unchecked;
+            if (checkBox.IsChecked != isChecked)
+            {
+                checkBox.IsChecked = isChecked;
+            }
         }
         finally
         {
-            row.TreeView.IsBusy = wasBusy;
+            suppressCheckChanged--;
         }
     }
 
