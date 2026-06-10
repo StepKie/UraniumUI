@@ -92,6 +92,82 @@ public class DataGrid_Test
         rootGrid.Children.OfType<ContentView>().Select(Grid.GetRow).Distinct().Single().ShouldBe(0);
     }
 
+    [Fact]
+    public void StyleClasses_ShouldBeApplied_ToHeaderAndCellViews()
+    {
+        var titleView = new Label
+        {
+            StyleClass = new[] { "ExistingHeader" },
+        };
+
+        var control = AnimationReadyHandler.Prepare(new DataGrid
+        {
+            Columns =
+            [
+                new DataGridColumn
+                {
+                    Title = "Id",
+                    TitleView = titleView,
+                    HeaderStyleClass = "CustomHeader, ImportantHeader",
+                    CellStyleClass = "CustomCell, ImportantCell",
+                    ValueBinding = new Binding(nameof(DataGridRow.Id)),
+                },
+            ],
+            ItemsSource = new List<DataGridRow>
+            {
+                new() { Id = 1, Name = "One" },
+            },
+        });
+
+        var rootGrid = control.Content.ShouldBeOfType<Grid>();
+        var cell = rootGrid.Children.OfType<ContentView>().Single();
+
+        titleView.StyleClass.ShouldContain("ExistingHeader");
+        titleView.StyleClass.ShouldContain("CustomHeader");
+        titleView.StyleClass.ShouldContain("ImportantHeader");
+        cell.StyleClass.ShouldContain("CustomCell");
+        cell.StyleClass.ShouldContain("ImportantCell");
+    }
+
+    [Fact]
+    public void EmptyView_WithHeaders_ShouldUseStarRow()
+    {
+        var control = AnimationReadyHandler.Prepare(new DataGrid
+        {
+            Columns =
+            [
+                new DataGridColumn { Title = "Id", ValueBinding = new Binding(nameof(DataGridRow.Id)) },
+            ],
+            ItemsSource = new List<DataGridRow>(),
+        });
+
+        var rootGrid = control.Content.ShouldBeOfType<Grid>();
+        rootGrid.RowDefinitions.Count.ShouldBe(3);
+        rootGrid.RowDefinitions[0].Height.IsAuto.ShouldBeTrue();
+        rootGrid.RowDefinitions[1].Height.IsAuto.ShouldBeTrue();
+        rootGrid.RowDefinitions[2].Height.IsStar.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SingleItem_WithoutHeaders_ShouldNotUseEmptyViewStarRow()
+    {
+        var control = AnimationReadyHandler.Prepare(new DataGrid
+        {
+            ShowHeaders = false,
+            Columns =
+            [
+                new DataGridColumn { Title = "Id", ValueBinding = new Binding(nameof(DataGridRow.Id)) },
+            ],
+            ItemsSource = new List<DataGridRow>
+            {
+                new() { Id = 1, Name = "One" },
+            },
+        });
+
+        var rootGrid = control.Content.ShouldBeOfType<Grid>();
+        rootGrid.RowDefinitions.Any(x => x.Height.IsStar).ShouldBeFalse();
+    }
+
     private sealed class DataGridRow
     {
         public int Id { get; init; }
