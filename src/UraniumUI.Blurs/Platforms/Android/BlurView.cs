@@ -1,4 +1,4 @@
-﻿using Android.Content;
+using Android.Content;
 using Android.Graphics;
 using Android.OS;
 using Android.Util;
@@ -103,7 +103,6 @@ public class BlurView : FrameLayout
     *                 It uses RenderEffectBlur on API 31+, and RenderScriptBlur on older versions.
     * @return {@link BlurView} to setup needed params.
     */
-
     [RequiresApi(Value = (int)BuildVersionCodes.JellyBeanMr1)]
     public IBlurViewFacade SetupWith(ViewGroup rootView)
     {

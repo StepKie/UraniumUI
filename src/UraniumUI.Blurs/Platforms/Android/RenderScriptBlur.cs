@@ -1,4 +1,4 @@
-﻿using Android.OS;
+using Android.OS;
 using Android.Renderscripts;
 using Android.Graphics;
 using Android.Content;
@@ -35,7 +35,6 @@ public class RenderScriptBlur : IBlurAlgorithm
      * @param blurRadius blur radius (1..25)
      * @return blurred bitmap
      */
-
     [RequiresApi(Value = (int)BuildVersionCodes.JellyBeanMr1)]
     public Bitmap Blur(Bitmap bitmap, float blurRadius)
     {
