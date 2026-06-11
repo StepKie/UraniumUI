@@ -61,6 +61,38 @@ builder.Services.Configure<AutoFormViewOptions>(options =>
 });
 ```
 
+### Async Form Validation
+
+`AutoFormView` inherits from `uranium:FormView`, so it supports async form validation through `Validator` or `ValidationHandler`. It automatically uses `Source` as the validation model and assigns validation paths for generated editors.
+
+```xml
+<uranium:AutoFormView Source="{Binding .}"
+                      Validator="{Binding .}" />
+```
+
+```csharp
+using UraniumUI.Validations;
+
+public class RegisterViewModel : IFormValidator
+{
+    public string UserName { get; set; }
+
+    public async Task<FormValidationResult> ValidateAsync(FormValidationContext context)
+    {
+        if (await userService.UsernameExistsAsync(UserName))
+        {
+            return FormValidationResult.PropertyError(
+                nameof(UserName),
+                "The username has already been taken.");
+        }
+
+        return FormValidationResult.Success();
+    }
+}
+```
+
+For busy UI, place your own indicator in the form and mark it with `uranium:FormView.IsBusyIndicator="True"`. The form shows it while async validation is running.
+
 ### EditorMapping
 You can configure the `AutoFormView` to use a specific editor for a type. For example, you can configure the `AutoFormViewOptions` to use a `Editor` for `string` properties.
 
