@@ -1,54 +1,145 @@
 ---
 _layout: landing
+title: UraniumUI
+description: The presentation framework for .NET MAUI.
 ---
 
-<div align="center">
-    <img align="center" src="https://github.com/enisn/UraniumUI/raw/develop/art/logo.svg" width="33%">
-    <h1 align="center">UraniumUI</h1>
-</div>
-Modern, extensible, customizable, and easy to use presentation framework for .NET MAUI.
-UraniumUI is a Free & Open-Source presentation framework for .NET MAUI. It combines native-MAUI-based controls, dynamic form generation, validation infrastructure, dialogs, theming, and extension points for building production-ready app interfaces without a proprietary black box.
+<section class="uui-landing">
+  <div class="uui-hero">
+    <div class="uui-hero-content">
+      <p class="uui-eyebrow">Free and open-source for production .NET MAUI apps</p>
+      <h1>The presentation framework for .NET MAUI.</h1>
+      <p class="uui-hero-copy">UraniumUI gives MAUI teams the presentation architecture they usually rebuild from scratch: dynamic forms, validation mapping, dialogs, theming, icon packs, state-aware controls, and native escape hatches.</p>
+      <div class="uui-actions">
+        <a class="uui-button uui-button-primary" href="en/Getting-Started.md">Get started</a>
+        <a class="uui-button uui-button-secondary" href="en/infrastructure/AutoFormView.md">See dynamic forms</a>
+        <a class="uui-button uui-button-ghost" href="https://uraniumui.gh.enisn-projects.io/api/toc.html">API docs</a>
+      </div>
+    </div>
+    <div class="uui-hero-panel" aria-label="UraniumUI presentation architecture">
+      <div class="uui-window-bar">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <div class="uui-architecture-stack">
+        <div class="uui-architecture-item">
+          <span>Foundation</span>
+          <strong>Native MAUI underneath</strong>
+          <p>Handlers, resources, bindings, platform APIs, and familiar XAML stay available.</p>
+        </div>
+        <div class="uui-architecture-item">
+          <span>Infrastructure</span>
+          <strong>Reusable screen patterns</strong>
+          <p>Forms, validation, dialogs, layouts, page attachments, and stateful content.</p>
+        </div>
+        <div class="uui-architecture-item">
+          <span>Presentation</span>
+          <strong>Themeable app UI</strong>
+          <p>Material resources, controls, icons, color tokens, and light/dark surfaces.</p>
+        </div>
+      </div>
+      <div class="uui-xaml-chip">Use the framework. Override any layer.</div>
+    </div>
+  </div>
 
-It is built on top of the .NET MAUI infrastructure, so you can use UraniumUI as a complete presentation layer or drop down to native MAUI APIs whenever your app needs a custom escape hatch.
+  <div class="uui-proof-strip">
+    <div>
+      <strong>Native MAUI foundation</strong>
+      <span>Handlers, resources, bindings, and platform APIs stay reachable.</span>
+    </div>
+    <div>
+      <strong>Enterprise-grade, not locked-in</strong>
+      <span>Use the defaults, override the mappings, or replace any piece.</span>
+    </div>
+    <div>
+      <strong>Production screen patterns</strong>
+      <span>Forms, validation, dialogs, theming, layouts, and reusable pages.</span>
+    </div>
+  </div>
 
-## Source Code
-UraniumUI is available on [GitHub](https://github.com/enisn/UraniumUI)
+  <div class="uui-section-heading">
+    <p class="uui-eyebrow">Why UraniumUI</p>
+    <h2>Stop rebuilding the same production UI foundation in every MAUI app.</h2>
+  </div>
 
-- Startup [Templates](https://enisn-projects.io/docs/en/uranium/latest/Getting-Started#new-projects)
-- Dynamic forms with [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/AutoFormView)
-- Validation infrastructure for [Data Annotations](https://enisn-projects.io/docs/en/uranium/latest/validations/DataAnnotations) and [InputKit](https://enisn-projects.io/docs/en/inputkit/latest/components/controls/FormView#validations)
-- Native MAUI foundation with escape hatches for custom behavior
-- Pre-built layouts and flexible controls.
-- Dark/light mode support.
-- All MAUI Platforms are supported.
-- Infrastructure for building custom controls and presentation patterns.
-- [Color System](https://enisn-projects.io/docs/en/uranium/latest/theming/ColorSystem) with easy to customize.
-- Extensible styling.
-- Dialogs
-  - [Mopups](https://enisn-projects.io/docs/en/uranium/latest/dialogs/Index#mopups)
-  - [CommunityToolkit](https://enisn-projects.io/docs/en/uranium/latest/dialogs/Index#communitytoolkit) 
-- Validation Support.
-  - [Data Annotations](https://enisn-projects.io/docs/en/uranium/latest/validations/DataAnnotations)
-  - [InputKit](https://enisn-projects.io/docs/en/inputkit/latest/components/controls/FormView#validations)
-- Font icon support.
-  - [Material Symbols](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons#material-symbols)
-  - [Fluent Icons](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons#segoe-fluent-icons)
-  - [FontAwesome](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons#fontawesome)
-- Theming
-  - [Material Theme](https://enisn-projects.io/docs/en/uranium/latest/themes/material/Index)
+  <div class="uui-feature-grid">
+    <a class="uui-card" href="en/infrastructure/AutoFormView.md">
+      <span class="uui-card-icon">01</span>
+      <h3>Dynamic Forms</h3>
+      <p>Generate editable forms from your models, map types to custom editors, localize display names, control layout, and reuse the same infrastructure inside dialogs.</p>
+    </a>
+    <a class="uui-card" href="en/validations/Index.md">
+      <span class="uui-card-icon">02</span>
+      <h3>Validation Infrastructure</h3>
+      <p>Use InputKit validations, DataAnnotations, async validators, and generated-field validation path mapping without hand-wiring every input.</p>
+    </a>
+    <a class="uui-card" href="en/themes/material/Index.md">
+      <span class="uui-card-icon">03</span>
+      <h3>Material Presentation</h3>
+      <p>Ship with text fields, picker fields, buttons, chips, containers, DataGrid, TreeView, TabView, BottomSheet, Backdrop, and Material resources.</p>
+    </a>
+    <a class="uui-card" href="en/dialogs/Index.md">
+      <span class="uui-card-icon">04</span>
+      <h3>Dialog Abstractions</h3>
+      <p>Use <code>IDialogService</code> with default modal pages, Mopups, or CommunityToolkit implementations for prompts, confirmations, progress, custom views, and forms.</p>
+    </a>
+    <a class="uui-card" href="en/infrastructure/UraniumContentPage.md">
+      <span class="uui-card-icon">05</span>
+      <h3>Page Infrastructure</h3>
+      <p>Build reusable presentation shells with <code>UraniumContentPage</code>, page attachments, stateful views, dynamic content, layouts, dropdowns, and expanders.</p>
+    </a>
+    <a class="uui-card" href="en/theming/ColorSystem.md">
+      <span class="uui-card-icon">06</span>
+      <h3>Theming and Escape Hatches</h3>
+      <p>Use color resources, style resources, cascading styling, custom themes, and icon packs while keeping access to regular MAUI primitives.</p>
+    </a>
+  </div>
 
+  <section class="uui-aha">
+    <div>
+      <p class="uui-eyebrow">The aha moment</p>
+      <h2>A complete form from a model and one XAML line.</h2>
+      <p>UraniumUI can generate editors, display names, layouts, and validation messages from the same model. When the defaults are not enough, you can replace editor mappings or drop down to normal MAUI views.</p>
+      <div class="uui-actions">
+        <a class="uui-button uui-button-primary" href="en/infrastructure/AutoFormView.md">Explore AutoFormView</a>
+        <a class="uui-button uui-button-secondary" href="en/validations/DataAnnotations.md">Add DataAnnotations</a>
+      </div>
+    </div>
+    <img src="en/images/autoformview-example-dark.png" alt="AutoFormView generated form example" />
+  </section>
 
-<img src="https://raw.githubusercontent.com/enisn/UraniumUI/develop/art/github-social-preview.png" alt="MAUI UraniumUI" />
+  <div class="uui-section-heading">
+    <p class="uui-eyebrow">Install what you need</p>
+    <h2>Composable packages for app-level presentation.</h2>
+  </div>
 
-## Contributing
-We welcome contributions and suggestions. Please read our [contributing guide](https://github.com/enisn/UraniumUI/blob/develop/CONTRIBUTING.md).
+  <div class="uui-package-grid">
+    <a href="https://www.nuget.org/packages/UraniumUI.Material/">UraniumUI.Material</a>
+    <a href="https://www.nuget.org/packages/UraniumUI.Validations.DataAnnotations/">UraniumUI.Validations.DataAnnotations</a>
+    <a href="https://www.nuget.org/packages/UraniumUI.Dialogs.Mopups/">UraniumUI.Dialogs.Mopups</a>
+    <a href="https://www.nuget.org/packages/UraniumUI.Dialogs.CommunityToolkit/">UraniumUI.Dialogs.CommunityToolkit</a>
+    <a href="https://www.nuget.org/packages/UraniumUI.Icons.MaterialSymbols/">UraniumUI.Icons.MaterialSymbols</a>
+    <a href="https://www.nuget.org/packages/UraniumUI.Blurs/">UraniumUI.Blurs</a>
+  </div>
 
+  <section class="uui-start-panel">
+    <div>
+      <p class="uui-eyebrow">Quick start</p>
+      <h2>Create a new UraniumUI app.</h2>
+      <p>Use the templates to start with UraniumUI, Material resources, icon options, dialog options, and optional blur support.</p>
+    </div>
+    <pre><code>dotnet new install UraniumUI.Templates
+dotnet new uraniumui-app -n MyMauiApp</code></pre>
+  </section>
 
-## Roadmap
-
-See [milestones](https://github.com/enisn/UraniumUI/milestones) section in the GitHub repository.
-
-## Support
-If you like this project and want to support it, you can sponsor it on [BuyMeACoffee](https://www.buymeacoffee.com/enisn).
-
-<a href="https://www.buymeacoffee.com/enisn"><img src="https://img.buymeacoffee.com/button-api/?text=Buy me a coffee&emoji=&slug=enisn&button_colour=40DCA5&font_colour=ffffff&font_family=Lato&outline_colour=000000&coffee_colour=FFDD00" /></a>
+  <div class="uui-final-cta">
+    <h2>Build MAUI screens from a stronger foundation.</h2>
+    <p>Start with the guide, inspect the API, or join the community if you are evaluating UraniumUI for a production app or team codebase.</p>
+    <div class="uui-actions uui-actions-center">
+      <a class="uui-button uui-button-primary" href="en/Getting-Started.md">Read the docs</a>
+      <a class="uui-button uui-button-secondary" href="https://github.com/enisn/UraniumUI">View on GitHub</a>
+      <a class="uui-button uui-button-ghost" href="https://discord.gg/nN7Yvch73v">Join Discord</a>
+    </div>
+  </div>
+</section>

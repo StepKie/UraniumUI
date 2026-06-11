@@ -5,148 +5,146 @@
       "path": "Getting-Started.md"
     },
     {
-      "text": "Fundamentals",
+      "text": "Guides",
+      "path": "guides/Index.md"
+    },
+    {
+      "text": "Forms & Validation",
       "items": [
         {
-          "text": "Uranium Content Page",
+          "text": "AutoFormView",
+          "path": "infrastructure/AutoFormView.md"
+        },
+        {
+          "text": "Validation Overview",
+          "path": "validations/Index.md"
+        },
+        {
+          "text": "InputKit Validations",
+          "path": "validations/InputKitValidations.md"
+        },
+        {
+          "text": "Data Annotations",
+          "path": "validations/DataAnnotations.md"
+        }
+      ]
+    },
+    {
+      "text": "Core Infrastructure",
+      "items": [
+        {
+          "text": "UraniumContentPage",
           "path": "infrastructure/UraniumContentPage.md"
         },
         {
-          "text": "Stateful Content View",
+          "text": "StatefulContentView",
           "path": "infrastructure/StatefulContentView.md"
         },
         {
-          "text": "Grid Layout",
-          "path": "infrastructure/GridLayout.md"
+          "text": "DynamicContentView",
+          "path": "infrastructure/DynamicContentView.md"
         },
+        {
+          "text": "GridLayout",
+          "path": "infrastructure/GridLayout.md"
+        }
+      ]
+    },
+    {
+      "text": "Core Components",
+      "items": [
         {
           "text": "CalendarView",
           "path": "infrastructure/CalendarView.md"
-        },
-        {
-          "text": "Auto Form View",
-          "path": "infrastructure/AutoFormView.md"
         },
         {
           "text": "Dropdown",
           "path": "infrastructure/Dropdown.md"
         },
         {
-          "text": "SelectableLabel",
-          "path": "infrastructure/SelectableLabel.md"
-        },
-        {
           "text": "ExpanderView",
           "path": "infrastructure/ExpanderView.md"
         },
         {
-          "text" : "Validations",
-          "path": "validations/Index.md",
-          "items": [
-            {
-              "text": "InputKit Validations",
-              "path": "validations/InputKitValidations.md"
-            },
-            {
-              "text": "Data Annotations",
-              "path": "validations/DataAnnotations.md"
-            }
-          ]
+          "text": "SelectableLabel",
+          "path": "infrastructure/SelectableLabel.md"
         }
       ]
     },
     {
       "text": "Dialogs",
-      "path": "dialogs/Index.md",
-      "items": [
-        {
-          "text": "CommunityToolkit",
-          "path": "dialogs/Index#communitytoolkit"
-        },
-        {
-          "text": "Mopups",
-          "path": "dialogs/Index#mopups"
-        }
-      ]
+      "path": "dialogs/Index.md"
     },
     {
-      "text": "Icons",
-      "path": "theming/Icons.md",
-      "items":[
-        {
-          "text": "Material Symbols",
-          "path": "theming/Icons#material-symbols"
-        },
-        {
-          "text": "Font Awesome",
-          "path": "theming/Icons#fontawesome"
-        },
-        {
-          "text": "Segoe Fluent Icons",
-          "path": "theming/Icons#segoe-fluent-icons"
-        }
-      ]
-    },
-    {
-      "text": "Web Components",
-      "items":[
-        {
-          "text": "CodeView",
-          "path": "web-components/CodeView.md"
-        }
-      ]
-    },
-    {
-      "text": "Styling",
+      "text": "Styling, Theming & Effects",
       "items": [
         {
           "text": "Color System",
           "path": "theming/ColorSystem.md"
         },
         {
-        "text": "Cascading Styling",
-        "path": "theming/CascadingStyling.md"
+          "text": "Cascading Styling",
+          "path": "theming/CascadingStyling.md"
         },
         {
           "text": "Creating a Theme",
           "path": "theming/CreatingTheme.md"
-        }
-      ]
-    },
-    {
-      "text": "Effects",
-      "items":[
+        },
         {
-          "text": "Blur",
+          "text": "Icons",
+          "path": "theming/Icons.md",
+          "items": [
+            {
+              "text": "Material Symbols",
+              "path": "theming/Icons.md#material-symbols"
+            },
+            {
+              "text": "Font Awesome",
+              "path": "theming/Icons.md#fontawesome"
+            },
+            {
+              "text": "Segoe Fluent Icons",
+              "path": "theming/Icons.md#segoe-fluent-icons"
+            }
+          ]
+        },
+        {
+          "text": "Blur Effects",
           "path": "Blurs.md"
         }
       ]
     },
     {
-      "text": "Material",
+      "text": "Material Theme",
+      "path": "themes/material/Index.md",
       "items": [
         {
-          "text": "Colors & Styles",
-          "path": "themes/material/ColorsAndStyles.md"
+          "text": "Theme Resources",
+          "items": [
+            {
+              "text": "Colors & Styles",
+              "path": "themes/material/ColorsAndStyles.md"
+            },
+            {
+              "text": "Elevation",
+              "path": "themes/material/Elevation.md"
+            },
+            {
+              "text": "Containers",
+              "path": "themes/material/Containers.md"
+            },
+            {
+              "text": "Divider",
+              "path": "themes/material/Divider.md"
+            },
+            {
+              "text": "Validations",
+              "path": "themes/material/Validations.md"
+            }
+          ]
         },
         {
-          "text": "Elevation",
-          "path": "themes/material/Elevation.md"
-        },
-        {
-          "text" : "ButtonView",
-          "path": "themes/material/ButtonView.md"
-        },
-        {
-          "text": "Buttons",
-          "path": "themes/material/Buttons.md"
-        },
-        {
-          "text": "Chip",
-          "path": "themes/material/Chip.md"
-        },
-        {
-          "text": "InputFields",
+          "text": "Inputs",
           "path": "themes/material/components/InputField.md",
           "items": [
             {
@@ -184,54 +182,78 @@
           ]
         },
         {
-          "text": "Validations",
-          "path": "themes/material/Validations.md"
+          "text": "Buttons & Selection",
+          "items": [
+            {
+              "text": "ButtonView",
+              "path": "themes/material/ButtonView.md"
+            },
+            {
+              "text": "Buttons",
+              "path": "themes/material/Buttons.md"
+            },
+            {
+              "text": "Chip",
+              "path": "themes/material/Chip.md"
+            },
+            {
+              "text": "CheckBox",
+              "path": "themes/material/CheckBox.md"
+            },
+            {
+              "text": "RadioButton",
+              "path": "themes/material/RadioButton.md"
+            }
+          ]
         },
         {
-          "text": "CheckBox",
-          "path": "themes/material/CheckBox.md"
+          "text": "Data & Navigation",
+          "items": [
+            {
+              "text": "DataGrid",
+              "path": "themes/material/components/DataGrid.md"
+            },
+            {
+              "text": "Paginator",
+              "path": "themes/material/components/Paginator.md"
+            },
+            {
+              "text": "TreeView",
+              "path": "themes/material/components/TreeView.md"
+            },
+            {
+              "text": "TabView",
+              "path": "themes/material/components/TabView.md"
+            }
+          ]
         },
         {
-          "text": "RadioButton",
-          "path": "themes/material/RadioButton.md"
-        },
-        {
-          "text": "Divider",
-          "path": "themes/material/Divider.md"
-        },
-        {
-          "text": "Backdrop",
-          "path": "themes/material/components/Backdrop.md"
-        },
-        {
-          "text": "Bottom Sheet",
-          "path": "themes/material/components/BottomSheet.md"
-        },
-        {
-          "text": "DataGrid",
-          "path": "themes/material/components/DataGrid.md"
-        },
-        {
-          "text": "Paginator",
-          "path": "themes/material/components/Paginator.md"
-        },
-        {
-          "text": "TreeView",
-          "path": "themes/material/components/TreeView.md"
-        },
-        {
-          "text": "TabView",
-          "path": "themes/material/components/TabView.md"
-        },
-        {
-          "text": "Containers",
-          "path": "themes/material/Containers.md"
+          "text": "Surfaces & Overlays",
+          "items": [
+            {
+              "text": "Backdrop",
+              "path": "themes/material/components/Backdrop.md"
+            },
+            {
+              "text": "Bottom Sheet",
+              "path": "themes/material/components/BottomSheet.md"
+            }
+          ]
         }
       ]
     },
     {
-      "text": "Migration Guide",
-      "items":[
+      "text": "Web Components",
+      "items": [
+        {
+          "text": "CodeView",
+          "path": "web-components/CodeView.md"
+        }
+      ]
+    },
+    {
+      "text": "Migration Guides",
+      "items": [
         {
           "text": "Migration to v1.1",
           "path": "migration-guides/Migrating-To-1.1.md"
@@ -267,18 +289,18 @@
       ]
     },
     {
-        "text": "API Reference",
-        "path": "https://uraniumui.gh.enisn-projects.io/api/UraniumUI.html"
+      "text": "API Reference",
+      "path": "https://uraniumui.gh.enisn-projects.io/api/UraniumUI.html"
     },
     {
-        "text": "Support",
-        "path": "Support.md",
-        "items":[
-            {
-                "text": "Premium Support",
-                "path": "PremiumSupport.md"
-            }
-        ]
+      "text": "Support",
+      "path": "Support.md",
+      "items": [
+        {
+          "text": "Premium Support",
+          "path": "PremiumSupport.md"
+        }
+      ]
     }
   ]
 }
