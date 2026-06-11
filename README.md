@@ -1,6 +1,8 @@
 <div align="center">
     <img align="center" src="./art/logo.svg" width="33%">
     <h1 align="center">UraniumUI</h1>
+    <p><strong>The presentation framework for .NET MAUI.</strong></p>
+    <p>Dynamic forms, validation, theming, dialogs, and native-MAUI-based controls without a proprietary black box.</p>
 </div>
 
 <div align="center">
@@ -12,35 +14,97 @@
    <a href="https://discord.gg/nN7Yvch73v"><img src="https://img.shields.io/discord/1277612890668404798"></a>
 </div>
 
-UraniumUI is a Free & Open-Source presentation framework for .NET MAUI. It combines native-MAUI-based controls, dynamic form generation, validation infrastructure, dialogs, theming, and extension points for building production-ready app interfaces without a proprietary black box.
+<p align="center">
+    <a href="https://enisn-projects.io/docs/en/uranium/latest/Getting-Started">Documentation</a> |
+    <a href="https://www.nuget.org/packages/UraniumUI/">NuGet</a> |
+    <a href="https://www.nuget.org/packages/UraniumUI.Templates/">Templates</a> |
+    <a href="https://discord.gg/nN7Yvch73v">Discord</a>
+</p>
 
-It is built on top of the .NET MAUI infrastructure, so you can use UraniumUI as a complete presentation layer or drop down to native MAUI APIs whenever your app needs a custom escape hatch.
+UraniumUI is a free and open-source presentation framework for .NET MAUI. It is built on top of the MAUI infrastructure, so you can use it as an app-level presentation layer while keeping access to handlers, resources, bindings, native controls, and platform APIs when you need a custom escape hatch.
 
-- Visit [Documentation](https://uraniumui.gh.enisn-projects.io/en/Getting-Started.html)
+It is not just a collection of styled controls. UraniumUI provides the building blocks for real app screens: generated forms, validation mapping, dialog abstractions, theme resources, icon packs, state-aware views, layout primitives, and extensibility points for your own controls.
 
-- Join the [Discord Community](https://discord.gg/nN7Yvch73v)
+## The Mental Model
 
- ## Getting Started 🚀
-Visit the documentation for onboarding.
+.NET MAUI gives you the platform foundation. UraniumUI adds the presentation architecture that most production apps end up rebuilding.
 
-- [Getting Started](https://uraniumui.gh.enisn-projects.io/en/Getting-Started.html)
+| App need | UraniumUI provides |
+| --- | --- |
+| Build forms quickly | `AutoFormView` generates editors from your model and lets you override editor mappings when needed. |
+| Validate forms consistently | InputKit validation, DataAnnotations integration, async validation, and automatic validation path mapping for generated fields. |
+| Keep UI native and flexible | Controls and handlers built on MAUI primitives instead of a closed, all-or-nothing rendering stack. |
+| Standardize app presentation | Material theme, color resources, style resources, cascading styling, icons, dialogs, and reusable page infrastructure. |
+| Escape the defaults | Replace generated editors, customize layouts, add page attachments, create themes, or use native MAUI APIs directly. |
 
-Or watch the video:
+## Quick Start
 
-<a href="https://youtu.be/4S_KKT2JeGE?si=omJoZpd-p3asDIvR">
-<img width="232" alt="image" src="https://github.com/enisn/UraniumUI/assets/23705418/3d97e437-9995-43cd-adc2-b8163ce83eff">
-</a>
+### Start a New App
 
-## Why UraniumUI
+Install the templates and create a ready-to-run UraniumUI project:
 
-- Build forms from your models with [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/AutoFormView), then customize the generated editors, labels, layouts, and validation mapping.
-- Use validation patterns that fit your application, including [DataAnnotations](https://enisn-projects.io/docs/en/uranium/latest/validations/DataAnnotations) and [InputKit](https://enisn-projects.io/docs/en/inputkit/latest/components/controls/FormView#validations).
-- Keep access to native MAUI primitives instead of committing to a closed control stack.
-- Create reusable presentation infrastructure with custom controls, themes, dialogs, icons, styling, and layout components.
+```bash
+dotnet new install UraniumUI.Templates
+dotnet new uraniumui-app -n MyMauiApp
+```
+
+For a lighter starter project:
+
+```bash
+dotnet new uraniumui-blank-app -n MyMauiApp
+```
+
+You can also generate a `UraniumContentPage` item:
+
+```bash
+dotnet new uraniumcontentpage -n CustomerPage -na MyMauiApp
+```
+
+Templates can configure icon packages, dialog integration, and blur support during project creation.
+
+### Add UraniumUI to an Existing App
+
+Install the Material package. It references the core UraniumUI package and configures Material controls and `AutoFormView` editor mappings.
+
+```bash
+dotnet add package UraniumUI.Material
+```
+
+Register UraniumUI in `MauiProgram.cs`:
+
+```csharp
+using UraniumUI;
+
+builder
+    .UseMauiApp<App>()
+    .UseUraniumUI()
+    .UseUraniumUIMaterial();
+```
+
+Add Material resources in `App.xaml`:
+
+```xml
+<Application xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             x:Class="MyMauiApp.App">
+    <Application.Resources>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary x:Name="appColors" Source="Resources/Styles/Colors.xaml" />
+                <ResourceDictionary x:Name="appStyles" Source="Resources/Styles/Styles.xaml" />
+                <material:StyleResource ColorsOverride="{x:Reference appColors}" BasedOn="{x:Reference appStyles}" />
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Application.Resources>
+</Application>
+```
+
+Read the full onboarding guide: [Getting Started](https://enisn-projects.io/docs/en/uranium/latest/Getting-Started).
 
 ## Aha Moment: Dynamic Forms
 
-Instead of hand-writing every field, binding, validation message, and layout row, describe the form with your view model and let UraniumUI generate the editable UI.
+Instead of hand-writing every field, binding, validation message, and layout row, describe the form with your model and let UraniumUI generate the editable UI.
 
 ```csharp
 using System.ComponentModel.DataAnnotations;
@@ -66,63 +130,97 @@ public class RegisterViewModel
 <uranium:AutoFormView Source="{Binding .}" />
 ```
 
-With `UraniumUI.Validations.DataAnnotations` configured, the same model can drive generated editors, display names, and validation messages. You still keep the escape hatch: override editor mappings, change layouts, or replace generated fields when a screen needs custom behavior.
+Enable DataAnnotations validation once:
 
-## Features ✨
+```bash
+dotnet add package UraniumUI.Validations.DataAnnotations
+```
 
-- Startup [Templates](https://enisn-projects.io/docs/en/uranium/latest/Getting-Started#new-projects)
-- Multiple target frameworks: `.NET 10` _(LTS)_ and `.NET 9`
-  - _Use UraniumUI **v2.6 - v2.12** for `.NET8`_
-  - _Use UraniumUI **v2.5** for `.NET6` and `.NET7`._
-- Pre-built layouts and flexible controls.
-- Dynamic forms with [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/AutoFormView).
-- Dark/light mode support.
-- MAUI platform support for `net9.0-*` and `net10.0-*` targets.
-  - `Android`
-  - `iOS`
-  - `MacCatalyst`
-  - `Windows`
-  - `Tizen` _(limited support / optional setup)_
-- Infrastructure for building custom controls and presentation patterns.
-  - [Plainer](https://github.com/enisn/Xamarin.Forms.Plainer)
-  - [InputField](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/InputField)
-- [Color System](https://enisn-projects.io/docs/en/uranium/latest/theming/ColorSystem) with easy customization.
-- Accessibility
-    - _(All controls support [keyboard accessibility](https://learn.microsoft.com/en-us/windows/apps/design/accessibility/keyboard-accessibility), unlike drawn controls)_
-- Extensible styling.
-- [Blur effects](https://enisn-projects.io/docs/en/uranium/latest/Blurs) with `UraniumUI.Blurs`.
-- Dialogs
-  - [Mopups](https://enisn-projects.io/docs/en/uranium/latest/dialogs/Index#mopups)
-  - [CommunityToolkit](https://enisn-projects.io/docs/en/uranium/latest/dialogs/Index#communitytoolkit) 
-- Validation Support.
-  - [Data Annotations](https://enisn-projects.io/docs/en/uranium/latest/validations/DataAnnotations)
-  - [InputKit](https://enisn-projects.io/docs/en/inputkit/latest/components/controls/FormView#validations)
-- Font icon support.
-  - [Material Symbols](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons#material-symbols)
-  - [Fluent Icons](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons#segoe-fluent-icons)
-  - [FontAwesome](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons#fontawesome)
-- Theming
-  - [Material Theme](https://enisn-projects.io/docs/en/uranium/latest/themes/material/Index)
+```csharp
+using UraniumUI.Options;
+using UraniumUI.Validations;
+
+builder.Services.Configure<AutoFormViewOptions>(options =>
+{
+    options.ValidationFactory = DataAnnotationValidation.CreateValidations;
+});
+```
+
+The same model can now drive generated editors, display names, and validation messages. If a screen needs custom behavior, override the editor mapping, change the generated layout, or replace a generated field with your own MAUI view.
+
+Learn more: [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/AutoFormView) and [DataAnnotations validation](https://enisn-projects.io/docs/en/uranium/latest/validations/DataAnnotations).
+
+## Feature Map
+
+| Area | What you get | Docs |
+| --- | --- | --- |
+| Dynamic forms | Model-driven forms, generated editors, custom editor mapping, property name mapping, layout customization, form dialogs. | [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/AutoFormView) |
+| Validation | InputKit validation, DataAnnotations package, async form validation, generated-field validation path mapping. | [Validations](https://enisn-projects.io/docs/en/uranium/latest/validations/Index) |
+| Material presentation | Text fields, picker fields, buttons, chips, checkboxes, radio buttons, containers, elevation, DataGrid, TreeView, TabView, BottomSheet, Backdrop. | [Material Theme](https://enisn-projects.io/docs/en/uranium/latest/themes/material/Index) |
+| Dialogs | `IDialogService`, default modal-page dialogs, Mopups integration, CommunityToolkit integration, prompt, confirmation, progress, custom view, and form dialogs. | [Dialogs](https://enisn-projects.io/docs/en/uranium/latest/dialogs/Index) |
+| Page architecture | `UraniumContentPage`, page attachments, `StatefulContentView`, `DynamicContentView`, `GridLayout`, `ExpanderView`, `Dropdown`, `CalendarView`. | [Core](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/UraniumContentPage) |
+| Theming | Color system, style resources, cascading styling, custom themes, icon packs, light and dark mode support. | [Color System](https://enisn-projects.io/docs/en/uranium/latest/theming/ColorSystem) |
+| Effects and web components | Blur effects and WebView-based code rendering. | [Blurs](https://enisn-projects.io/docs/en/uranium/latest/Blurs), [CodeView](https://enisn-projects.io/docs/en/uranium/latest/web-components/CodeView) |
+
+## Package Map
+
+| Package | Purpose |
+| --- | --- |
+| `UraniumUI` | Core controls, handlers, dialogs, layouts, `AutoFormView`, and extensibility infrastructure. |
+| `UraniumUI.Material` | Material presentation layer and Material editor mappings for generated forms. |
+| `UraniumUI.Validations.DataAnnotations` | DataAnnotations integration for forms and generated editors. |
+| `UraniumUI.Dialogs.Mopups` | Dialog implementation backed by Mopups. |
+| `UraniumUI.Dialogs.CommunityToolkit` | Dialog implementation backed by .NET MAUI Community Toolkit. |
+| `UraniumUI.Icons.MaterialSymbols` | Material Symbols icon fonts and glyph helpers. |
+| `UraniumUI.Icons.FontAwesome` | Font Awesome icon fonts and glyph helpers. |
+| `UraniumUI.Icons.SegoeFluent` | Segoe Fluent icon fonts and glyph helpers. |
+| `UraniumUI.Blurs` | Cross-platform blur effects. |
+| `UraniumUI.WebComponents` | WebView-based components such as `CodeView`. |
+| `UraniumUI.Templates` | Project and item templates for new UraniumUI apps and pages. |
+
+## Supported Targets
+
+| Target | Support |
+| --- | --- |
+| Current versions | `.NET 10` LTS and `.NET 9` |
+| .NET 8 | Use UraniumUI `v2.6` through `v2.12` |
+| .NET 6 and .NET 7 | Use UraniumUI `v2.5` |
+
+Supported MAUI platforms:
+
+- Android
+- iOS
+- Mac Catalyst
+- Windows
+- Tizen, with limited support and optional setup
+
+## Documentation
+
+- [Getting Started](https://enisn-projects.io/docs/en/uranium/latest/Getting-Started)
+- [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/AutoFormView)
+- [Validations](https://enisn-projects.io/docs/en/uranium/latest/validations/Index)
+- [Material Theme](https://enisn-projects.io/docs/en/uranium/latest/themes/material/Index)
+- [Dialogs](https://enisn-projects.io/docs/en/uranium/latest/dialogs/Index)
+- [Icons](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons)
+- [Blurs](https://enisn-projects.io/docs/en/uranium/latest/Blurs)
 
 <img src="art/github-social-preview.png" width="100%">
 
+## Contributing
 
----
+We welcome contributions and suggestions. Please read the [contributing guide](CONTRIBUTING.md).
 
-## Contributing 🧑‍💻
-We welcome contributions and suggestions. Please read our [contributing guide](CONTRIBUTING.md).
+You may consider checking out issues with the [good first issue](https://github.com/enisn/UraniumUI/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) label to make your first contribution.
 
-> You may consider checking out the issues with [good first issue](https://github.com/enisn/UraniumUI/issues?q=is%3Aopen+is%3Aissue+label%3A%22good+first+issue%22) label to make your first contribution.
+## Roadmap
 
+See the [milestones](https://github.com/enisn/UraniumUI/milestones) section in the repository.
 
-## Roadmap 🛣️
+## License
 
-See [milestones](https://github.com/enisn/UraniumUI/milestones) section in the repository.
+This project is licensed under the Apache License. See the [LICENSE](LICENSE) file for details.
 
-## License 📝
-This project is licensed under the Apache License License - see the [LICENSE](LICENSE) file for details.
-
-## Backers 💚
+## Backers
 
 | Special thanks to project supporters 🎉 |
 | --- |
@@ -148,11 +246,11 @@ This project is licensed under the Apache License License - see the [LICENSE](LI
 | 7 M O X D | <!-- 5☕ -->
 | _Anonymous people 6☕️_ |  <!-- 4☕️ -->
 
-> Donations are spent to infrastructural costs such as documentation website etc.
+Donations are spent on infrastructure costs such as the documentation website.
 
-## Support 🙏
+## Support
 
-If you like this project and want to support it, you can <a href="https://www.buymeacoffee.com/enisn">BuyMeACoffee</a>. Your coffee will keep me awake while developing this project. ☕
+If UraniumUI helps you ship .NET MAUI apps, you can support the project on <a href="https://www.buymeacoffee.com/enisn">BuyMeACoffee</a>.
 
 <br />
 
