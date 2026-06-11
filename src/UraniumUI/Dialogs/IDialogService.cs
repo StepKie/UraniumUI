@@ -9,6 +9,15 @@ public interface IDialogService
         View content,
         string okText = "OK");
 
+    Task<bool> DisplayViewAsync(
+        string title,
+        View content,
+        string okText,
+        string cancelText)
+    {
+        throw new NotSupportedException("The active dialog service does not support cancellable custom view dialogs.");
+    }
+
     Task<IDisposable> DisplayProgressAsync(
         string title,
         string message);

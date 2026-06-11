@@ -582,6 +582,72 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         return tcs.Task;
     }
 
+    public Task<bool> DisplayViewAsync(string title, View content, string okText, string cancelText)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        var calculatedSize = CalculateSize(Page);
+        var rootContainer = new VerticalStackLayout();
+
+#if IOS || MACCATALYST
+        var popup = new Popup
+        {
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = 230,
+            BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
+            CanBeDismissedByTappingOutsideOfPopup = false,
+            Padding = 0,
+            Content = rootContainer,
+        };
+        rootContainer.VerticalOptions = LayoutOptions.Center;
+#else
+        var popup = new Popup()
+        {
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
+            BackgroundColor = Colors.Transparent,
+            Padding = 0,
+            CanBeDismissedByTappingOutsideOfPopup = false,
+            Content = new ContentView
+            {
+                BackgroundColor = Colors.Transparent,
+                Content = GetFrame(calculatedSize.Width, rootContainer)
+            }
+        };
+#endif
+
+        var footer = GetFooter(new Dictionary<string, Command>
+        {
+            { okText, new Command(async () =>
+            {
+                tcs.TrySetResult(true);
+                await popup.CloseAsync();
+            }) },
+            { cancelText, new Command(async () =>
+            {
+                tcs.TrySetResult(false);
+                await popup.CloseAsync();
+            }) }
+        });
+
+        rootContainer.Add(GetHeader(title));
+        rootContainer.Add(new ScrollView
+        {
+            Content = content,
+            VerticalOptions = LayoutOptions.Start,
+#if IOS || MACCATALYST
+            //MaximumHeightRequest = calculatedSize.Height
+#else
+            MaximumHeightRequest = calculatedSize.Height
+#endif
+        });
+        rootContainer.Add(GetDivider());
+        rootContainer.Add(footer);
+
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
+
+        return tcs.Task;
+    }
+
     public Task<TViewModel> DisplayFormViewAsync<TViewModel>(string title, TViewModel viewModel = null, string submit = "OK", string cancel = "Cancel") where TViewModel : class
     {
         var tcs = new TaskCompletionSource<TViewModel>();

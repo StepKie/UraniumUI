@@ -59,6 +59,44 @@ public class DefaultDialogService : IDialogService
         return tcs.Task;
     }
 
+    public Task<bool> DisplayViewAsync(string title, View content, string okText, string cancelText)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+
+        var popupPage = new DefaultDialogAnimatedContentPage
+        {
+            BackgroundColor = GetBackdropColor(),
+            Content = GetFrame(Page.Width, new VerticalStackLayout
+            {
+                Children =
+                {
+                    GetHeader(title),
+                    content,
+                    GetDivider(),
+                    GetFooter(new Dictionary<string, Command>
+                    {
+                        {
+                            okText, new Command(async () =>
+                            {
+                                await ClosePopupAndSetResult(tcs, true);
+                            })
+                        },
+                        {
+                            cancelText, new Command(async () =>
+                            {
+                                await ClosePopupAndSetResult(tcs, false);
+                            })
+                        }
+                    })
+                }
+            })
+        };
+
+        Page.Navigation.PushModalAsync(ConfigurePopupPage(popupPage), animated: false);
+
+        return tcs.Task;
+    }
+
     public Task<IDisposable> DisplayProgressAsync(string title, string message)
     {
         return DisplayProgressCancellableAsync(title, message, cancelText: null);
