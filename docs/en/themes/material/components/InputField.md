@@ -24,6 +24,20 @@ InputField can be used in XAML like any other control. You can pass an existing 
 </material:InputField>
 ```
 
+You can use `TitleFormattedText` when the floating title needs styled spans:
+
+```xml
+<material:InputField HasValue="True">
+    <material:InputField.TitleFormattedText>
+        <FormattedString>
+            <Span Text="Pick a Time" FontAttributes="Bold" />
+            <Span Text=" *" TextColor="Red" />
+        </FormattedString>
+    </material:InputField.TitleFormattedText>
+    <TimePicker BackgroundColor="Transparent" />
+</material:InputField>
+```
+
 ![MAUI Material Design Picker](../../../../images/inputfield-demo-timepicker.png)
 
 ### Inherit from InputField
@@ -100,6 +114,7 @@ InputField has the following style classes that can be used to style the control
 
 ## Properties
 - `Title`: The floating label text
+- `TitleFormattedText`: The floating label formatted text
 - `AccentColor`: The color used for focused state and validation
 - `TitleColor`: The color of the floating label
 - `BorderColor`: The color of the input border

@@ -464,6 +464,15 @@ public partial class InputField : ContentView
         InitializeBorder();
     }
 
+    private void ApplyTitleFormattedText()
+    {
+        var currentLabelTitle = labelTitle;
+        if (currentLabelTitle is not null)
+        {
+            currentLabelTitle.FormattedText = TitleFormattedText;
+        }
+    }
+
     protected override void OnApplyTemplate()
     {
         base.OnApplyTemplate();
@@ -471,6 +480,8 @@ public partial class InputField : ContentView
         isTemplateApplied = true;
 
         ResetTemplateParts();
+
+        ApplyTitleFormattedText();
 
         if (Icon != null)
         {
@@ -558,6 +569,20 @@ public partial class InputField : ContentView
         typeof(InputField),
         string.Empty,
         propertyChanged: (bo, ov, nv) => (bo as InputField).InitializeBorder());
+
+    public FormattedString TitleFormattedText { get => (FormattedString)GetValue(TitleFormattedTextProperty); set => SetValue(TitleFormattedTextProperty, value); }
+
+    public static readonly BindableProperty TitleFormattedTextProperty = BindableProperty.Create(
+        nameof(TitleFormattedText),
+        typeof(FormattedString),
+        typeof(InputField),
+        default(FormattedString),
+        propertyChanged: (bo, ov, nv) =>
+        {
+            var inputField = bo as InputField;
+            inputField.ApplyTitleFormattedText();
+            inputField.InitializeBorder();
+        });
 
     public Color AccentColor { get => (Color)GetValue(AccentColorProperty); set => SetValue(AccentColorProperty, value); }
 
