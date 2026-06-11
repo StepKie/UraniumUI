@@ -268,6 +268,37 @@ public class TextField_Test
     }
 
     [Fact]
+    public void IsSpellCheckEnabled_ShouldBeSet_FromViewModel()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+        var viewModel = new TestViewModel { IsSpellCheckEnabled = false };
+        control.BindingContext = viewModel;
+
+        // Act
+        control.SetBinding(TextField.IsSpellCheckEnabledProperty, new Binding(nameof(TestViewModel.IsSpellCheckEnabled)));
+
+        // Assert
+        control.IsSpellCheckEnabled.ShouldBeFalse();
+        control.EntryView.IsSpellCheckEnabled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsSpellCheckEnabled_ShouldBeUpdated_FromViewModel()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+        var viewModel = new TestViewModel { IsSpellCheckEnabled = true };
+        control.BindingContext = viewModel;
+        control.SetBinding(TextField.IsSpellCheckEnabledProperty, new Binding(nameof(TestViewModel.IsSpellCheckEnabled)));
+
+        // Act
+        viewModel.IsSpellCheckEnabled = false;
+
+        // Assert
+        control.IsSpellCheckEnabled.ShouldBeFalse();
+        control.EntryView.IsSpellCheckEnabled.ShouldBeFalse();
+    }
+
+    [Fact]
     public void Keyboard_ShouldBeSet_FromViewModel()
     {
         var control = AnimationReadyHandler.Prepare(new TextField());
@@ -440,6 +471,7 @@ public class TextField_Test
         private ICommand command;
         private int selectionLength;
         private bool isPassword;
+        private bool isSpellCheckEnabled;
         private Keyboard keyboard;
         private ClearButtonVisibility clearButtonVisibility;
         private double characterSpacing;
@@ -455,6 +487,8 @@ public class TextField_Test
         public int SelectionLength { get => selectionLength; set => SetProperty(ref selectionLength, value); }
 
         public bool IsPassword { get => isPassword; set => SetProperty(ref isPassword, value); }
+
+        public bool IsSpellCheckEnabled { get => isSpellCheckEnabled; set => SetProperty(ref isSpellCheckEnabled, value); }
 
         public Keyboard Keyboard { get => keyboard; set => SetProperty(ref keyboard, value); }
 
