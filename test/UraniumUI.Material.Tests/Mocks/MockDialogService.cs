@@ -77,6 +77,11 @@ internal class MockDialogService : IDialogService
         return Task.CompletedTask;
     }
 
+    public Task<bool> DisplayViewAsync(string title, View content, string okText, string cancelText)
+    {
+        return Task.FromResult(true);
+    }
+
     public Task<TViewModel> DisplayFormViewAsync<TViewModel>(string title, TViewModel viewModel = null, string submit = "OK", string cancel = "Cancel") where TViewModel : class
     {
         return Task.FromResult(default(TViewModel));

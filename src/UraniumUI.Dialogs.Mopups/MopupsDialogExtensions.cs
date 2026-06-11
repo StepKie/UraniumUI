@@ -81,6 +81,11 @@ public static class MopupsDialogExtensions
         return GetService().WithPage(page).DisplayViewAsync(title, content, okText);
     }
 
+    public static Task<bool> DisplayViewAsync(this Page page, string title, View content, string okText, string cancelText)
+    {
+        return GetService().WithPage(page).DisplayViewAsync(title, content, okText, cancelText);
+    }
+
     public static Task<TViewModel> DisplayFormViewAsync<TViewModel>(this Page page, string title, TViewModel viewModel = null, string submit = "OK", string cancel = "Cancel") where TViewModel : class
     {
         return GetService().WithPage(page)

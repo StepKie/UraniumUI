@@ -398,6 +398,43 @@ public class MopupsDialogService : IDialogService
         return MopupService.Instance.PushAsync(popup);
     }
 
+    public virtual async Task<bool> DisplayViewAsync(string title, View content, string okText, string cancelText)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        var popup = new PopupPage
+        {
+            BackgroundColor = DialogOptions.GetBackdropColor(),
+            CloseWhenBackgroundIsClicked = false,
+        };
+
+        popup.Content = GetFrame(Page.Width, new VerticalStackLayout
+        {
+            Children =
+                {
+                    GetHeader(title),
+                    content,
+                    GetDivider(),
+                    GetFooter(new Dictionary<string, Command>
+                    {
+                        { okText, new Command(() =>
+                        {
+                            tcs.TrySetResult(true);
+                            MopupService.Instance.RemovePageAsync(popup);
+                        }) },
+                        { cancelText, new Command(() =>
+                        {
+                            tcs.TrySetResult(false);
+                            MopupService.Instance.RemovePageAsync(popup);
+                        }) }
+                    })
+                }
+        });
+
+        await MopupService.Instance.PushAsync(popup);
+
+        return await tcs.Task;
+    }
+
     public Task<TViewModel> DisplayFormViewAsync<TViewModel>(string title, TViewModel viewModel = null, string submit = "OK", string cancel = "Cancel") where TViewModel : class
     {
         var tcs = new TaskCompletionSource<TViewModel>();

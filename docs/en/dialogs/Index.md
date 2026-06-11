@@ -282,6 +282,54 @@ Manual verification steps for each dialog provider:
 
 ---
 
+### View
+
+View dialogs can display custom MAUI content. Use the one-button overload when the dialog is informational. Use the OK/Cancel overload when the caller needs to know whether the user accepted or discarded changes.
+
+```csharp
+private async void Button_Clicked(object sender, EventArgs e)
+{
+    var content = new VerticalStackLayout
+    {
+        Children =
+        {
+            new HorizontalStackLayout
+            {
+                Children =
+                {
+                    new CheckBox(),
+                    new Label { Text = "Yes" }
+                }
+            },
+            new HorizontalStackLayout
+            {
+                Children =
+                {
+                    new CheckBox(),
+                    new Label { Text = "No" }
+                }
+            },
+            new Button { Text = "Open Camera" }
+        }
+    };
+
+    var accepted = await DialogService.DisplayViewAsync(
+        "Custom Content",
+        content,
+        "Save",
+        "Cancel");
+
+    if (accepted)
+    {
+        // Save changes from the custom content.
+    }
+}
+```
+
+`DisplayViewAsync(title, content, okText, cancelText)` returns `true` when the OK button is pressed and `false` when the Cancel button is pressed. The button labels are explicit to avoid ambiguity with the existing one-button overload.
+
+---
+
 ### Progress
 
 Progress dialog can be used to show a progress dialog to the user. There are 2 types of progress dialogs in UraniumUI. They are blocking and cancellable. Blocking progress dialog will block the UI until it's closed. Cancellable progress dialog will have a cancel button to allow user to cancel the operation. It returns an `IDisposable` and it'll be visible until you dispose it. You can use it with `using` statement to show a progress dialog.
