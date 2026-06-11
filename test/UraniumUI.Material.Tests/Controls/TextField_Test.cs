@@ -106,6 +106,21 @@ public class TextField_Test
 
         titleLabel.ShouldNotBeNull();
         titleLabel.FormattedText.ShouldBeSameAs(formattedTitle);
+        titleLabel.Text.ShouldBeNull();
+
+        control.Title = "Updated plain title";
+
+        titleLabel.FormattedText.ShouldBeSameAs(formattedTitle);
+        titleLabel.Text.ShouldBeNull();
+
+        control.TitleFormattedText = null;
+
+        titleLabel.FormattedText.ShouldBeNull();
+        titleLabel.Text.ShouldBe(control.Title);
+
+        control.Title = "Restored plain title";
+
+        titleLabel.Text.ShouldBe(control.Title);
     }
 
     [Fact]

@@ -467,10 +467,21 @@ public partial class InputField : ContentView
     private void ApplyTitleFormattedText()
     {
         var currentLabelTitle = labelTitle;
-        if (currentLabelTitle is not null)
+        if (currentLabelTitle is null)
         {
-            currentLabelTitle.FormattedText = TitleFormattedText;
+            return;
         }
+
+        if (TitleFormattedText is null)
+        {
+            currentLabelTitle.FormattedText = null;
+            currentLabelTitle.SetBinding(Label.TextProperty, GetRelativeBinding(nameof(Title)));
+            return;
+        }
+
+        currentLabelTitle.RemoveBinding(Label.TextProperty);
+        currentLabelTitle.Text = null;
+        currentLabelTitle.FormattedText = TitleFormattedText;
     }
 
     protected override void OnApplyTemplate()
