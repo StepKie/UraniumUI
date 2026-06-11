@@ -31,6 +31,7 @@ Then you can use it like this:
 - `IsPassword` - Gets or sets whether the TextField should mask its text
 - `MaxLength` - Gets or sets the maximum length of text allowed
 - `IsTextPredictionEnabled` - Gets or sets whether text prediction is enabled
+- `IsSpellCheckEnabled` - Gets or sets whether spell checking is enabled
 - `CharacterSpacing` - Gets or sets the spacing between characters
 - `HorizontalTextAlignment` - Gets or sets the horizontal alignment of the text
 

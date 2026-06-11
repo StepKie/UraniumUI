@@ -139,6 +139,18 @@ public partial class TextField
             (bindable as TextField).EntryView.IsTextPredictionEnabled = (bool)newValue;
         });
 
+    public bool IsSpellCheckEnabled { get => (bool)GetValue(IsSpellCheckEnabledProperty); set => SetValue(IsSpellCheckEnabledProperty, value); }
+
+    public static readonly BindableProperty IsSpellCheckEnabledProperty = BindableProperty.Create(
+        nameof(IsSpellCheckEnabled),
+        typeof(bool),
+        typeof(TextField),
+        Entry.IsSpellCheckEnabledProperty.DefaultValue,
+        propertyChanged: (bindable, oldValue, newValue) =>
+        {
+            (bindable as TextField).EntryView.IsSpellCheckEnabled = (bool)newValue;
+        });
+
     public int MaxLength { get => (int)GetValue(MaxLengthProperty); set => SetValue(MaxLengthProperty, value); }
 
     public static readonly BindableProperty MaxLengthProperty = BindableProperty.Create(
