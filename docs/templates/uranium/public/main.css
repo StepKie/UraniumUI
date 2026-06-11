@@ -221,6 +221,65 @@ code {
 }
 
 /* LANDING PAGE */
+body.uui-static-home {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(82, 214, 129, .22), transparent 28rem),
+    radial-gradient(circle at 96% 10%, rgba(253, 219, 58, .12), transparent 24rem),
+    var(--bs-body-bg);
+  color: var(--bs-body-color);
+  font-family: var(--bs-font-sans-serif), system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  margin: 0;
+}
+
+.uui-home-nav {
+  align-items: center;
+  display: flex;
+  gap: 1rem;
+  justify-content: space-between;
+  margin: 0 auto;
+  max-width: 1180px;
+  padding: 1rem;
+}
+
+.uui-home-brand {
+  align-items: center;
+  color: var(--bs-body-color);
+  display: inline-flex;
+  font-size: 1.05rem;
+  font-weight: 800;
+  gap: .7rem;
+  text-decoration: none;
+}
+
+.uui-home-brand img {
+  border-radius: 14px;
+  box-shadow: none;
+  height: 38px;
+  width: 38px;
+}
+
+.uui-home-nav nav {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: .35rem;
+  justify-content: flex-end;
+}
+
+.uui-home-nav nav a {
+  border-radius: var(--border-radius-button);
+  color: var(--bs-body-color);
+  font-weight: 700;
+  padding: .55rem .85rem;
+  text-decoration: none;
+  transition: background-color 160ms ease, color 160ms ease;
+}
+
+.uui-home-nav nav a:hover {
+  background: var(--bs-primary-border-subtle);
+  color: var(--bs-link-hover-color);
+}
+
 .uui-landing {
   --uui-accent: #52d681;
   --uui-accent-strong: #2db965;
@@ -233,7 +292,7 @@ code {
   --uui-line: color-mix(in srgb, var(--bs-body-color) 18%, transparent);
   margin: 0 auto;
   max-width: 1180px;
-  padding: 1rem 0 4rem;
+  padding: 1rem 1rem 4rem;
 }
 
 .uui-landing * {
