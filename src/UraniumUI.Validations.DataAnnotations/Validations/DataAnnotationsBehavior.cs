@@ -11,6 +11,8 @@ public class DataAnnotationsBehavior : Behavior<View>
     public BindingBase Binding { get; set; }
 
     protected BindableObject bindable;
+    readonly List<DataAnnotationValidation> appliedValidations = new();
+    IValidatable appliedValidatable;
 
     protected override void OnAttachedTo(BindableObject bindable)
     {
@@ -32,6 +34,7 @@ public class DataAnnotationsBehavior : Behavior<View>
     {
         base.OnDetachingFrom(bindable);
         bindable.BindingContextChanged -= Bindable_BindingContextChanged;
+        RemoveAppliedValidations();
     }
 
     private void Bindable_BindingContextChanged(object sender, EventArgs e)
@@ -41,6 +44,8 @@ public class DataAnnotationsBehavior : Behavior<View>
 
     void Apply()
     {
+        RemoveAppliedValidations();
+
         if (bindable is not IValidatable validatable)
         {
             return;
@@ -65,8 +70,29 @@ public class DataAnnotationsBehavior : Behavior<View>
 
         foreach (var attribute in validationAttributes)
         {
-            validatable.Validations.Add(new DataAnnotationValidation(attribute, displayAttribute?.GetName() ?? propertyInfo.Name));
+            var validation = new DataAnnotationValidation(attribute, displayAttribute?.GetName() ?? propertyInfo.Name);
+            validatable.Validations.Add(validation);
+            appliedValidations.Add(validation);
         }
+
+        appliedValidatable = validatable;
+    }
+
+    void RemoveAppliedValidations()
+    {
+        if (appliedValidatable is null)
+        {
+            appliedValidations.Clear();
+            return;
+        }
+
+        foreach (var validation in appliedValidations)
+        {
+            appliedValidatable.Validations.Remove(validation);
+        }
+
+        appliedValidations.Clear();
+        appliedValidatable = null;
     }
 
     (object Source, string Path) GetSourceAndPath()

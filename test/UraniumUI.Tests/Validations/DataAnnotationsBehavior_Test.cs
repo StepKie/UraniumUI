@@ -58,6 +58,30 @@ public class DataAnnotationsBehavior_Test
         Assert.Equal(nameof(TestViewModel.Email), dataAnnotationValidation.PropertyName);
     }
 
+    [Fact]
+    public void BindingContextChanged_ShouldNotDuplicateValidations()
+    {
+        var view = new ValidatableView
+        {
+            BindingContext = new TestViewModel()
+        };
+        var existingValidation = new TestValidation();
+        view.Validations.Add(existingValidation);
+
+        view.Behaviors.Add(new DataAnnotationsBehavior
+        {
+            Binding = new Binding(nameof(TestViewModel.Email))
+        });
+
+        Assert.Equal(2, view.Validations.Count);
+
+        view.BindingContext = new TestViewModel();
+
+        Assert.Equal(2, view.Validations.Count);
+        Assert.Contains(existingValidation, view.Validations);
+        Assert.Single(view.Validations.OfType<DataAnnotationValidation>());
+    }
+
     class ValidatableView : ContentView, IValidatable
     {
         public List<IValidation> Validations { get; } = new();
@@ -70,6 +94,16 @@ public class DataAnnotationsBehavior_Test
 
         public void ResetValidation()
         {
+        }
+    }
+
+    class TestValidation : IValidation
+    {
+        public string Message { get; set; }
+
+        public bool Validate(object value)
+        {
+            return true;
         }
     }
 
