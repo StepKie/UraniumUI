@@ -3,10 +3,10 @@
   <PropertyGroup>
     <PackageType>Template</PackageType>
     <PackageVersion>2.11.0</PackageVersion>
-    <Title>Uranium UI MAUI Templates</Title>
+    <Title>UraniumUI MAUI Templates</Title>
     <Authors>enisn</Authors>
-    <Description>Templates for new MAUI Apps, Themes and Libraries</Description>
-    <PackageTags>dotnet-new;templates;maui,uikit</PackageTags>
+    <Description>Templates for new .NET MAUI apps, themes, and libraries built with UraniumUI.</Description>
+    <PackageTags>dotnet-new;templates;maui;uraniumui;presentation-framework</PackageTags>
 
     <TargetFramework>net10.0</TargetFramework>
 

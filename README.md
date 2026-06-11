@@ -1,6 +1,6 @@
 <div align="center">
     <img align="center" src="./art/logo.svg" width="33%">
-    <h1 align="center">Uranium UI Kit</h1>
+    <h1 align="center">UraniumUI</h1>
 </div>
 
 <div align="center">
@@ -12,7 +12,9 @@
    <a href="https://discord.gg/nN7Yvch73v"><img src="https://img.shields.io/discord/1277612890668404798"></a>
 </div>
 
-Uranium is a Free & Open-Source UI Kit for .NET MAUI. It provides a set of controls and utilities to build modern applications. It is built on top of the .NET MAUI infrastructure and provides a set of controls and layouts to build modern UIs. It also provides infrastructure for building custom controls and themes on it.
+UraniumUI is a Free & Open-Source presentation framework for .NET MAUI. It combines native-MAUI-based controls, dynamic form generation, validation infrastructure, dialogs, theming, and extension points for building production-ready app interfaces without a proprietary black box.
+
+It is built on top of the .NET MAUI infrastructure, so you can use UraniumUI as a complete presentation layer or drop down to native MAUI APIs whenever your app needs a custom escape hatch.
 
 - Visit [Documentation](https://uraniumui.gh.enisn-projects.io/en/Getting-Started.html)
 
@@ -29,6 +31,43 @@ Or watch the video:
 <img width="232" alt="image" src="https://github.com/enisn/UraniumUI/assets/23705418/3d97e437-9995-43cd-adc2-b8163ce83eff">
 </a>
 
+## Why UraniumUI
+
+- Build forms from your models with [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/AutoFormView), then customize the generated editors, labels, layouts, and validation mapping.
+- Use validation patterns that fit your application, including [DataAnnotations](https://enisn-projects.io/docs/en/uranium/latest/validations/DataAnnotations) and [InputKit](https://enisn-projects.io/docs/en/inputkit/latest/components/controls/FormView#validations).
+- Keep access to native MAUI primitives instead of committing to a closed control stack.
+- Create reusable presentation infrastructure with custom controls, themes, dialogs, icons, styling, and layout components.
+
+## Aha Moment: Dynamic Forms
+
+Instead of hand-writing every field, binding, validation message, and layout row, describe the form with your view model and let UraniumUI generate the editable UI.
+
+```csharp
+using System.ComponentModel.DataAnnotations;
+
+public class RegisterViewModel
+{
+    [Required]
+    [EmailAddress]
+    public string Email { get; set; } = string.Empty;
+
+    [Required]
+    public string FullName { get; set; } = string.Empty;
+
+    [Range(1, 10)]
+    public int NumberOfSeats { get; set; }
+
+    [Display(Name = "I accept the terms and conditions")]
+    public bool AcceptedTerms { get; set; }
+}
+```
+
+```xml
+<uranium:AutoFormView Source="{Binding .}" />
+```
+
+With `UraniumUI.Validations.DataAnnotations` configured, the same model can drive generated editors, display names, and validation messages. You still keep the escape hatch: override editor mappings, change layouts, or replace generated fields when a screen needs custom behavior.
+
 ## Features ✨
 
 - Startup [Templates](https://enisn-projects.io/docs/en/uranium/latest/Getting-Started#new-projects)
@@ -36,6 +75,7 @@ Or watch the video:
   - _Use UraniumUI **v2.6 - v2.12** for `.NET8`_
   - _Use UraniumUI **v2.5** for `.NET6` and `.NET7`._
 - Pre-built layouts and flexible controls.
+- Dynamic forms with [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/AutoFormView).
 - Dark/light mode support.
 - MAUI platform support for `net9.0-*` and `net10.0-*` targets.
   - `Android`
@@ -43,7 +83,7 @@ Or watch the video:
   - `MacCatalyst`
   - `Windows`
   - `Tizen` _(limited support / optional setup)_
-- Infrastructure for building custom controls.
+- Infrastructure for building custom controls and presentation patterns.
   - [Plainer](https://github.com/enisn/Xamarin.Forms.Plainer)
   - [InputField](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/InputField)
 - [Color System](https://enisn-projects.io/docs/en/uranium/latest/theming/ColorSystem) with easy customization.

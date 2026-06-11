@@ -1,13 +1,15 @@
 # Getting Started
-Uranium UI is a UI framework for .NET MAUI. It is built on top of the .NET MAUI infrastructure and provides a set of controls and layouts to build modern UIs. It also provides infrastructure for building custom controls and themes on it.
+UraniumUI is a presentation framework for .NET MAUI. It combines native-MAUI-based controls, theming, dialogs, dynamic forms, validation infrastructure, and extension points for building production-ready app interfaces.
 
-There are 2 ways to get started with Uranium UI:
+It is built on top of the .NET MAUI infrastructure, so you can start with UraniumUI's ready-made presentation layer and still drop down to native MAUI APIs when a screen needs custom behavior.
+
+There are 2 ways to get started with UraniumUI:
 - Existing Projects
 - New projects
 
 ## New Projects
 
-Uranium UI provides a project template to start a new project with Uranium UI. You can customize the startup project with parameters like icon library, theme, and more.
+UraniumUI provides a project template to start a new project with UraniumUI. You can customize the startup project with parameters like icon library, theme, and more.
 
 - Install latest templates from NuGet: 
     ```bash
@@ -49,7 +51,7 @@ Also, templates has `ide.host.json` implementation that allows to create a new p
     dotnet add package UraniumUI.Material
     ```
 
-    > Uranium UI doesn't include any theme by default. Pick one of the themes and install it. Since there is only one theme for now, you can install [UraniumUI.Material](https://www.nuget.org/packages/UraniumUI.Material/) directly instead of installing both **UraniumUI** and **UraniumUI.Material**.
+    > UraniumUI doesn't include any theme by default. Pick one of the themes and install it. Since there is only one theme for now, you can install [UraniumUI.Material](https://www.nuget.org/packages/UraniumUI.Material/) directly instead of installing both **UraniumUI** and **UraniumUI.Material**.
 
 
 
