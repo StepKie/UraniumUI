@@ -70,6 +70,30 @@ public class FormView_Test
     }
 
     [Fact]
+    public async Task SubmitAsync_ShouldRestoreBusyDisabledViews_WhenRemovedWhileBusy()
+    {
+        var validationCompletion = new TaskCompletionSource<FormValidationResult>();
+        var formView = new FormView
+        {
+            Validator = new TestFormValidator(_ => validationCompletion.Task)
+        };
+
+        var submitButton = new Button();
+        FormView.SetIsSubmitButton(submitButton, true);
+        formView.Children.Add(submitButton);
+
+        var submitTask = formView.SubmitAsync();
+
+        Assert.False(submitButton.IsEnabled);
+
+        formView.Children.Remove(submitButton);
+        validationCompletion.SetResult(FormValidationResult.Success());
+
+        Assert.True(await submitTask);
+        Assert.True(submitButton.IsEnabled);
+    }
+
+    [Fact]
     public async Task SubmitAsync_ShouldNotRunAsyncValidator_WhenLocalValidationFails()
     {
         var validatorCalled = false;

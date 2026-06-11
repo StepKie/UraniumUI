@@ -470,10 +470,10 @@ public class MopupsDialogService : IDialogService
                             await MopupService.Instance.RemovePageAsync(popup);
                         }
                     }) },
-                    { cancel, new Command(() =>
+                    { cancel, new Command(async () =>
                     {
                         tcs.TrySetResult(null);
-                        MopupService.Instance.RemovePageAsync(popup);
+                        await MopupService.Instance.RemovePageAsync(popup);
                     }) }
                 })
             }

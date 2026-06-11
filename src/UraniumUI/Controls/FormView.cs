@@ -409,6 +409,11 @@ public class FormView : InputKitFormView
 
     private void ApplyBusyState()
     {
+        if (!IsBusy)
+        {
+            RestoreBusyDisabledViews();
+        }
+
         foreach (var bindable in GetChildBindableObjects(this))
         {
             if (bindable is not View view)
@@ -421,11 +426,21 @@ public class FormView : InputKitFormView
                 ApplyBusyIndicatorState(view, IsBusy);
             }
 
-            if (IsSubmitElement(view) || IsResetElement(view))
+            if (IsBusy && (IsSubmitElement(view) || IsResetElement(view)))
             {
                 ApplyBusyEnabledState(view);
             }
         }
+    }
+
+    private void RestoreBusyDisabledViews()
+    {
+        foreach (var (view, wasEnabled) in busyDisabledViews)
+        {
+            view.IsEnabled = wasEnabled;
+        }
+
+        busyDisabledViews.Clear();
     }
 
     private void ApplyBusyEnabledState(View view)
@@ -441,11 +456,7 @@ public class FormView : InputKitFormView
             return;
         }
 
-        if (busyDisabledViews.TryGetValue(view, out var wasEnabled))
-        {
-            view.IsEnabled = wasEnabled;
-            busyDisabledViews.Remove(view);
-        }
+        RestoreBusyDisabledViews();
     }
 
     private static void ApplyBusyIndicatorState(View view, bool isBusy)
@@ -505,7 +516,7 @@ public class FormView : InputKitFormView
 
     private void OnChildRemoved(object sender, ElementEventArgs e)
     {
-        if (e.Element is View view)
+        if (!IsBusy && e.Element is View view)
         {
             busyDisabledViews.Remove(view);
         }

@@ -2,6 +2,7 @@
 <ContentPage x:Class="UraniumApp.Pages.ValidationsPage"
              xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+             xmlns:uranium="http://schemas.enisn-projects.io/dotnet/maui/uraniumui"
              xmlns:input="clr-namespace:InputKit.Shared.Controls;assembly=InputKit.Maui"
              xmlns:validation="clr-namespace:InputKit.Shared.Validations;assembly=InputKit.Maui"
              xmlns:v="clr-namespace:UraniumUI.Validations;assembly=UraniumUI.Validations.DataAnnotations"
@@ -88,6 +89,41 @@
                             Command="{Binding FillCommand}"
                             StyleClass="FilledTonalButton"/>
                 </input:FormView>
+
+                <BoxView HeightRequest="1"
+                         Margin="0,30,0,10"
+                         BackgroundColor="{StaticResource OutlineVariant}" />
+
+                <Label Text="Async form validation"
+                       FontSize="Title"
+                       FontAttributes="Bold" />
+
+                <Label Text="Type 'admin', 'root', or 'taken' to simulate a server-side username conflict. Validation intentionally waits 2.5 seconds so the busy indicator is visible."
+                       Opacity=".7" />
+
+                <uranium:FormView Validator="{Binding .}"
+                                  SubmitCommand="{Binding AsyncSubmitCommand}"
+                                  Spacing="16">
+                    <material:TextField Title="Username"
+                                        Text="{Binding AsyncUserName}"
+                                        uranium:FormView.ValidationPath="AsyncUserName"
+                                        Icon="{FontImage FontFamily=MaterialSharp, Glyph={x:Static m:MaterialSharp.Person}}">
+                        <validation:RequiredValidation />
+                        <validation:MinLengthValidation MinLength="3" />
+                    </material:TextField>
+
+                    <ActivityIndicator uranium:FormView.IsBusyIndicator="True"
+                                       HorizontalOptions="Center"
+                                       Color="{StaticResource Primary}" />
+
+                    <Button Text="Check availability"
+                            uranium:FormView.IsSubmitButton="True"
+                            StyleClass="FilledButton" />
+
+                    <Label Text="{Binding AsyncValidationResult}"
+                           TextColor="{StaticResource Primary}"
+                           FontAttributes="Bold" />
+                </uranium:FormView>
             </StackLayout>
         </ScrollView>
     </ContentPage.Content>
