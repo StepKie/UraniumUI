@@ -1,4 +1,6 @@
 using InputKit.Shared.Abstraction;
+using Microsoft.Maui.Controls.Internals;
+using System.Collections;
 using System.ComponentModel.DataAnnotations;
 using System.Reflection;
 
@@ -9,6 +11,8 @@ public class DataAnnotationsBehavior : Behavior<View>
     public BindingBase Binding { get; set; }
 
     protected BindableObject bindable;
+    readonly List<DataAnnotationValidation> appliedValidations = new();
+    IValidatable appliedValidatable;
 
     protected override void OnAttachedTo(BindableObject bindable)
     {
@@ -30,6 +34,7 @@ public class DataAnnotationsBehavior : Behavior<View>
     {
         base.OnDetachingFrom(bindable);
         bindable.BindingContextChanged -= Bindable_BindingContextChanged;
+        RemoveAppliedValidations();
     }
 
     private void Bindable_BindingContextChanged(object sender, EventArgs e)
@@ -39,28 +44,121 @@ public class DataAnnotationsBehavior : Behavior<View>
 
     void Apply()
     {
+        RemoveAppliedValidations();
+
         if (bindable is not IValidatable validatable)
         {
             return;
         }
 
-        if (Binding is Binding newBinding)
+        var (source, path) = GetSourceAndPath();
+
+        if (source is null || string.IsNullOrWhiteSpace(path))
         {
-            var source = newBinding.Source ?? bindable.BindingContext;
-
-            if (source is null)
-            {
-                return;
-            }
-
-            var propertyInfo = source.GetType().GetProperty(newBinding.Path);
-            var validationAttributes = propertyInfo.GetCustomAttributes<ValidationAttribute>(true);
-            var displayAttribute = propertyInfo.GetCustomAttribute<DisplayAttribute>(true);
-
-            foreach (var attribute in validationAttributes)
-            {
-                validatable.Validations.Add(new DataAnnotationValidation(attribute, displayAttribute?.GetName() ?? propertyInfo.Name));
-            }
+            return;
         }
+
+        var propertyInfo = GetProperty(source.GetType(), path);
+
+        if (propertyInfo is null)
+        {
+            return;
+        }
+
+        var validationAttributes = propertyInfo.GetCustomAttributes<ValidationAttribute>(true);
+        var displayAttribute = propertyInfo.GetCustomAttribute<DisplayAttribute>(true);
+
+        foreach (var attribute in validationAttributes)
+        {
+            var validation = new DataAnnotationValidation(attribute, displayAttribute?.GetName() ?? propertyInfo.Name);
+            validatable.Validations.Add(validation);
+            appliedValidations.Add(validation);
+        }
+
+        appliedValidatable = validatable;
+    }
+
+    void RemoveAppliedValidations()
+    {
+        if (appliedValidatable is null)
+        {
+            appliedValidations.Clear();
+            return;
+        }
+
+        foreach (var validation in appliedValidations)
+        {
+            appliedValidatable.Validations.Remove(validation);
+        }
+
+        appliedValidations.Clear();
+        appliedValidatable = null;
+    }
+
+    (object Source, string Path) GetSourceAndPath()
+    {
+        return Binding switch
+        {
+            Binding binding => (binding.Source ?? bindable.BindingContext, binding.Path),
+            TypedBindingBase typedBinding => (typedBinding.Source ?? bindable.BindingContext, GetTypedBindingPath(typedBinding)),
+            _ => default
+        };
+    }
+
+    static string GetTypedBindingPath(TypedBindingBase typedBinding)
+    {
+        var handlersField = typedBinding.GetType().GetField("_handlers", BindingFlags.Instance | BindingFlags.NonPublic);
+
+        if (handlersField?.GetValue(typedBinding) is not IEnumerable handlers)
+        {
+            return null;
+        }
+
+        var propertyNames = new List<string>();
+
+        foreach (var handler in handlers)
+        {
+            if (handler is null)
+            {
+                continue;
+            }
+
+            var propertyName = handler.GetType()
+                .GetProperty("PropertyName", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+                ?.GetValue(handler) as string;
+
+            if (string.IsNullOrWhiteSpace(propertyName))
+            {
+                return null;
+            }
+
+            propertyNames.Add(propertyName);
+        }
+
+        return propertyNames.Count == 0 ? null : string.Join('.', propertyNames);
+    }
+
+    static PropertyInfo GetProperty(Type type, string propertyName)
+    {
+        var propertyNames = propertyName.Split('.');
+
+        for (var i = 0; i < propertyNames.Length; i++)
+        {
+            var propertyInfo = type.GetProperty(propertyNames[i]);
+
+            if (propertyInfo is null)
+            {
+                return null;
+            }
+
+            if (i == propertyNames.Length - 1)
+            {
+                return propertyInfo;
+            }
+
+            type = propertyInfo.PropertyType;
+        }
+
+        return null;
     }
 }
