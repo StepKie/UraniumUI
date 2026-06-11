@@ -115,6 +115,9 @@ public class RegisterViewModel : IFormValidator
 
 Return `FormValidationResult.Error("message")` for a generic form-level error. Return `FormValidationResult.PropertyError("PropertyName", "message")` to show the error on a field marked with `uranium:FormView.ValidationPath`.
 
+> [!IMPORTANT]
+> `ValidationPath` has no default value on manually created forms. `FormView` does not infer it from `{Binding UserName}`. If a property error is returned for a field without a matching `ValidationPath`, the error is shown in the form-level validation summary instead of on the field.
+
 `uranium:FormView.IsBusyIndicator="True"` marks any view as the form busy indicator. The form shows it while async validation is running. If the marked view is an `ActivityIndicator`, the form also toggles `IsRunning`.
 
 ## Creating Custom Validation

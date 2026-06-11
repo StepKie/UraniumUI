@@ -93,6 +93,9 @@ public class RegisterViewModel : IFormValidator
 
 For busy UI, place your own indicator in the form and mark it with `uranium:FormView.IsBusyIndicator="True"`. The form shows it while async validation is running.
 
+> [!NOTE]
+> Unlike manually created `uranium:FormView` fields, `AutoFormView` assigns `uranium:FormView.ValidationPath` automatically for generated editors. Property errors returned with `FormValidationResult.PropertyError(nameof(UserName), "...")` can therefore map to the generated field without extra XAML.
+
 ### EditorMapping
 You can configure the `AutoFormView` to use a specific editor for a type. For example, you can configure the `AutoFormViewOptions` to use a `Editor` for `string` properties.
 
