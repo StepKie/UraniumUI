@@ -694,8 +694,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         {
             { submit, new Command(async () =>
             {
-                formView.Submit();
-                if (formView.IsValidated)
+                if (await formView.SubmitAsync())
                 {
                     tcs.TrySetResult((TViewModel)formView.Source);
                     await popup.CloseAsync();

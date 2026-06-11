@@ -462,19 +462,18 @@ public class MopupsDialogService : IDialogService
                 GetDivider(),
                 GetFooter( new Dictionary<string, Command>
                 {
-                    { submit, new Command(() =>
+                    { submit, new Command(async () =>
                     {
-                        formView.Submit();
-                        if (formView.IsValidated)
+                        if (await formView.SubmitAsync())
                         {
-                            tcs.TrySetResult(viewModel);
-                            MopupService.Instance.RemovePageAsync(popup);
+                            tcs.TrySetResult((TViewModel)formView.Source);
+                            await MopupService.Instance.RemovePageAsync(popup);
                         }
                     }) },
-                    { cancel, new Command(() =>
+                    { cancel, new Command(async () =>
                     {
                         tcs.TrySetResult(null);
-                        MopupService.Instance.RemovePageAsync(popup);
+                        await MopupService.Instance.RemovePageAsync(popup);
                     }) }
                 })
             }

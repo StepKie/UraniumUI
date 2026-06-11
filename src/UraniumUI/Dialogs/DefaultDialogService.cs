@@ -528,10 +528,9 @@ await ClosePopupAndSetResult(tcs, selected);
                         {
                             submit, new Command(async () =>
                             {
-                                formView.Submit();
-                                if (formView.IsValidated)
+                                if (await formView.SubmitAsync())
                                 {
-await ClosePopupAndSetResult(tcs, (TViewModel)formView.Source);
+                                    await ClosePopupAndSetResult(tcs, (TViewModel)formView.Source);
                                 }
                             })
                         },

@@ -70,6 +70,56 @@ There are some built-in validations that can be used in your application. They a
   * `DigitsOnlyValidation` - Checks if the value contains only digits.
   * `LettersOnlyValidation` - Checks if the value contains only letters.
 
+## Async Form Validation
+
+Use `uranium:FormView` when the whole form needs an async validation step, such as checking if a username already exists on the server. The form still runs local `IValidation` rules first. If they pass, it invokes the assigned validator and maps returned errors to the form or to specific fields.
+
+```xml
+<uranium:FormView Validator="{Binding .}">
+    <material:TextField Title="Username"
+                        Text="{Binding UserName}"
+                        uranium:FormView.ValidationPath="UserName">
+        <validation:RequiredValidation />
+    </material:TextField>
+
+    <ActivityIndicator uranium:FormView.IsBusyIndicator="True" />
+
+    <Button Text="Register"
+            uranium:FormView.IsSubmitButton="True"
+            StyleClass="FilledButton" />
+</uranium:FormView>
+```
+
+The view model can implement `IFormValidator`:
+
+```csharp
+using UraniumUI.Validations;
+
+public class RegisterViewModel : IFormValidator
+{
+    public string UserName { get; set; }
+
+    public async Task<FormValidationResult> ValidateAsync(FormValidationContext context)
+    {
+        if (await userService.UsernameExistsAsync(UserName))
+        {
+            return FormValidationResult.PropertyError(
+                nameof(UserName),
+                "The username has already been taken.");
+        }
+
+        return FormValidationResult.Success();
+    }
+}
+```
+
+Return `FormValidationResult.Error("message")` for a generic form-level error. Return `FormValidationResult.PropertyError("PropertyName", "message")` to show the error on a field marked with `uranium:FormView.ValidationPath`.
+
+> [!IMPORTANT]
+> `ValidationPath` has no default value on manually created forms. `FormView` does not infer it from `{Binding UserName}`. If a property error is returned for a field without a matching `ValidationPath`, the error is shown in the form-level validation summary instead of on the field.
+
+`uranium:FormView.IsBusyIndicator="True"` marks any view as the form busy indicator. The form shows it while async validation is running. If the marked view is an `ActivityIndicator`, the form also toggles `IsRunning`.
+
 ## Creating Custom Validation
 
 You can create your own validation by implementing `IValidation` interface. It has a `Validate` method that takes a `object` as parameter and returns `bool` as result. The parameter is the value of the control that the validation is applied to. The result is the validation result. If the result is `false`, the validation message will be shown.
