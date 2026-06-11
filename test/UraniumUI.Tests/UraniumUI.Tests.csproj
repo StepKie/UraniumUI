@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\UraniumUI\UraniumUI.csproj" />
+    <ProjectReference Include="..\..\src\UraniumUI.Validations.DataAnnotations\UraniumUI.Validations.DataAnnotations.csproj" />
     <ProjectReference Include="..\UraniumUI.Tests.Core\UraniumUI.Tests.Core.csproj" />
   </ItemGroup>
 
