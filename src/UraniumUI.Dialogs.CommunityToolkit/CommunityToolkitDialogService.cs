@@ -660,7 +660,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
             ShowResetButton = false,
             ShowSubmitButton = false,
             ShowMissingProperties = false,
-            Source = viewModel,
+            Source = viewModel ?? UraniumServiceProvider.Current.GetRequiredService<TViewModel>(),
         };
 
 #if IOS || MACCATALYST
@@ -694,8 +694,12 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         {
             { submit, new Command(async () =>
             {
-                tcs.TrySetResult(viewModel);
-                await popup.CloseAsync();
+                formView.Submit();
+                if (formView.IsValidated)
+                {
+                    tcs.TrySetResult((TViewModel)formView.Source);
+                    await popup.CloseAsync();
+                }
             }) },
             { cancel, new Command(async () =>
             {
