@@ -76,7 +76,7 @@ Attachments aren't same layer with page content and they will automatically rend
 ### IPageAttachment
 `IPageAttachment` is an interface and contains 2 members that you should implement. 
 
-- `OnAttached(UraniumContentPage attachedPage)`: A method that is executed right after attachment is added to the page. You can use this method to initialize your attachment.
+- `OnAttached(UraniumContentPage attachedPage)`: A method that is executed right after attachment is added to the page. You can use this method to initialize your attachment. This can happen before MAUI completes the first layout pass, so `attachedPage.Width` and `attachedPage.Height` can be `double.NaN`. Use layout options for positioning, or wait for `SizeChanged` if you need the actual page size.
 
 - `AttachmentPosition`: A property you should return either of `Front` or `Behind` enum value. This property determines the position of the attachment. 
   - `Front`: The attachment will be rendered at the front.
@@ -92,22 +92,24 @@ public class FAB : ImageButton, IPageAttachment
 {
     public FAB()
     {
-        this.Source = new Uri("arrow.png");
-        this.Width = 42;
-        this.Height = 42;
+        this.Source = ImageSource.FromFile("arrow.png");
+        this.WidthRequest = 42;
+        this.HeightRequest = 42;
         this.CornerRadius = 21;
         this.BackgroundColor = Colors.Blue;
+        this.HorizontalOptions = LayoutOptions.End;
+        this.VerticalOptions = LayoutOptions.End;
+        this.Margin = new Thickness(0, 0, 20, 20);
 
-        this.Click += (s, e) =>{ Console.WriteLine("FAB clicked"); };
+        this.Clicked += (s, e) => { Console.WriteLine("FAB clicked"); };
     }
 
     public AttachmentPosition AttachmentPosition => AttachmentPosition.Front;
 
     public void OnAttached(UraniumContentPage page)
     {
-        // Place it right bottom of the page.
-        this.TranslationX = this.PageWidth - this.Width - 20;
-        this.TranslationY = this.PageHeight - this.Height - 20;
+        // The FAB is positioned with layout options and margin.
+        // If you need page.Width or page.Height, read them after page.SizeChanged.
     }
 }
 ```
