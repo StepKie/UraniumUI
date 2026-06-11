@@ -133,6 +133,7 @@ public class DropdownField : InputField
         nameof(SelectedItem),
         typeof(object),
         typeof(DropdownField),
+        defaultBindingMode: BindingMode.TwoWay,
         propertyChanged: (bindable, oldValue, newValue) => (bindable as DropdownField).OnSelectedItemChanged());
 
     public bool AllowClear { get => (bool)GetValue(AllowClearProperty); set => SetValue(AllowClearProperty, value); }
