@@ -461,10 +461,7 @@ public partial class TabView : Grid
             ((View)newValue.ContentTemplate?.CreateContent()
                 ?? (View)ItemTemplate?.CreateContent());
 
-        if (content.BindingContext is null && newValue.Data is not null && content.BindingContext != newValue.Data)
-        {
-            content.BindingContext = newValue.Data;
-        }
+        ApplyContentBindingContext(newValue, content);
 
         foreach (var item in Tabs)
         {
@@ -523,6 +520,25 @@ public partial class TabView : Grid
 
         SelectedTabChanged?.Invoke(this, newValue);
         ExecuteCommandIfCan(SelectedTabChangedCommand, newValue);
+    }
+
+    private void ApplyContentBindingContext(TabItem tabItem, View content)
+    {
+        if (tabItem.Data is not null)
+        {
+            if (content.BindingContext is null)
+            {
+                content.RemoveBinding(BindingContextProperty);
+                content.BindingContext = tabItem.Data;
+            }
+
+            return;
+        }
+
+        if (content.BindingContext is null)
+        {
+            content.SetBinding(BindingContextProperty, new Binding(nameof(BindingContext), source: this));
+        }
     }
 
     protected virtual void OnTabPlacementChanged()
