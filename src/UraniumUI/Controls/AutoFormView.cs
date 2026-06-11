@@ -5,6 +5,7 @@ using UraniumUI.Resources;
 using UraniumUI.Options;
 using Microsoft.Extensions.Options;
 using InputKit.Shared.Abstraction;
+using InputCheckBox = InputKit.Shared.Controls.CheckBox;
 
 namespace UraniumUI.Controls;
 public class AutoFormView : FormView
@@ -311,8 +312,8 @@ public class AutoFormView : FormView
 
     public static View EditorForBoolean(PropertyInfo property, Func<PropertyInfo, string> propertyNameFactory, object source)
     {
-        var editor = new InputKit.Shared.Controls.CheckBox();
-        editor.SetBinding(InputKit.Shared.Controls.CheckBox.IsCheckedProperty, new Binding(property.Name, source: source));
+        var editor = new InputCheckBox();
+        editor.SetBinding(InputCheckBox.IsCheckedProperty, new Binding(property.Name, source: source));
         editor.Text = propertyNameFactory(property);
 
         return editor;

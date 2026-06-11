@@ -112,6 +112,20 @@ namespace UraniumUI.Material.Controls
                     }
                 });
 
+        public Color DestroyIconColor { get => (Color)GetValue(DestroyIconColorProperty); set => SetValue(DestroyIconColorProperty, value); }
+
+        public static readonly BindableProperty DestroyIconColorProperty = BindableProperty.Create(
+                nameof(DestroyIconColor),
+                typeof(Color),
+                typeof(Chip),
+                propertyChanged: (bindable, oldValue, newValue) =>
+                {
+                    if (bindable is Chip chip && newValue is Color color && chip.closeButton.Content is Path path)
+                    {
+                        path.Fill = color.ToSolidColorBrush();
+                    }
+                });
+
         public bool SelfDestruct { get => (bool)GetValue(SelfDestructProperty); set => SetValue(SelfDestructProperty, value); }
 
         public static readonly BindableProperty SelfDestructProperty = BindableProperty.Create(

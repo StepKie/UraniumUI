@@ -18,6 +18,13 @@
     ItemsSource="{Binding Items}"
     Icon="{FontImageSource FontFamily=MaterialSharp, Glyph={x:Static m:MaterialSharp.Expand_circle_down}}"
     />
+
+<material:MultiplePickerField
+    Title="Styled picker"
+    ItemsSource="{Binding Items}"
+    ChipBackgroundColor="{StaticResource SecondaryContainer}"
+    ChipTextColor="{StaticResource OnSecondaryContainer}"
+    CheckBoxColor="{StaticResource Secondary}" />
             ]]>
         </x:String>
         <x:String x:Key="SourceCodeCsharp">
@@ -32,6 +39,11 @@ public ObservableCollection<string> Items { get; } = new ObservableCollection<st
         </x:String>
         <x:String x:Key="DocLink">https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/MultiplePickerField</x:String>
         <x:String x:Key="SourceLink">https://github.com/enisn/UraniumUI/blob/develop/demo/UraniumApp/Pages/InputFields/MultiplePickerFieldPage.xaml</x:String>
+        <x:Array x:Key="DemoItems" Type="{x:Type x:String}">
+            <x:String>Item 1</x:String>
+            <x:String>Item 2</x:String>
+            <x:String>Item 3</x:String>
+        </x:Array>
     </ContentPage.Resources>
 
     <ScrollView>
@@ -51,18 +63,17 @@ public ObservableCollection<string> Items { get; } = new ObservableCollection<st
 
                 <Border StyleClass="SurfaceContainer, Rounded" StrokeThickness="0">
                     <VerticalStackLayout>
-                        <Label Text="Simple EditorField" FontSize="Subtitle" Margin="20"/>
+                        <Label Text="Simple MultiplePickerField" FontSize="Subtitle" Margin="20"/>
 
                         <VerticalStackLayout StyleClass="ControlPreview" Spacing="12">
-                            <material:MultiplePickerField Title="Pick options" Icon="{FontImageSource FontFamily=MaterialSharp, Glyph={x:Static m:MaterialSharp.Expand_circle_down}}">
-                                <material:MultiplePickerField.ItemsSource>
-                                    <x:Array Type="{x:Type x:String}">
-                                        <x:String>Item 1</x:String>
-                                        <x:String>Item 2</x:String>
-                                        <x:String>Item 3</x:String>
-                                    </x:Array>
-                                </material:MultiplePickerField.ItemsSource>
-                            </material:MultiplePickerField>
+                            <material:MultiplePickerField Title="Pick options" ItemsSource="{StaticResource DemoItems}" Icon="{FontImageSource FontFamily=MaterialSharp, Glyph={x:Static m:MaterialSharp.Expand_circle_down}}" />
+
+                            <material:MultiplePickerField
+                                Title="Styled picker"
+                                ItemsSource="{StaticResource DemoItems}"
+                                ChipBackgroundColor="{StaticResource SecondaryContainer}"
+                                ChipTextColor="{StaticResource OnSecondaryContainer}"
+                                CheckBoxColor="{StaticResource Secondary}" />
                         </VerticalStackLayout>
 
                         <uranium:ExpanderView>

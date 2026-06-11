@@ -56,3 +56,30 @@ You can hide the remove icon shown on selected chips by setting `IsChipRemoveVis
     Title="Pick some options"
     IsChipRemoveVisible="False" />
 ```
+
+## Selection Colors
+Selected items are shown as chips. You can change their colors directly on `MultiplePickerField`.
+
+```xml
+<material:MultiplePickerField
+    Title="Pick some options"
+    ItemsSource="{Binding Items}"
+    ChipBackgroundColor="DeepSkyBlue"
+    ChipTextColor="White"
+    ChipDestroyIconColor="White" />
+```
+
+## Dialog CheckBox Colors
+`MultiplePickerField` uses a CheckBox prompt internally. You can also change the colors of those internal checkboxes directly on the field.
+
+```xml
+<material:MultiplePickerField
+    Title="Pick some options"
+    ItemsSource="{Binding Items}"
+    CheckBoxColor="DeepSkyBlue"
+    CheckBoxBorderColor="Gray"
+    CheckBoxTextColor="Black"
+    CheckBoxIconColor="White" />
+```
+
+If you want the same checkbox colors across the whole app, define a style for `material:CheckBox` in your app resources.

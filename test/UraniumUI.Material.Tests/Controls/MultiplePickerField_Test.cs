@@ -76,6 +76,44 @@ public class MultiplePickerField_Test
         chip.IsDestroyVisible.ShouldBeTrue();
     }
 
+    [Fact]
+    public void ChipStyleProperties_ShouldUpdateGeneratedChip()
+    {
+        var control = AnimationReadyHandler.Prepare(new TestMultiplePickerField());
+        control.SelectedItems = new ObservableCollection<object> { "Option 1" };
+
+        control.ChipBackgroundColor = Colors.Red;
+        control.ChipTextColor = Colors.White;
+        control.ChipDestroyIconColor = Colors.Yellow;
+
+        var chip = control.GetSingleChip();
+        chip.BackgroundColor.ShouldBe(Colors.Red);
+        chip.TextColor.ShouldBe(Colors.White);
+        chip.DestroyIconColor.ShouldBe(Colors.Yellow);
+    }
+
+    [Fact]
+    public void CheckBoxStyleProperties_ShouldUpdateGeneratedPromptCheckBox()
+    {
+        var control = AnimationReadyHandler.Prepare(new TestMultiplePickerField
+        {
+            CheckBoxColor = Colors.Red,
+            CheckBoxBorderColor = Colors.Blue,
+            CheckBoxTextColor = Colors.Green,
+            CheckBoxIconColor = Colors.Yellow,
+        });
+
+        var checkBox = control.CreateCheckBoxPromptCheckBoxForTest("Option 1", true);
+
+        checkBox.Text.ShouldBe("Option 1");
+        checkBox.CommandParameter.ShouldBe("Option 1");
+        checkBox.IsChecked.ShouldBeTrue();
+        checkBox.Color.ShouldBe(Colors.Red);
+        checkBox.BorderColor.ShouldBe(Colors.Blue);
+        checkBox.TextColor.ShouldBe(Colors.Green);
+        checkBox.IconColor.ShouldBe(Colors.Yellow);
+    }
+
     private sealed class TestMultiplePickerField : MultiplePickerField
     {
         public int RefreshChipLayoutCallCount { get; private set; }
@@ -83,6 +121,11 @@ public class MultiplePickerField_Test
         public Chip GetSingleChip()
         {
             return chipsHolderLayout.Children.OfType<Chip>().Single();
+        }
+
+        public UraniumUI.Material.Controls.CheckBox CreateCheckBoxPromptCheckBoxForTest(object item, bool isChecked)
+        {
+            return CreateCheckBoxPromptCheckBox(item, isChecked);
         }
 
         protected override void RefreshChipLayout()
