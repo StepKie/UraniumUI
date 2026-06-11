@@ -185,7 +185,6 @@ public partial class TabView : Grid
                     this.RowDefinitions.Add(new RowDefinition(GridLength.Star));
                     this.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
 
-
                     Grid.SetRow(_headerScrollView, 1);
                     Grid.SetColumn(_headerScrollView, 0);
 
@@ -197,7 +196,6 @@ public partial class TabView : Grid
                 {
                     this.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Auto));
                     this.ColumnDefinitions.Add(new ColumnDefinition(GridLength.Star));
-
 
                     Grid.SetRow(_headerScrollView, 0);
                     Grid.SetColumn(_headerScrollView, 0);
@@ -461,10 +459,7 @@ public partial class TabView : Grid
             ((View)newValue.ContentTemplate?.CreateContent()
                 ?? (View)ItemTemplate?.CreateContent());
 
-        if (content.BindingContext is null && newValue.Data is not null && content.BindingContext != newValue.Data)
-        {
-            content.BindingContext = newValue.Data;
-        }
+        ApplyContentBindingContext(newValue, content);
 
         foreach (var item in Tabs)
         {
@@ -476,43 +471,7 @@ public partial class TabView : Grid
             oldValue.Content = null; // Make it null, in the next visit of this method, a new instance will be created.
         }
 
-        if (CachingStrategy == TabViewCachingStrategy.CacheOnLayout)
-        {
-            if (_contentContainer.Content is not Layout layout)
-            {
-                layout = new Grid();
-                _contentContainer.Content = layout;
-            }
-
-            var existing = layout.Children.FirstOrDefault(x => x == content);
-            if (existing == null)
-            {
-                layout.Children.Add(content);
-            }
-
-            foreach (var child in layout.Children)
-            {
-                (child as View).IsVisible = content == child;
-            }
-        }
-        else
-        {
-            if (_contentContainer.Content != null)
-            {
-                if (UseAnimation)
-                {
-                    await _contentContainer.Content?.FadeToSafely(0, 60);
-                }
-            }
-
-            content.Opacity = 0;
-
-            _contentContainer.Content = content;
-            if (UseAnimation)
-            {
-                await content.FadeToSafely(1, 60);
-            }
-        }
+        await PresentContentAsync(content);
 
         content.Opacity = 1;
 
@@ -523,6 +482,66 @@ public partial class TabView : Grid
 
         SelectedTabChanged?.Invoke(this, newValue);
         ExecuteCommandIfCan(SelectedTabChangedCommand, newValue);
+    }
+
+    private async Task PresentContentAsync(View content)
+    {
+        if (CachingStrategy == TabViewCachingStrategy.CacheOnLayout)
+        {
+            PresentContentOnLayout(content);
+            return;
+        }
+
+        if (_contentContainer.Content != null && UseAnimation)
+        {
+            await _contentContainer.Content?.FadeToSafely(0, 60);
+        }
+
+        content.Opacity = 0;
+
+        _contentContainer.Content = content;
+        if (UseAnimation)
+        {
+            await content.FadeToSafely(1, 60);
+        }
+    }
+
+    private void PresentContentOnLayout(View content)
+    {
+        if (_contentContainer.Content is not Layout layout)
+        {
+            layout = new Grid();
+            _contentContainer.Content = layout;
+        }
+
+        if (!layout.Children.Any(x => x == content))
+        {
+            layout.Children.Add(content);
+        }
+
+        foreach (var child in layout.Children)
+        {
+            (child as View).IsVisible = content == child;
+        }
+    }
+
+    private void ApplyContentBindingContext(TabItem tabItem, View content)
+    {
+        if (tabItem.Data is not null)
+        {
+            if (content.BindingContext is null)
+            {
+                content.RemoveBinding(BindingContextProperty);
+                content.BindingContext = tabItem.Data;
+            }
+
+            return;
+        }
+
+        if (content.BindingContext is null)
+        {
+            content.SetBinding(BindingContextProperty, new Binding(nameof(BindingContext), source: this));
+        }
     }
 
     protected virtual void OnTabPlacementChanged()
