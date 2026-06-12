@@ -1,10 +1,8 @@
 ﻿using CommunityToolkit.Maui.Views;
-using InputKit.Shared.Controls;
 using Plainer.Maui.Controls;
 using UraniumUI.Controls;
 using UraniumUI.Infrastructure;
 using UraniumUI.Resources;
-using CheckBox = InputKit.Shared.Controls.CheckBox;
 
 namespace UraniumUI.Dialogs.CommunityToolkit;
 public static class CommunityToolkitDialogExtensions

@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Windows.Input;
 using UraniumUI.Dialogs;
+using MaterialCheckBox = UraniumUI.Material.Controls.CheckBox;
 
 namespace UraniumUI.Material.Controls;
 public partial class MultiplePickerField : InputField
@@ -49,11 +50,7 @@ public partial class MultiplePickerField : InputField
             }
 
             IsBusy = true;
-            var result = await DialogService.DisplayCheckBoxPromptAsync(
-                this.Title,
-                ItemsSource as IEnumerable<object>,
-                SelectedItems as IEnumerable<object>
-                );
+            var result = await DisplayPickerPromptAsync();
 
             if (result != null)
             {
@@ -104,12 +101,148 @@ public partial class MultiplePickerField : InputField
             chip.SetBinding(Chip.IsDestroyVisibleProperty, new Binding(nameof(IsChipRemoveVisible), source: this));
             chip.SelfDestruct = false;
             chip.DestroyCommand = _destroyChipCommand;
+            ApplyGeneratedChipStyle(chip);
             return chip;
         }));
 
         BindableLayout.SetItemsSource(layout, SelectedItems);
 
         return layout;
+    }
+
+    protected virtual async Task<IEnumerable<object>> DisplayPickerPromptAsync()
+    {
+        var selectionSource = ItemsSource?.Cast<object>() ?? Enumerable.Empty<object>();
+        var selectedItems = SelectedItems?.Cast<object>();
+
+        if (!HasCheckBoxPromptStyle())
+        {
+            return await DialogService.DisplayCheckBoxPromptAsync(
+                this.Title,
+                selectionSource,
+                selectedItems);
+        }
+
+        var checkBoxGroup = CreateCheckBoxPromptContent(selectionSource, selectedItems);
+        var accepted = await DialogService.DisplayViewAsync(
+            this.Title,
+            CreateCheckBoxPromptView(checkBoxGroup),
+            "OK",
+            "Cancel");
+
+        return accepted
+            ? checkBoxGroup.Children
+                .OfType<MaterialCheckBox>()
+                .Where(checkBox => checkBox.IsChecked)
+                .Select(checkBox => checkBox.CommandParameter)
+                .ToList()
+            : null;
+    }
+
+    protected virtual bool HasCheckBoxPromptStyle()
+    {
+        return CheckBoxColor is not null
+            || CheckBoxBorderColor is not null
+            || CheckBoxTextColor is not null
+            || CheckBoxIconColor is not null;
+    }
+
+    protected virtual View CreateCheckBoxPromptView(VerticalStackLayout checkBoxGroup)
+    {
+        return new ScrollView
+        {
+            Content = checkBoxGroup,
+            VerticalOptions = LayoutOptions.Start,
+        };
+    }
+
+    protected virtual VerticalStackLayout CreateCheckBoxPromptContent(IEnumerable<object> selectionSource, IEnumerable<object> selectedItems)
+    {
+        var selectedItemsList = selectedItems?.ToList();
+        var checkBoxGroup = new VerticalStackLayout
+        {
+            Margin = 20,
+            Spacing = 10,
+            VerticalOptions = LayoutOptions.Center,
+            HorizontalOptions = LayoutOptions.Start,
+        };
+
+        foreach (var item in selectionSource)
+        {
+            checkBoxGroup.Add(CreateCheckBoxPromptCheckBox(item, selectedItemsList?.Contains(item) ?? false));
+        }
+
+        return checkBoxGroup;
+    }
+
+    protected virtual MaterialCheckBox CreateCheckBoxPromptCheckBox(object item, bool isChecked)
+    {
+        var checkBox = new MaterialCheckBox
+        {
+            Text = item?.ToString(),
+            CommandParameter = item,
+            IsChecked = isChecked,
+        };
+
+        ApplyCheckBoxPromptStyle(checkBox);
+
+        return checkBox;
+    }
+
+    protected virtual void ApplyCheckBoxPromptStyle(MaterialCheckBox checkBox)
+    {
+        if (CheckBoxColor is not null)
+        {
+            checkBox.Color = CheckBoxColor;
+        }
+
+        if (CheckBoxBorderColor is not null)
+        {
+            checkBox.BorderColor = CheckBoxBorderColor;
+        }
+
+        if (CheckBoxTextColor is not null)
+        {
+            checkBox.TextColor = CheckBoxTextColor;
+        }
+
+        if (CheckBoxIconColor is not null)
+        {
+            checkBox.IconColor = CheckBoxIconColor;
+        }
+    }
+
+    protected virtual void ApplyGeneratedChipStyle(Chip chip)
+    {
+        if (ChipBackgroundColor is not null)
+        {
+            chip.BackgroundColor = ChipBackgroundColor;
+        }
+
+        if (ChipTextColor is not null)
+        {
+            chip.TextColor = ChipTextColor;
+        }
+
+        if (ChipDestroyIconColor is not null)
+        {
+            chip.DestroyIconColor = ChipDestroyIconColor;
+        }
+    }
+
+    protected virtual void RefreshGeneratedChipStyles()
+    {
+        if (chipsHolderLayout is null)
+        {
+            return;
+        }
+
+        foreach (var chip in chipsHolderLayout.Children.OfType<Chip>())
+        {
+            ApplyGeneratedChipStyle(chip);
+        }
+
+        RefreshChipLayout();
     }
     
     protected override object GetValueForValidator()
@@ -197,4 +330,56 @@ public partial class MultiplePickerField : InputField
         typeof(MultiplePickerField),
         defaultValue: true,
         propertyChanged: (bindable, oldValue, newValue) => (bindable as MultiplePickerField)?.RefreshChipLayout());
+
+    public Color ChipBackgroundColor { get => (Color)GetValue(ChipBackgroundColorProperty); set => SetValue(ChipBackgroundColorProperty, value); }
+
+    public static readonly BindableProperty ChipBackgroundColorProperty = BindableProperty.Create(
+        nameof(ChipBackgroundColor),
+        typeof(Color),
+        typeof(MultiplePickerField),
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as MultiplePickerField)?.RefreshGeneratedChipStyles());
+
+    public Color ChipTextColor { get => (Color)GetValue(ChipTextColorProperty); set => SetValue(ChipTextColorProperty, value); }
+
+    public static readonly BindableProperty ChipTextColorProperty = BindableProperty.Create(
+        nameof(ChipTextColor),
+        typeof(Color),
+        typeof(MultiplePickerField),
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as MultiplePickerField)?.RefreshGeneratedChipStyles());
+
+    public Color ChipDestroyIconColor { get => (Color)GetValue(ChipDestroyIconColorProperty); set => SetValue(ChipDestroyIconColorProperty, value); }
+
+    public static readonly BindableProperty ChipDestroyIconColorProperty = BindableProperty.Create(
+        nameof(ChipDestroyIconColor),
+        typeof(Color),
+        typeof(MultiplePickerField),
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as MultiplePickerField)?.RefreshGeneratedChipStyles());
+
+    public Color CheckBoxColor { get => (Color)GetValue(CheckBoxColorProperty); set => SetValue(CheckBoxColorProperty, value); }
+
+    public static readonly BindableProperty CheckBoxColorProperty = BindableProperty.Create(
+        nameof(CheckBoxColor),
+        typeof(Color),
+        typeof(MultiplePickerField));
+
+    public Color CheckBoxBorderColor { get => (Color)GetValue(CheckBoxBorderColorProperty); set => SetValue(CheckBoxBorderColorProperty, value); }
+
+    public static readonly BindableProperty CheckBoxBorderColorProperty = BindableProperty.Create(
+        nameof(CheckBoxBorderColor),
+        typeof(Color),
+        typeof(MultiplePickerField));
+
+    public Color CheckBoxTextColor { get => (Color)GetValue(CheckBoxTextColorProperty); set => SetValue(CheckBoxTextColorProperty, value); }
+
+    public static readonly BindableProperty CheckBoxTextColorProperty = BindableProperty.Create(
+        nameof(CheckBoxTextColor),
+        typeof(Color),
+        typeof(MultiplePickerField));
+
+    public Color CheckBoxIconColor { get => (Color)GetValue(CheckBoxIconColorProperty); set => SetValue(CheckBoxIconColorProperty, value); }
+
+    public static readonly BindableProperty CheckBoxIconColorProperty = BindableProperty.Create(
+        nameof(CheckBoxIconColor),
+        typeof(Color),
+        typeof(MultiplePickerField));
 }

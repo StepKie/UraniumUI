@@ -1,5 +1,4 @@
 ﻿
-using InputKit.Shared.Controls;
 using Microsoft.Extensions.Options;
 using Mopups.Pages;
 using Mopups.Services;
@@ -138,12 +137,14 @@ public class MopupsDialogService : IDialogService
 
         foreach (var item in selectionSource)
         {
-            checkBoxGroup.Add(new CheckBox
+            var checkBox = new CheckBox
             {
                 Text = prop != null ? prop.GetValue(item)?.ToString() : item.ToString(),
                 CommandParameter = item,
                 IsChecked = selectedItems?.Contains(item) ?? false,
-            });
+            };
+
+            checkBoxGroup.Add(checkBox);
         }
 
         var rootGrid = new Grid
@@ -192,7 +193,7 @@ public class MopupsDialogService : IDialogService
 
         var prop = displayMember != null ? typeof(T).GetProperty(displayMember) : null;
 
-        var rbGroup = new RadioButtonGroupView()
+        var rbGroup = new InputKit.Shared.Controls.RadioButtonGroupView()
         {
             Margin = 20,
             VerticalOptions = LayoutOptions.Center,

@@ -1,5 +1,4 @@
-﻿using InputKit.Shared.Controls;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Plainer.Maui.Controls;
 using UraniumUI.Controls;
 using UraniumUI.Infrastructure;
@@ -248,12 +247,14 @@ private async Task ClosePopupAndSetResult<T>(TaskCompletionSource<T> tcs, T resu
 
         foreach (var item in selectionSource)
         {
-            checkBoxGroup.Add(new CheckBox
+            var checkBox = new CheckBox
             {
                 Text = prop != null ? prop.GetValue(item)?.ToString() : item.ToString(),
                 CommandParameter = item,
                 IsChecked = selectedItems?.Contains(item) ?? false,
-            });
+            };
+
+            checkBoxGroup.Add(checkBox);
         }
 
         var rootGrid = new Grid
@@ -315,7 +316,7 @@ await ClosePopupAndSetResult(tcs, selected);
 
         var prop = displayMember != null ? typeof(T).GetProperty(displayMember) : null;
 
-        var rbGroup = new RadioButtonGroupView()
+        var rbGroup = new InputKit.Shared.Controls.RadioButtonGroupView()
         {
             Margin = 20,
             VerticalOptions = LayoutOptions.Center,

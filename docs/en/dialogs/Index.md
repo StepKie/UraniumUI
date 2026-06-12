@@ -228,6 +228,10 @@ private async void Button_Clicked(object sender, EventArgs e)
 }
 ```
 
+#### Styling
+
+The shared dialog APIs do not expose per-prompt checkbox styling. Use app-level styles for the checkbox type used by your dialog implementation, or build a custom view with `DisplayViewAsync` when one dialog needs custom visuals.
+
 ---
 
 ### Text Prompt

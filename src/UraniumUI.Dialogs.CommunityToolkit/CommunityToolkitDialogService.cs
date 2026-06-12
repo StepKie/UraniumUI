@@ -2,7 +2,6 @@
 using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Maui.Views;
-using InputKit.Shared.Controls;
 using Microsoft.Extensions.Options;
 using Plainer.Maui.Controls;
 using UraniumUI.Controls;
@@ -213,12 +212,14 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 
         foreach (var item in selectionSource)
         {
-            checkBoxGroup.Add(new CheckBox
+            var checkBox = new CheckBox
             {
                 Text = prop != null ? prop.GetValue(item)?.ToString() : item.ToString(),
                 CommandParameter = item,
                 IsChecked = selectedItems?.Contains(item) ?? false,
-            });
+            };
+
+            checkBoxGroup.Add(checkBox);
         }
 
         var footer = GetFooter(new Dictionary<string, Command>
@@ -295,7 +296,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 #endif
         var prop = displayMember != null ? typeof(T).GetProperty(displayMember) : null;
 
-        var rbGroup = new RadioButtonGroupView()
+        var rbGroup = new InputKit.Shared.Controls.RadioButtonGroupView()
         {
             Margin = 20,
             VerticalOptions = LayoutOptions.Center,

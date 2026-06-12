@@ -1,6 +1,4 @@
-﻿using InputKit.Shared.Controls;
-
-namespace UraniumUI.Dialogs;
+﻿namespace UraniumUI.Dialogs;
 
 public interface IDialogService
 {

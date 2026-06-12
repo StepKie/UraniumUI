@@ -36,9 +36,9 @@ Backdrop has `Title` and `IconImageSource` property and one of them should be se
     <uranium:UraniumContentPage.Attachments>
            <material:BackdropView Title="Filter" IconImageSource="filter.png">
             <VerticalStackLayout>
-                <input:CheckBox Text="Include Disabled Items" Type="Filled" />
-                <input:CheckBox Text="Include Deleted Items" Type="Filled" />
-                <input:CheckBox Text="Show all categories" Type="Filled"/>
+                <material:CheckBox Text="Include Disabled Items" Type="Filled" />
+                <material:CheckBox Text="Include Deleted Items" Type="Filled" />
+                <material:CheckBox Text="Show all categories" Type="Filled"/>
                 <input:AdvancedSlider Title="Maximum Value" MinValue="0" MaxValue="1200" StepValue="10" MaxValueSuffix="items" />
             </VerticalStackLayout>
         </material:BackdropView>
