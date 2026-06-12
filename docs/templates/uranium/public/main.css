@@ -309,6 +309,7 @@ body.uui-static-home {
 
 .uui-hero,
 .uui-aha,
+.uui-promise,
 .uui-start-panel,
 .uui-final-cta {
   border: 1px solid var(--uui-line);
@@ -542,6 +543,63 @@ body.uui-static-home {
   text-align: center;
 }
 
+.uui-promise {
+  align-items: start;
+  background:
+    radial-gradient(circle at 10% 0%, rgba(82, 214, 129, .2), transparent 18rem),
+    linear-gradient(135deg, #172124, #253235);
+  color: #f6f4e6;
+  display: grid;
+  gap: 2rem;
+  grid-template-columns: minmax(0, .82fr) minmax(0, 1.18fr);
+  margin-top: 3rem;
+  padding: clamp(1.4rem, 4vw, 3rem);
+}
+
+.uui-promise h2 {
+  color: #f6f4e6;
+  font-size: clamp(2rem, 4.8vw, 3.8rem);
+  font-weight: 800;
+  letter-spacing: -.04em;
+  line-height: 1.03;
+  margin: 0;
+}
+
+.uui-promise > div > p:last-child,
+.uui-promise-card p {
+  color: rgba(246, 244, 230, .72);
+  line-height: 1.65;
+  margin: 1rem 0 0;
+}
+
+.uui-promise-grid {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.uui-promise-card {
+  background: rgba(246, 244, 230, .08);
+  border: 1px solid rgba(246, 244, 230, .12);
+  border-radius: 22px;
+  padding: 1.25rem;
+}
+
+.uui-promise-card span {
+  color: var(--uui-tertiary);
+  display: block;
+  font-weight: 800;
+  letter-spacing: .12em;
+  margin-bottom: 1rem;
+}
+
+.uui-promise-card h3 {
+  color: #f6f4e6;
+  font-size: 1.2rem;
+  line-height: 1.25;
+  margin: 0;
+}
+
 .uui-section-heading h2,
 .uui-aha h2,
 .uui-start-panel h2,
@@ -674,6 +732,7 @@ body.uui-static-home {
 @media (max-width: 991px) {
   .uui-hero,
   .uui-aha,
+  .uui-promise,
   .uui-start-panel {
     grid-template-columns: 1fr;
   }
@@ -692,6 +751,7 @@ body.uui-static-home {
 
   .uui-hero,
   .uui-aha,
+  .uui-promise,
   .uui-start-panel,
   .uui-final-cta {
     border-radius: 24px;
@@ -699,6 +759,7 @@ body.uui-static-home {
 
   .uui-proof-strip,
   .uui-feature-grid,
+  .uui-promise-grid,
   .uui-package-grid {
     grid-template-columns: 1fr;
   }

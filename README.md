@@ -2,7 +2,7 @@
     <img align="center" src="./art/logo.svg" width="33%">
     <h1 align="center">UraniumUI</h1>
     <p><strong>The presentation framework for .NET MAUI.</strong></p>
-    <p>Dynamic forms, validation, theming, dialogs, and native-MAUI-based controls without a proprietary black box.</p>
+    <p>Fill the UI gaps in plain MAUI without adopting a second app model, proprietary layer, or special coding style.</p>
 </div>
 
 <div align="center">
@@ -21,9 +21,19 @@
     <a href="https://discord.gg/nN7Yvch73v">Discord</a>
 </p>
 
-UraniumUI is a free and open-source presentation framework for .NET MAUI. It is built on top of the MAUI infrastructure, so you can use it as an app-level presentation layer while keeping access to handlers, resources, bindings, native controls, and platform APIs when you need a custom escape hatch.
+UraniumUI is a free and open-source presentation framework for .NET MAUI. It fills the UI gaps plain MAUI leaves to every team: polished controls, validation-aware forms, dialogs, icons, and app-ready presentation patterns without moving your app into a proprietary black box.
+
+You keep writing regular .NET MAUI: XAML, `ContentPage`, bindings, styles, resources, handlers, dependency injection, MVVM, and platform APIs. UraniumUI attaches to that model instead of replacing it.
 
 It is not just a collection of styled controls. UraniumUI provides the building blocks for real app screens: generated forms, validation mapping, dialog abstractions, theme resources, icon packs, state-aware views, layout primitives, and extensibility points for your own controls.
+
+## No Framework Tax
+
+Some UI stacks ask you to move your app into their way of building software. UraniumUI does not.
+
+There is no required base ViewModel, proprietary navigation model, custom application layer, generated project structure, or new UI DSL. Adopt one control, a validation-aware field set, or a full Material presentation layer. Your app remains a MAUI app.
+
+Plain MAUI in, better UI out.
 
 ## The Mental Model
 
