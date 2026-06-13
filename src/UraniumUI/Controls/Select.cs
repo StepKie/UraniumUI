@@ -14,7 +14,7 @@ public class Select : ContentView
     private readonly Label selectedLabel;
     private readonly ContentView selectedContent;
     private readonly Path arrowPath;
-    private DropdownOverlayRegistration overlayRegistration;
+    private PopupOverlayRegistration overlayRegistration;
     private INotifyPropertyChanged selectedItemNotifier;
     private int arrowRotationVersion;
 
@@ -81,7 +81,7 @@ public class Select : ContentView
         }
 
         var popup = CreateDropDownView();
-        var registration = DropdownOverlay.Show(this, popup, new DropdownOverlayOptions
+        var registration = PopupOverlay.Show(this, popup, new PopupOverlayOptions
         {
             Width = Width,
             MaxHeight = MaxDropDownHeight,

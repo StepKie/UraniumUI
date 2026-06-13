@@ -3,7 +3,7 @@ using Microsoft.Maui.Layouts;
 
 namespace UraniumUI.Controls;
 
-internal sealed class DropdownOverlayOptions
+internal sealed class PopupOverlayOptions
 {
     public double Width { get; init; }
 
@@ -12,12 +12,12 @@ internal sealed class DropdownOverlayOptions
     public Thickness Margin { get; init; } = new(0, 4, 0, 4);
 }
 
-internal sealed class DropdownOverlayRegistration : IDisposable
+internal sealed class PopupOverlayRegistration : IDisposable
 {
     private readonly Action close;
     private bool isClosed;
 
-    public DropdownOverlayRegistration(Action close)
+    public PopupOverlayRegistration(Action close)
     {
         this.close = close;
     }
@@ -42,12 +42,12 @@ internal sealed class DropdownOverlayRegistration : IDisposable
     }
 }
 
-internal static class DropdownOverlay
+internal static class PopupOverlay
 {
-    private static readonly ConditionalWeakTable<Page, DropdownOverlayHost> hosts = new();
-    private static readonly ConditionalWeakTable<VisualElement, DropdownOverlayHost> hostsByElement = new();
+    private static readonly ConditionalWeakTable<Page, PopupOverlayHost> hosts = new();
+    private static readonly ConditionalWeakTable<VisualElement, PopupOverlayHost> hostsByElement = new();
 
-    public static DropdownOverlayRegistration Show(VisualElement anchor, View popup, DropdownOverlayOptions options)
+    public static PopupOverlayRegistration Show(VisualElement anchor, View popup, PopupOverlayOptions options)
     {
         if (anchor is null)
         {
@@ -62,14 +62,14 @@ internal static class DropdownOverlay
         var page = FindParentPage(anchor);
         if (page is not ContentPage contentPage)
         {
-            return FindParentHost(anchor)?.Show(anchor, popup, options ?? new DropdownOverlayOptions());
+            return FindParentHost(anchor)?.Show(anchor, popup, options ?? new PopupOverlayOptions());
         }
 
-        var host = hosts.GetValue(contentPage, page => new DropdownOverlayHost((ContentPage)page));
-        return host.Show(anchor, popup, options ?? new DropdownOverlayOptions());
+        var host = hosts.GetValue(contentPage, page => new PopupOverlayHost((ContentPage)page));
+        return host.Show(anchor, popup, options ?? new PopupOverlayOptions());
     }
 
-    internal static void RegisterHostElement(VisualElement element, DropdownOverlayHost host)
+    internal static void RegisterHostElement(VisualElement element, PopupOverlayHost host)
     {
         hostsByElement.Remove(element);
         hostsByElement.Add(element, host);
@@ -90,7 +90,7 @@ internal static class DropdownOverlay
         return Application.Current?.Windows.FirstOrDefault()?.Page;
     }
 
-    private static DropdownOverlayHost FindParentHost(Element element)
+    private static PopupOverlayHost FindParentHost(Element element)
     {
         while (element is not null)
         {
@@ -106,27 +106,27 @@ internal static class DropdownOverlay
     }
 }
 
-internal sealed class DropdownOverlayHost
+internal sealed class PopupOverlayHost
 {
     private readonly ContentPage page;
     private Grid root;
     private AbsoluteLayout overlayLayer;
     private View originalContent;
     private bool ownsRoot;
-    private DropdownOverlayRegistration activeRegistration;
+    private PopupOverlayRegistration activeRegistration;
     private VisualElement activeAnchor;
     private View activeDismissLayer;
     private View activePopup;
-    private DropdownOverlayOptions activeOptions;
+    private PopupOverlayOptions activeOptions;
     private bool activePopupAnimated;
 
-    public DropdownOverlayHost(ContentPage page)
+    public PopupOverlayHost(ContentPage page)
     {
         this.page = page;
         EnsureHost();
     }
 
-    public DropdownOverlayRegistration Show(VisualElement anchor, View popup, DropdownOverlayOptions options)
+    public PopupOverlayRegistration Show(VisualElement anchor, View popup, PopupOverlayOptions options)
     {
         CloseActive();
         EnsureHost();
@@ -148,8 +148,8 @@ internal sealed class DropdownOverlayHost
         anchor.SizeChanged += OnAnchorSizeChanged;
         PositionPopup();
 
-        DropdownOverlayRegistration registration = null;
-        registration = new DropdownOverlayRegistration(() =>
+        PopupOverlayRegistration registration = null;
+        registration = new PopupOverlayRegistration(() =>
         {
             if (!ReferenceEquals(activeRegistration, registration))
             {
@@ -213,7 +213,7 @@ internal sealed class DropdownOverlayHost
         if (page.Content is Grid existingRoot)
         {
             root = existingRoot;
-            overlayLayer = existingRoot.Children.OfType<AbsoluteLayout>().FirstOrDefault(x => x.StyleId == nameof(DropdownOverlay)) ?? overlayLayer ?? CreateOverlayLayer();
+            overlayLayer = existingRoot.Children.OfType<AbsoluteLayout>().FirstOrDefault(x => x.StyleId == nameof(PopupOverlay)) ?? overlayLayer ?? CreateOverlayLayer();
             originalContent = existingRoot;
             ownsRoot = false;
             RegisterHostElements();
@@ -240,7 +240,7 @@ internal sealed class DropdownOverlayHost
     {
         return new AbsoluteLayout
         {
-            StyleId = nameof(DropdownOverlay),
+            StyleId = nameof(PopupOverlay),
             BackgroundColor = Colors.Transparent,
             InputTransparent = true,
             IsVisible = false,
@@ -263,11 +263,11 @@ internal sealed class DropdownOverlayHost
 
     private void RegisterHostElements()
     {
-        DropdownOverlay.RegisterHostElement(root, this);
+        PopupOverlay.RegisterHostElement(root, this);
 
         if (originalContent is not null)
         {
-            DropdownOverlay.RegisterHostElement(originalContent, this);
+            PopupOverlay.RegisterHostElement(originalContent, this);
         }
     }
 
