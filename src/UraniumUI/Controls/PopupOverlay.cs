@@ -190,36 +190,58 @@ internal sealed class PopupOverlayHost
 
     private void EnsureHost()
     {
-        if (root is not null && overlayLayer is not null)
+        if (TryUseCurrentHost() || TryUsePageGridHost())
         {
-            if (ReferenceEquals(page.Content, root))
-            {
-                return;
-            }
-
-            if (ownsRoot && ReferenceEquals(page.Content, originalContent))
-            {
-                if (originalContent is not null && !root.Children.Contains(originalContent))
-                {
-                    root.Children.Insert(0, originalContent);
-                }
-
-                RegisterHostElements();
-                page.Content = root;
-                return;
-            }
-        }
-
-        if (page.Content is Grid existingRoot)
-        {
-            root = existingRoot;
-            overlayLayer = existingRoot.Children.OfType<AbsoluteLayout>().FirstOrDefault(x => x.StyleId == nameof(PopupOverlay)) ?? overlayLayer ?? CreateOverlayLayer();
-            originalContent = existingRoot;
-            ownsRoot = false;
-            RegisterHostElements();
             return;
         }
 
+        WrapPageContent();
+    }
+
+    private bool TryUseCurrentHost()
+    {
+        if (root is null || overlayLayer is null)
+        {
+            return false;
+        }
+
+        if (ReferenceEquals(page.Content, root))
+        {
+            return true;
+        }
+
+        if (!ownsRoot || !ReferenceEquals(page.Content, originalContent))
+        {
+            return false;
+        }
+
+        if (originalContent is not null && !root.Children.Contains(originalContent))
+        {
+            root.Children.Insert(0, originalContent);
+        }
+
+        RegisterHostElements();
+        page.Content = root;
+        return true;
+    }
+
+    private bool TryUsePageGridHost()
+    {
+        if (page.Content is not Grid existingRoot)
+        {
+            return false;
+        }
+
+        root = existingRoot;
+        overlayLayer = existingRoot.Children.OfType<AbsoluteLayout>().FirstOrDefault(x => x.StyleId == nameof(PopupOverlay)) ?? overlayLayer ?? CreateOverlayLayer();
+        originalContent = existingRoot;
+        ownsRoot = false;
+        RegisterHostElements();
+        return true;
+    }
+
+    private void WrapPageContent()
+    {
         originalContent = page.Content;
         root = ownsRoot && root is not null ? root : new Grid();
         ownsRoot = true;
