@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Maui.Controls.Xaml;
 using Shouldly;
 using UraniumUI.Material.Controls;
 using UraniumUI.Tests.Core;
@@ -168,11 +169,49 @@ public class DataGrid_Test
         rootGrid.RowDefinitions.Any(x => x.Height.IsStar).ShouldBeFalse();
     }
 
+    [Fact]
+    public void DataGridValueBinding_GenericProvideValue_ShouldAttachBinding_WhenBindingContextBecomesBinding()
+    {
+        var target = AnimationReadyHandler.Prepare(new Entry());
+        var source = new DataGridEditableRow { Name = "One" };
+        var extension = new DataGridValueBindingExtension { Mode = BindingMode.TwoWay };
+
+        var binding = ((IMarkupExtension<BindingBase>)extension)
+            .ProvideValue(new DataGridValueBindingServiceProvider(target, Entry.TextProperty));
+
+        binding.ShouldBeNull();
+
+        target.BindingContext = new Binding(nameof(DataGridEditableRow.Name), source: source);
+
+        target.Text.ShouldBe("One");
+
+        target.Text = "Two";
+
+        source.Name.ShouldBe("Two");
+    }
+
     private sealed class DataGridRow
     {
         public int Id { get; init; }
 
         public string Name { get; init; }
+    }
+
+    private sealed class DataGridEditableRow
+    {
+        public string Name { get; set; }
+    }
+
+    private sealed class DataGridValueBindingServiceProvider(View targetObject, BindableProperty targetProperty) : IServiceProvider, IProvideValueTarget
+    {
+        public object TargetObject { get; } = targetObject;
+
+        public object TargetProperty { get; } = targetProperty;
+
+        public object GetService(Type serviceType)
+        {
+            return serviceType == typeof(IProvideValueTarget) ? this : null;
+        }
     }
 
     internal class DataGridTestViewModel : UraniumBindableObject
