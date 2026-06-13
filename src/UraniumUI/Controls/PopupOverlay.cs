@@ -147,6 +147,7 @@ internal sealed class PopupOverlayHost
         root.SizeChanged += OnRootSizeChanged;
         anchor.SizeChanged += OnAnchorSizeChanged;
         PositionPopup();
+        DispatchPositionPopup();
 
         PopupOverlayRegistration registration = null;
         registration = new PopupOverlayRegistration(() =>
@@ -215,13 +216,14 @@ internal sealed class PopupOverlayHost
             return false;
         }
 
+        RegisterHostElements();
+        page.Content = root;
+
         if (originalContent is not null && !root.Children.Contains(originalContent))
         {
             root.Children.Insert(0, originalContent);
         }
 
-        RegisterHostElements();
-        page.Content = root;
         return true;
     }
 
@@ -246,16 +248,16 @@ internal sealed class PopupOverlayHost
         root = ownsRoot && root is not null ? root : new Grid();
         ownsRoot = true;
 
-        if (originalContent is not null && !root.Children.Contains(originalContent))
-        {
-            root.Children.Add(originalContent);
-        }
-
         overlayLayer ??= CreateOverlayLayer();
 
         RegisterHostElements();
 
         page.Content = root;
+
+        if (originalContent is not null && !root.Children.Contains(originalContent))
+        {
+            root.Children.Add(originalContent);
+        }
     }
 
     private AbsoluteLayout CreateOverlayLayer()
@@ -324,6 +326,18 @@ internal sealed class PopupOverlayHost
     private void OnAnchorSizeChanged(object sender, EventArgs e)
     {
         PositionPopup();
+    }
+
+    private void DispatchPositionPopup()
+    {
+        try
+        {
+            root.Dispatcher?.DispatchDelayed(TimeSpan.FromMilliseconds(1), PositionPopup);
+        }
+        catch (InvalidOperationException)
+        {
+            // Unit tests can run without an application dispatcher.
+        }
     }
 
     private void PositionPopup()

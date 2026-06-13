@@ -309,6 +309,35 @@ public class Select_Test
     }
 
     [Fact]
+    public void OpenCloseOpen_ShouldRewrapNonGridContentWithoutDuplicatingContent()
+    {
+        var pageContent = new VerticalStackLayout();
+        var page = new ContentPage
+        {
+            Content = pageContent
+        };
+        var control = new Select
+        {
+            ItemsSource = new[] { "One", "Two" }
+        };
+        pageContent.Add(control);
+
+        control.Open();
+        var root = Assert.IsType<Grid>(page.Content);
+
+        control.Close();
+        Assert.Same(pageContent, page.Content);
+
+        control.Open();
+
+        Assert.Same(root, page.Content);
+        Assert.Equal(1, root.Children.Count(child => ReferenceEquals(child, pageContent)));
+        Assert.Same(pageContent, root.Children[0]);
+
+        control.Close();
+    }
+
+    [Fact]
     public void Open_ShouldUseExistingGridRootWithoutReparenting()
     {
         var pageRoot = new Grid
@@ -351,6 +380,49 @@ public class Select_Test
         Assert.Same(overlay, Assert.Single(pageRoot.Children.OfType<AbsoluteLayout>()));
         Assert.True(overlay.IsVisible);
         Assert.False(overlay.InputTransparent);
+    }
+
+    [Fact]
+    public void Open_ShouldPositionPopupRelativeToNestedSidePanel()
+    {
+        var pageRoot = new Grid
+        {
+            ColumnDefinitions =
+            {
+                new ColumnDefinition(new GridLength(7, GridUnitType.Star)),
+                new ColumnDefinition(new GridLength(3, GridUnitType.Star)),
+            }
+        };
+        var preview = new ContentView();
+        var sidePanel = new VerticalStackLayout();
+        var control = new Select
+        {
+            ItemsSource = new[] { "Default", "Numeric", "Email" },
+            WidthRequest = 180,
+            HeightRequest = 40,
+        };
+        sidePanel.Add(control);
+        pageRoot.Add(preview);
+        pageRoot.Add(sidePanel, column: 1);
+        _ = new ContentPage
+        {
+            Content = pageRoot
+        };
+        pageRoot.Arrange(new Rect(0, 0, 1000, 600));
+        preview.Arrange(new Rect(0, 0, 700, 600));
+        sidePanel.Arrange(new Rect(700, 0, 300, 600));
+        control.Arrange(new Rect(20, 80, 180, 40));
+
+        control.Open();
+
+        var overlay = Assert.Single(pageRoot.Children.OfType<AbsoluteLayout>());
+        var popup = Assert.Single(overlay.Children.OfType<Border>());
+        var popupBounds = AbsoluteLayout.GetLayoutBounds(popup);
+
+        Assert.True(popupBounds.X >= 700);
+        Assert.True(popupBounds.Y > 0);
+
+        control.Close();
     }
 
     [Fact]
