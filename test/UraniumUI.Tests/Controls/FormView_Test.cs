@@ -118,6 +118,40 @@ public class FormView_Test
     }
 
     [Fact]
+    public async Task SubmitAsync_ShouldValidateBindableLayoutChildren()
+    {
+        var validatorCalled = false;
+        var formView = new FormView
+        {
+            Validator = new TestFormValidator(_ =>
+            {
+                validatorCalled = true;
+                return Task.FromResult(FormValidationResult.Success());
+            })
+        };
+
+        var itemsHost = new VerticalStackLayout();
+        ValidatableView field = null;
+
+        BindableLayout.SetItemTemplate(itemsHost, new DataTemplate(() =>
+        {
+            field = new ValidatableView();
+            field.Validations.Add(new FailingValidation("Local validation failed."));
+            return field;
+        }));
+        BindableLayout.SetItemsSource(itemsHost, new[] { "item" });
+
+        formView.Children.Add(itemsHost);
+
+        var result = await formView.SubmitAsync();
+
+        Assert.NotNull(field);
+        Assert.False(result);
+        Assert.False(validatorCalled);
+        Assert.True(field.DisplayValidationCalled);
+    }
+
+    [Fact]
     public async Task InheritedSubmitCommand_ShouldUseAsyncSubmitOverride()
     {
         var validatorCalled = new TaskCompletionSource();

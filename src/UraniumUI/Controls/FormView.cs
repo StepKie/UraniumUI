@@ -153,7 +153,7 @@ public class FormView : InputKitFormView
     {
         ClearFormValidationMessages();
 
-        if (!InputKitFormView.CheckValidation(this))
+        if (!CheckChildValidation())
         {
             DisplayChildValidations();
             var invalidResult = FormValidationResult.Invalid();
@@ -307,6 +307,19 @@ public class FormView : InputKitFormView
         {
             validatable.DisplayValidation();
         }
+    }
+
+    private bool CheckChildValidation()
+    {
+        foreach (var (validatable, _) in GetChildValidatables())
+        {
+            if (!validatable.IsValid)
+            {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     private IEnumerable<(IValidatable validatable, BindableObject bindable)> GetValidatablesByPath(string validationPath)
