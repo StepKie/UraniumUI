@@ -94,6 +94,36 @@ public class TextField_Test
     }
 
     [Fact]
+    public void TitleFormattedText_ShouldBind_ToTitleLabel()
+    {
+        var formattedTitle = new FormattedString();
+        formattedTitle.Spans.Add(new Span { Text = "Name", FontAttributes = FontAttributes.Bold });
+        formattedTitle.Spans.Add(new Span { Text = " *", TextColor = Colors.Red });
+
+        var control = AnimationReadyHandler.Prepare(new TextField { TitleFormattedText = formattedTitle });
+
+        var titleLabel = control.FindByViewQueryIdInVisualTreeDescendants<Label>("TitleLabel");
+
+        titleLabel.ShouldNotBeNull();
+        titleLabel.FormattedText.ShouldBeSameAs(formattedTitle);
+        titleLabel.Text.ShouldBeNull();
+
+        control.Title = "Updated plain title";
+
+        titleLabel.FormattedText.ShouldBeSameAs(formattedTitle);
+        titleLabel.Text.ShouldBeNull();
+
+        control.TitleFormattedText = null;
+
+        titleLabel.FormattedText.ShouldBeNull();
+        titleLabel.Text.ShouldBe(control.Title);
+
+        control.Title = "Restored plain title";
+
+        titleLabel.Text.ShouldBe(control.Title);
+    }
+
+    [Fact]
     public void Attachments_Container_HasDefaultSpacingFromBorderAndBetweenChildren()
     {
         // The Attachments container provides a default gap to the field border and
