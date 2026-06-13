@@ -99,7 +99,7 @@ Set `AllowClear` to `true` to show a clear button when a value is selected.
 | `SelectedItemTemplate` | Template used for the closed selected value. Falls back to `ItemTemplate`. |
 | `AllowClear` | Shows a clear button when a value is selected. |
 | `SelectedItemChangedCommand` | Command executed when `SelectedItem` changes. |
-| `DropdownView` | The inner `Select` control. |
+| `SelectView` | The inner `Select` control. |
 
 ## Events
 

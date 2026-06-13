@@ -29,36 +29,36 @@ public class SelectField_Test
     }
 
     [Fact]
-    public void ItemTemplate_ShouldBeForwarded_ToDropdownView()
+    public void ItemTemplate_ShouldBeForwarded_ToSelectView()
     {
         var control = AnimationReadyHandler.Prepare(new SelectField());
         var itemTemplate = new DataTemplate(() => new Label());
 
         control.ItemTemplate = itemTemplate;
 
-        control.DropdownView.ItemTemplate.ShouldBeSameAs(itemTemplate);
+        control.SelectView.ItemTemplate.ShouldBeSameAs(itemTemplate);
     }
 
     [Fact]
-    public void SelectedItemTemplate_ShouldBeForwarded_ToDropdownView()
+    public void SelectedItemTemplate_ShouldBeForwarded_ToSelectView()
     {
         var control = AnimationReadyHandler.Prepare(new SelectField());
         var selectedItemTemplate = new DataTemplate(() => new Label());
 
         control.SelectedItemTemplate = selectedItemTemplate;
 
-        control.DropdownView.SelectedItemTemplate.ShouldBeSameAs(selectedItemTemplate);
+        control.SelectView.SelectedItemTemplate.ShouldBeSameAs(selectedItemTemplate);
     }
 
     [Fact]
-    public void ItemDisplayBinding_ShouldBeForwarded_ToDropdownView()
+    public void ItemDisplayBinding_ShouldBeForwarded_ToSelectView()
     {
         var control = AnimationReadyHandler.Prepare(new SelectField());
         var itemDisplayBinding = new Binding(nameof(DisplayTestItem.Name));
 
         control.ItemDisplayBinding = itemDisplayBinding;
 
-        control.DropdownView.ItemDisplayBinding.ShouldBeSameAs(itemDisplayBinding);
+        control.SelectView.ItemDisplayBinding.ShouldBeSameAs(itemDisplayBinding);
     }
 
     [Fact]
@@ -70,15 +70,16 @@ public class SelectField_Test
         control.ItemDisplayBinding = new Binding(nameof(DisplayTestItem.Name));
         control.SelectedItem = item;
 
-        GetSelectedLabel(control.DropdownView).Text.ShouldBe("Ada Lovelace");
+        GetSelectedLabel(control.SelectView).Text.ShouldBe("Ada Lovelace");
     }
 
     [Fact]
-    public void Constructor_ShouldUseFocusableDropdownView()
+    public void Constructor_ShouldUseFocusableSelectView()
     {
         var control = AnimationReadyHandler.Prepare(new SelectField());
 
-        control.DropdownView.IsFocusable.ShouldBeTrue();
+        control.SelectView.IsFocusable.ShouldBeTrue();
+        control.SelectView.StyleClass.ShouldContain("InputField.Select");
     }
 
     [Fact]
@@ -98,9 +99,9 @@ public class SelectField_Test
         pageRoot.Add(control);
         pageRoot.Arrange(new Rect(0, 0, 1000, 700));
         control.Arrange(new Rect(650, 520, 240, 55));
-        control.DropdownView.Arrange(new Rect(0, 0, 240, 45));
+        control.SelectView.Arrange(new Rect(0, 0, 240, 45));
 
-        control.DropdownView.Open();
+        control.SelectView.Open();
 
         var overlay = pageRoot.Children.OfType<AbsoluteLayout>().Single();
         var popup = overlay.Children.OfType<Border>().Single();
@@ -126,18 +127,18 @@ public class SelectField_Test
     }
 
     [Fact]
-    public void SelectedItem_ShouldSyncBetweenDropdownAndField_WhenBoundToSameReactiveSource()
+    public void SelectedItem_ShouldSyncBetweenSelectAndField_WhenBoundToSameReactiveSource()
     {
-        var dropdown = AnimationReadyHandler.Prepare(new Select());
+        var select = AnimationReadyHandler.Prepare(new Select());
         var field = AnimationReadyHandler.Prepare(new SelectField());
-        AnimationReadyHandler.Prepare(field.DropdownView);
+        AnimationReadyHandler.Prepare(field.SelectView);
         var viewModel = new ReactiveTestViewModel();
-        dropdown.BindingContext = viewModel;
+        select.BindingContext = viewModel;
         field.BindingContext = viewModel;
-        dropdown.SetBinding(Select.SelectedItemProperty, new Binding(nameof(ReactiveTestViewModel.SelectedItem)));
+        select.SetBinding(Select.SelectedItemProperty, new Binding(nameof(ReactiveTestViewModel.SelectedItem)));
         field.SetBinding(SelectField.SelectedItemProperty, new Binding(nameof(ReactiveTestViewModel.SelectedItem)));
 
-        dropdown.SelectedItem = "Ada";
+        select.SelectedItem = "Ada";
 
         viewModel.SelectedItem.ShouldBe("Ada");
         field.SelectedItem.ShouldBe("Ada");
@@ -145,11 +146,11 @@ public class SelectField_Test
         field.SelectedItem = "Grace";
 
         viewModel.SelectedItem.ShouldBe("Grace");
-        dropdown.SelectedItem.ShouldBe("Grace");
+        select.SelectedItem.ShouldBe("Grace");
     }
 
     [Fact]
-    public void Constructor_ShouldApplyMaterialThemeColors_ToDropdownView()
+    public void Constructor_ShouldApplyMaterialThemeColors_ToSelectView()
     {
         Application.Current.UserAppTheme = AppTheme.Light;
         Application.Current.Resources["Surface"] = Colors.Pink;
@@ -161,17 +162,17 @@ public class SelectField_Test
 
         var control = AnimationReadyHandler.Prepare(new SelectField());
 
-        control.DropdownView.DropDownBackgroundColor.ShouldBe(Colors.Pink);
-        control.DropdownView.DropDownBorderColor.ShouldBe(Colors.Blue);
-        control.DropdownView.SelectedItemBackgroundColor.ShouldBe(Colors.Red);
-        control.DropdownView.HoveredItemBackgroundColor.ShouldBe(Colors.Green);
-        control.DropdownView.PressedItemBackgroundColor.ShouldBe(Colors.Orange.WithAlpha(.18f));
-        control.DropdownView.TextColor.ShouldBe(Colors.Purple);
-        control.DropdownView.PlaceholderColor.ShouldBe(Colors.Purple.WithAlpha(.5f));
+        control.SelectView.DropDownBackgroundColor.ShouldBe(Colors.Pink);
+        control.SelectView.DropDownBorderColor.ShouldBe(Colors.Blue);
+        control.SelectView.SelectedItemBackgroundColor.ShouldBe(Colors.Red);
+        control.SelectView.HoveredItemBackgroundColor.ShouldBe(Colors.Green);
+        control.SelectView.PressedItemBackgroundColor.ShouldBe(Colors.Orange.WithAlpha(.18f));
+        control.SelectView.TextColor.ShouldBe(Colors.Purple);
+        control.SelectView.PlaceholderColor.ShouldBe(Colors.Purple.WithAlpha(.5f));
     }
 
     [Fact]
-    public void Constructor_ShouldApplyMaterialThemePlaceholderColor_ToDropdownArrow()
+    public void Constructor_ShouldApplyMaterialThemePlaceholderColor_ToSelectArrow()
     {
         var originalTheme = Application.Current.UserAppTheme;
 
@@ -181,7 +182,7 @@ public class SelectField_Test
             Application.Current.Resources["OnBackgroundDark"] = Colors.White;
 
             var control = AnimationReadyHandler.Prepare(new SelectField());
-            var arrowPath = GetArrowPath(control.DropdownView);
+            var arrowPath = GetArrowPath(control.SelectView);
 
             var arrowBrush = arrowPath.Fill.ShouldBeOfType<SolidColorBrush>();
             arrowBrush.Color.ShouldBe(Colors.White.WithAlpha(.5f));

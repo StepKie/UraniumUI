@@ -11,13 +11,13 @@ namespace UraniumUI.Material.Controls;
 [ContentProperty(nameof(Validations))]
 public class SelectField : InputField
 {
-    public Select DropdownView => Content as Select;
+    public Select SelectView => Content as Select;
 
     public override View Content { get; set; } = new SelectFieldSelect
     {
         VerticalOptions = LayoutOptions.Center,
         HorizontalOptions = LayoutOptions.Fill,
-        StyleClass = new List<string> { "InputField.Dropdown" },
+        StyleClass = new List<string> { "InputField.Select" },
     };
 
     protected StatefulContentView iconClear = new StatefulContentView
@@ -45,59 +45,59 @@ public class SelectField : InputField
         SemanticProperties.SetHint(iconClear, "Clears the selected value.");
         iconClear.TappedCommand = new Command(OnClearTapped);
         UpdateClearIconState();
-        ConfigureMaterialDropDownColors();
+        ConfigureMaterialSelectColors();
 
-        if (DropdownView is SelectFieldSelect selectFieldSelect)
+        if (SelectView is SelectFieldSelect selectFieldSelect)
         {
             selectFieldSelect.PopupAnchor = this;
         }
 
-        DropdownView.SetBinding(Select.SelectedItemProperty, new Binding(nameof(SelectedItem), BindingMode.TwoWay, source: this));
-        DropdownView.SetBinding(Select.ItemsSourceProperty, new Binding(nameof(ItemsSource), source: this));
-        DropdownView.SetBinding(Select.IsEnabledProperty, new Binding(nameof(IsEnabled), source: this));
-        DropdownView.SetBinding(Select.FontSizeProperty, new Binding(nameof(FontSize), source: this));
-        DropdownView.SetBinding(Select.FontAutoScalingEnabledProperty, new Binding(nameof(FontAutoScalingEnabled), source: this));
-        DropdownView.SetBinding(Select.FontFamilyProperty, new Binding(nameof(FontFamily), source: this));
-        DropdownView.SetBinding(Select.FontAttributesProperty, new Binding(nameof(FontAttributes), source: this));
-        DropdownView.SetBinding(Select.TextColorProperty, new Binding(nameof(TextColor), source: this));
-        DropdownView.SetBinding(Select.HorizontalTextAlignmentProperty, new Binding(nameof(HorizontalTextAlignment), source: this));
-        DropdownView.SetBinding(Select.ItemTemplateProperty, new Binding(nameof(ItemTemplate), source: this));
-        DropdownView.SetBinding(Select.SelectedItemTemplateProperty, new Binding(nameof(SelectedItemTemplate), source: this));
+        SelectView.SetBinding(Select.SelectedItemProperty, new Binding(nameof(SelectedItem), BindingMode.TwoWay, source: this));
+        SelectView.SetBinding(Select.ItemsSourceProperty, new Binding(nameof(ItemsSource), source: this));
+        SelectView.SetBinding(Select.IsEnabledProperty, new Binding(nameof(IsEnabled), source: this));
+        SelectView.SetBinding(Select.FontSizeProperty, new Binding(nameof(FontSize), source: this));
+        SelectView.SetBinding(Select.FontAutoScalingEnabledProperty, new Binding(nameof(FontAutoScalingEnabled), source: this));
+        SelectView.SetBinding(Select.FontFamilyProperty, new Binding(nameof(FontFamily), source: this));
+        SelectView.SetBinding(Select.FontAttributesProperty, new Binding(nameof(FontAttributes), source: this));
+        SelectView.SetBinding(Select.TextColorProperty, new Binding(nameof(TextColor), source: this));
+        SelectView.SetBinding(Select.HorizontalTextAlignmentProperty, new Binding(nameof(HorizontalTextAlignment), source: this));
+        SelectView.SetBinding(Select.ItemTemplateProperty, new Binding(nameof(ItemTemplate), source: this));
+        SelectView.SetBinding(Select.SelectedItemTemplateProperty, new Binding(nameof(SelectedItemTemplate), source: this));
     }
 
-    private void ConfigureMaterialDropDownColors()
+    private void ConfigureMaterialSelectColors()
     {
         this.SetAppThemeColor(
             TextColorProperty,
             ColorResource.GetColor("OnBackground", Colors.DarkGray),
             ColorResource.GetColor("OnBackgroundDark", Colors.LightGray));
 
-        DropdownView.SetAppThemeColor(
+        SelectView.SetAppThemeColor(
             Select.DropDownBackgroundColorProperty,
             ColorResource.GetColor("Surface", Colors.White),
             ColorResource.GetColor("SurfaceDark", Color.FromArgb("#2C3639")));
 
-        DropdownView.SetAppThemeColor(
+        SelectView.SetAppThemeColor(
             Select.DropDownBorderColorProperty,
             ColorResource.GetColor("Outline", Colors.LightGray),
             ColorResource.GetColor("OutlineDark", Colors.Gray));
 
-        DropdownView.SetAppThemeColor(
+        SelectView.SetAppThemeColor(
             Select.PlaceholderColorProperty,
             ColorResource.GetColor("OnBackground", Colors.DarkGray).WithAlpha(.5f),
             ColorResource.GetColor("OnBackgroundDark", Colors.LightGray).WithAlpha(.5f));
 
-        DropdownView.SetAppThemeColor(
+        SelectView.SetAppThemeColor(
             Select.SelectedItemBackgroundColorProperty,
             ColorResource.GetColor("PrimaryContainer", Colors.LightGray),
             ColorResource.GetColor("PrimaryContainerDark", Colors.DarkGray));
 
-        DropdownView.SetAppThemeColor(
+        SelectView.SetAppThemeColor(
             Select.HoveredItemBackgroundColorProperty,
             ColorResource.GetColor("SurfaceVariant", Colors.LightGray),
             ColorResource.GetColor("SurfaceVariantDark", Colors.Gray));
 
-        DropdownView.SetAppThemeColor(
+        SelectView.SetAppThemeColor(
             Select.PressedItemBackgroundColorProperty,
             ColorResource.GetColor("Primary", Colors.Gray).WithAlpha(.18f),
             ColorResource.GetColor("PrimaryDark", Colors.LightGray).WithAlpha(.24f));
@@ -119,7 +119,7 @@ public class SelectField : InputField
         if (IsEnabled)
         {
             SelectedItem = null;
-            DropdownView.Unfocus();
+            SelectView.Unfocus();
         }
     }
 
@@ -160,7 +160,7 @@ public class SelectField : InputField
 
     public void Close()
     {
-        DropdownView?.Close();
+        SelectView?.Close();
     }
 
     public IEnumerable ItemsSource { get => (IEnumerable)GetValue(ItemsSourceProperty); set => SetValue(ItemsSourceProperty, value); }
@@ -185,7 +185,7 @@ public class SelectField : InputField
     public static readonly BindableProperty SelectedItemTemplateProperty = BindableProperty.Create(
         nameof(SelectedItemTemplate), typeof(DataTemplate), typeof(SelectField));
 
-    public BindingBase ItemDisplayBinding { get => DropdownView?.ItemDisplayBinding; set => DropdownView.ItemDisplayBinding = value; }
+    public BindingBase ItemDisplayBinding { get => SelectView?.ItemDisplayBinding; set => SelectView.ItemDisplayBinding = value; }
 
     public bool AllowClear { get => (bool)GetValue(AllowClearProperty); set => SetValue(AllowClearProperty, value); }
 
