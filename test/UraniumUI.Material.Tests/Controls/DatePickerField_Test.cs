@@ -201,7 +201,7 @@ public class DatePickerField_Test
             },
         });
 
-        control.Content.Margin.ShouldBe(new Thickness(10, 0));
+        control.Content.Margin.ShouldBe(new Thickness(InputField.EdgePadding, 0));
     }
 
     [Fact]
