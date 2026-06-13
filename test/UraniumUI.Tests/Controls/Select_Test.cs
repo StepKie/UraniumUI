@@ -426,6 +426,46 @@ public class Select_Test
     }
 
     [Fact]
+    public void HostShow_ShouldPositionPopupRelativeToWrappedNonGridRoot()
+    {
+        var pageContent = new VerticalStackLayout();
+        var control = new Select
+        {
+            WidthRequest = 180,
+            HeightRequest = 40,
+        };
+        var page = new ContentPage
+        {
+            Content = pageContent
+        };
+        pageContent.Add(control);
+        var host = new PopupOverlayHost(page);
+        var root = Assert.IsType<Grid>(page.Content);
+        var popup = new Border();
+
+        root.Arrange(new Rect(0, 0, 1000, 700));
+        pageContent.Arrange(new Rect(0, 0, 1000, 700));
+        control.Arrange(new Rect(650, 520, 180, 40));
+
+        var registration = host.Show(control, popup, new PopupOverlayOptions
+        {
+            Width = 180,
+            MaxHeight = 240,
+            Margin = new Thickness(0, 4),
+        });
+
+        var overlay = Assert.Single(root.Children.OfType<AbsoluteLayout>());
+        var popupBounds = AbsoluteLayout.GetLayoutBounds(popup);
+
+        Assert.Same(pageContent, root.Children[0]);
+        Assert.Contains(popup, overlay.Children);
+        Assert.True(popupBounds.X >= 650);
+        Assert.True(popupBounds.Y > 250);
+
+        registration.Close();
+    }
+
+    [Fact]
     public void Open_ShouldUseUnstyledDismissLayer_WithLowOpacityBackdrop()
     {
         var pageContent = new VerticalStackLayout();

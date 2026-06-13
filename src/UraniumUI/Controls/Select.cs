@@ -89,7 +89,7 @@ public class Select : StatefulContentView
         }
 
         var popup = CreateDropDownView();
-        var registration = PopupOverlay.Show(this, popup, new PopupOverlayOptions
+        var registration = PopupOverlay.Show(GetPopupAnchor() ?? this, popup, new PopupOverlayOptions
         {
             Width = Width,
             MaxHeight = MaxDropDownHeight,
@@ -151,6 +151,11 @@ public class Select : StatefulContentView
             Content = activeScrollView,
             Shadow = DropDownShadow,
         };
+    }
+
+    protected virtual VisualElement GetPopupAnchor()
+    {
+        return this;
     }
 
     protected virtual View CreateItemContainer(object item)

@@ -119,6 +119,7 @@ internal sealed class PopupOverlayHost
     private View activePopup;
     private PopupOverlayOptions activeOptions;
     private bool activePopupAnimated;
+    private readonly List<ScrollView> activeScrollParents = new();
 
     public PopupOverlayHost(ContentPage page)
     {
@@ -146,6 +147,7 @@ internal sealed class PopupOverlayHost
 
         root.SizeChanged += OnRootSizeChanged;
         anchor.SizeChanged += OnAnchorSizeChanged;
+        RegisterScrollParents(anchor);
         PositionPopup();
         DispatchPositionPopup();
 
@@ -166,6 +168,7 @@ internal sealed class PopupOverlayHost
             root.Children.Remove(activeOverlayLayer);
             root.SizeChanged -= OnRootSizeChanged;
             anchor.SizeChanged -= OnAnchorSizeChanged;
+            UnregisterScrollParents();
 
             if (ownsRoot && ReferenceEquals(page.Content, root))
             {
@@ -217,12 +220,8 @@ internal sealed class PopupOverlayHost
         }
 
         RegisterHostElements();
+        AttachOriginalContentToRoot(insertAtStart: true);
         page.Content = root;
-
-        if (originalContent is not null && !root.Children.Contains(originalContent))
-        {
-            root.Children.Insert(0, originalContent);
-        }
 
         return true;
     }
@@ -245,19 +244,45 @@ internal sealed class PopupOverlayHost
     private void WrapPageContent()
     {
         originalContent = page.Content;
-        root = ownsRoot && root is not null ? root : new Grid();
+        root = ownsRoot && root is not null ? root : CreateRoot();
         ownsRoot = true;
 
         overlayLayer ??= CreateOverlayLayer();
 
         RegisterHostElements();
+        AttachOriginalContentToRoot(insertAtStart: false);
 
         page.Content = root;
+    }
 
-        if (originalContent is not null && !root.Children.Contains(originalContent))
+    private Grid CreateRoot()
+    {
+        return new Grid
         {
-            root.Children.Add(originalContent);
+            HorizontalOptions = LayoutOptions.Fill,
+            VerticalOptions = LayoutOptions.Fill,
+        };
+    }
+
+    private void AttachOriginalContentToRoot(bool insertAtStart)
+    {
+        if (originalContent is null || root.Children.Contains(originalContent))
+        {
+            return;
         }
+
+        if (ReferenceEquals(page.Content, originalContent))
+        {
+            page.Content = null;
+        }
+
+        if (insertAtStart)
+        {
+            root.Children.Insert(0, originalContent);
+            return;
+        }
+
+        root.Children.Add(originalContent);
     }
 
     private AbsoluteLayout CreateOverlayLayer()
@@ -266,6 +291,8 @@ internal sealed class PopupOverlayHost
         {
             StyleId = nameof(PopupOverlay),
             BackgroundColor = Colors.Transparent,
+            HorizontalOptions = LayoutOptions.Fill,
+            VerticalOptions = LayoutOptions.Fill,
             InputTransparent = true,
             IsVisible = false,
             ZIndex = 9999,
@@ -328,11 +355,23 @@ internal sealed class PopupOverlayHost
         PositionPopup();
     }
 
+    private void OnScrollParentScrolled(object sender, ScrolledEventArgs e)
+    {
+        PositionPopup();
+    }
+
     private void DispatchPositionPopup()
+    {
+        DispatchPositionPopup(TimeSpan.FromMilliseconds(1));
+        DispatchPositionPopup(TimeSpan.FromMilliseconds(16));
+        DispatchPositionPopup(TimeSpan.FromMilliseconds(50));
+    }
+
+    private void DispatchPositionPopup(TimeSpan delay)
     {
         try
         {
-            root.Dispatcher?.DispatchDelayed(TimeSpan.FromMilliseconds(1), PositionPopup);
+            root.Dispatcher?.DispatchDelayed(delay, PositionPopup);
         }
         catch (InvalidOperationException)
         {
@@ -342,20 +381,23 @@ internal sealed class PopupOverlayHost
 
     private void PositionPopup()
     {
-        if (activeAnchor is null || activePopup is null || activeOptions is null || root.Width <= 0 || root.Height <= 0)
+        var placementWidth = overlayLayer.Width > 0 ? overlayLayer.Width : root.Width;
+        var placementHeight = overlayLayer.Height > 0 ? overlayLayer.Height : root.Height;
+
+        if (activeAnchor is null || activePopup is null || activeOptions is null || placementWidth <= 0 || placementHeight <= 0)
         {
             return;
         }
 
-        var anchorBounds = GetBoundsRelativeTo(activeAnchor, root);
-        var availableWidth = Math.Max(0, root.Width - activeOptions.Margin.HorizontalThickness);
+        var anchorBounds = GetAnchorBoundsRelativeToOverlay();
+        var availableWidth = Math.Max(0, placementWidth - activeOptions.Margin.HorizontalThickness);
         var requestedWidth = activeOptions.Width > 0 ? activeOptions.Width : anchorBounds.Width;
         var minimumWidth = Math.Min(anchorBounds.Width, availableWidth);
         var width = Math.Min(Math.Max(requestedWidth, minimumWidth), availableWidth);
 
-        var x = Math.Min(Math.Max(activeOptions.Margin.Left, anchorBounds.X), Math.Max(activeOptions.Margin.Left, root.Width - width - activeOptions.Margin.Right));
+        var x = Math.Min(Math.Max(activeOptions.Margin.Left, anchorBounds.X), Math.Max(activeOptions.Margin.Left, placementWidth - width - activeOptions.Margin.Right));
 
-        var availableBelow = root.Height - anchorBounds.Bottom - activeOptions.Margin.Bottom;
+        var availableBelow = placementHeight - anchorBounds.Bottom - activeOptions.Margin.Bottom;
         var availableAbove = anchorBounds.Top - activeOptions.Margin.Top;
         var desiredMaxHeight = activeOptions.MaxHeight > 0 ? activeOptions.MaxHeight : 240d;
         var firstPassMaxHeight = Math.Max(0, Math.Min(desiredMaxHeight, Math.Max(availableBelow, availableAbove)));
@@ -374,7 +416,7 @@ internal sealed class PopupOverlayHost
 
         var y = showAbove
             ? Math.Max(activeOptions.Margin.Top, anchorBounds.Top - height)
-            : Math.Min(anchorBounds.Bottom, root.Height - height - activeOptions.Margin.Bottom);
+            : Math.Min(anchorBounds.Bottom, placementHeight - height - activeOptions.Margin.Bottom);
 
         AbsoluteLayout.SetLayoutFlags(activePopup, AbsoluteLayoutFlags.None);
         AbsoluteLayout.SetLayoutBounds(activePopup, new Rect(x, y, width, AbsoluteLayout.AutoSize));
@@ -428,7 +470,58 @@ internal sealed class PopupOverlayHost
         }
     }
 
+    private void RegisterScrollParents(Element element)
+    {
+        UnregisterScrollParents();
+
+        var current = element.Parent;
+        while (current is not null)
+        {
+            if (current is ScrollView scrollView && !activeScrollParents.Contains(scrollView))
+            {
+                scrollView.Scrolled += OnScrollParentScrolled;
+                activeScrollParents.Add(scrollView);
+            }
+
+            current = current.Parent;
+        }
+    }
+
+    private void UnregisterScrollParents()
+    {
+        foreach (var scrollView in activeScrollParents)
+        {
+            scrollView.Scrolled -= OnScrollParentScrolled;
+        }
+
+        activeScrollParents.Clear();
+    }
+
+    private Rect GetAnchorBoundsRelativeToOverlay()
+    {
+        var anchorBounds = GetBoundsRelativeTo(activeAnchor, root);
+        var overlayRootBounds = GetBoundsRelativeTo(overlayLayer, root);
+        return new Rect(
+            anchorBounds.X - overlayRootBounds.X,
+            anchorBounds.Y - overlayRootBounds.Y,
+            anchorBounds.Width,
+            anchorBounds.Height);
+    }
+
     internal static Rect GetBoundsRelativeTo(VisualElement element, VisualElement relativeTo)
+    {
+        var logicalBounds = GetLogicalBoundsRelativeTo(element, relativeTo);
+        var platformBounds = GetPlatformBoundsRelativeTo(element, relativeTo);
+
+        if (platformBounds is not null && ShouldUsePlatformBounds(platformBounds.Value, logicalBounds))
+        {
+            return platformBounds.Value;
+        }
+
+        return logicalBounds;
+    }
+
+    private static Rect GetLogicalBoundsRelativeTo(VisualElement element, VisualElement relativeTo)
     {
         var x = 0d;
         var y = 0d;
@@ -449,5 +542,71 @@ internal sealed class PopupOverlayHost
         }
 
         return new Rect(x, y, element.Width, element.Height);
+    }
+
+    private static bool ShouldUsePlatformBounds(Rect platformBounds, Rect logicalBounds)
+    {
+        if (!IsFinite(platformBounds.X) || !IsFinite(platformBounds.Y))
+        {
+            return false;
+        }
+
+        var platformHasNoOffset = IsCloseToZero(platformBounds.X) && IsCloseToZero(platformBounds.Y);
+        var logicalHasOffset = !IsCloseToZero(logicalBounds.X) || !IsCloseToZero(logicalBounds.Y);
+        return !platformHasNoOffset || !logicalHasOffset;
+    }
+
+    private static bool IsFinite(double value)
+    {
+        return !double.IsNaN(value) && !double.IsInfinity(value);
+    }
+
+    private static bool IsCloseToZero(double value)
+    {
+        return Math.Abs(value) < .5d;
+    }
+
+    private static Rect? GetPlatformBoundsRelativeTo(VisualElement element, VisualElement relativeTo)
+    {
+        try
+        {
+#if WINDOWS
+            if (element.Handler?.PlatformView is Microsoft.UI.Xaml.UIElement elementView &&
+                relativeTo.Handler?.PlatformView is Microsoft.UI.Xaml.UIElement relativeView)
+            {
+                var point = elementView.TransformToVisual(relativeView).TransformPoint(new Windows.Foundation.Point(0, 0));
+                return new Rect(point.X, point.Y, element.Width, element.Height);
+            }
+#elif ANDROID
+            if (element.Handler?.PlatformView is Android.Views.View elementView &&
+                relativeTo.Handler?.PlatformView is Android.Views.View relativeView)
+            {
+                var elementLocation = new int[2];
+                var relativeLocation = new int[2];
+                elementView.GetLocationOnScreen(elementLocation);
+                relativeView.GetLocationOnScreen(relativeLocation);
+                var density = relativeView.Context?.Resources?.DisplayMetrics?.Density ?? 1f;
+                if (density <= 0)
+                {
+                    density = 1f;
+                }
+
+                return new Rect((elementLocation[0] - relativeLocation[0]) / density, (elementLocation[1] - relativeLocation[1]) / density, element.Width, element.Height);
+            }
+#elif IOS || MACCATALYST
+            if (element.Handler?.PlatformView is UIKit.UIView elementView &&
+                relativeTo.Handler?.PlatformView is UIKit.UIView relativeView)
+            {
+                var point = elementView.ConvertPointToView(CoreGraphics.CGPoint.Empty, relativeView);
+                return new Rect(point.X, point.Y, element.Width, element.Height);
+            }
+#endif
+        }
+        catch
+        {
+            // Fall back to MAUI logical coordinates until platform views are connected.
+        }
+
+        return null;
     }
 }

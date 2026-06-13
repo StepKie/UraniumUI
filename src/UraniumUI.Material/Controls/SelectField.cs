@@ -13,7 +13,7 @@ public class SelectField : InputField
 {
     public Select DropdownView => Content as Select;
 
-    public override View Content { get; set; } = new Select
+    public override View Content { get; set; } = new SelectFieldSelect
     {
         VerticalOptions = LayoutOptions.Center,
         HorizontalOptions = LayoutOptions.Fill,
@@ -46,6 +46,11 @@ public class SelectField : InputField
         iconClear.TappedCommand = new Command(OnClearTapped);
         UpdateClearIconState();
         ConfigureMaterialDropDownColors();
+
+        if (DropdownView is SelectFieldSelect selectFieldSelect)
+        {
+            selectFieldSelect.PopupAnchor = this;
+        }
 
         DropdownView.SetBinding(Select.SelectedItemProperty, new Binding(nameof(SelectedItem), BindingMode.TwoWay, source: this));
         DropdownView.SetBinding(Select.ItemsSourceProperty, new Binding(nameof(ItemsSource), source: this));
@@ -217,4 +222,14 @@ public class SelectField : InputField
 
     public static readonly BindableProperty HorizontalTextAlignmentProperty = BindableProperty.Create(
         nameof(HorizontalTextAlignment), typeof(TextAlignment), typeof(SelectField), Select.HorizontalTextAlignmentProperty.DefaultValue);
+
+    private sealed class SelectFieldSelect : Select
+    {
+        public VisualElement PopupAnchor { get; set; }
+
+        protected override VisualElement GetPopupAnchor()
+        {
+            return PopupAnchor ?? base.GetPopupAnchor();
+        }
+    }
 }

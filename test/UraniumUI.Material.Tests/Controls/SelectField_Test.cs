@@ -82,6 +82,37 @@ public class SelectField_Test
     }
 
     [Fact]
+    public void Open_ShouldPositionPopupRelativeToSelectField()
+    {
+        var pageRoot = new Grid();
+        var control = AnimationReadyHandler.Prepare(new SelectField
+        {
+            WidthRequest = 240,
+            HeightRequest = 55,
+        });
+        control.ItemsSource = new[] { "Default", "Numeric", "Email" };
+        _ = new ContentPage
+        {
+            Content = pageRoot
+        };
+        pageRoot.Add(control);
+        pageRoot.Arrange(new Rect(0, 0, 1000, 700));
+        control.Arrange(new Rect(650, 520, 240, 55));
+        control.DropdownView.Arrange(new Rect(0, 0, 240, 45));
+
+        control.DropdownView.Open();
+
+        var overlay = pageRoot.Children.OfType<AbsoluteLayout>().Single();
+        var popup = overlay.Children.OfType<Border>().Single();
+        var popupBounds = AbsoluteLayout.GetLayoutBounds(popup);
+
+        popupBounds.X.ShouldBeGreaterThanOrEqualTo(650);
+        popupBounds.Y.ShouldBeGreaterThan(250);
+
+        control.Close();
+    }
+
+    [Fact]
     public void AllowClear_ShouldExposeSemanticDescription_ForClearButton()
     {
         var control = AnimationReadyHandler.Prepare(new SelectField());
