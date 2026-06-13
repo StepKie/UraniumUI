@@ -25,6 +25,10 @@ public partial class TreeView : ContentView
     private long checkStateVersion;
     private bool isSelectedItemsUpdating;
 
+    public event EventHandler<object> SelectedItemChanged;
+
+    public event EventHandler<IList> SelectedItemsChanged;
+
     public TreeView()
     {
         dataController = new TreeViewDataController
@@ -58,7 +62,7 @@ public partial class TreeView : ContentView
 
         if (SelectedItems is INotifyCollectionChanged observableSelectedItems)
         {
-            observableSelectedItems.CollectionChanged -= SelectedItemsChanged;
+            observableSelectedItems.CollectionChanged -= OnSelectedItemsCollectionChanged;
 
             if (Handler is null)
             {
@@ -66,7 +70,7 @@ public partial class TreeView : ContentView
             }
             else
             {
-                observableSelectedItems.CollectionChanged += SelectedItemsChanged;
+                observableSelectedItems.CollectionChanged += OnSelectedItemsCollectionChanged;
                 dataController.Attach();
             }
         }
@@ -163,6 +167,15 @@ public partial class TreeView : ContentView
         nameof(SelectedItem), typeof(object), typeof(TreeView), default, BindingMode.TwoWay,
         propertyChanged: (bindable, oldValue, newValue) => (bindable as TreeView)?.OnSelectedItemChanged(oldValue, newValue));
 
+    public ICommand SelectedItemChangedCommand
+    {
+        get => (ICommand)GetValue(SelectedItemChangedCommandProperty);
+        set => SetValue(SelectedItemChangedCommandProperty, value);
+    }
+
+    public static readonly BindableProperty SelectedItemChangedCommandProperty = BindableProperty.Create(
+        nameof(SelectedItemChangedCommand), typeof(ICommand), typeof(TreeView));
+
     public IList SelectedItems
     {
         get => (IList)GetValue(SelectedItemsProperty);
@@ -173,6 +186,15 @@ public partial class TreeView : ContentView
         nameof(SelectedItems), typeof(IList), typeof(TreeView),
         defaultValueCreator: _ => new ObservableCollection<object>(),
         propertyChanged: (bindable, oldValue, newValue) => (bindable as TreeView)?.OnSelectedItemsChanged((IList)oldValue, (IList)newValue));
+
+    public ICommand SelectedItemsChangedCommand
+    {
+        get => (ICommand)GetValue(SelectedItemsChangedCommandProperty);
+        set => SetValue(SelectedItemsChangedCommandProperty, value);
+    }
+
+    public static readonly BindableProperty SelectedItemsChangedCommandProperty = BindableProperty.Create(
+        nameof(SelectedItemsChangedCommand), typeof(ICommand), typeof(TreeView));
 
     public DataTemplate ExpanderTemplate
     {
@@ -519,40 +541,53 @@ public partial class TreeView : ContentView
         dataController.RefreshAllSelection();
     }
 
+    private void NotifySelectedItemChanged(object selectedItem)
+    {
+        SelectedItemChanged?.Invoke(this, selectedItem);
+        SelectedItemChangedCommand?.Execute(selectedItem);
+    }
+
+    private void NotifySelectedItemsChanged(IList selectedItems)
+    {
+        SelectedItemsChanged?.Invoke(this, selectedItems);
+        SelectedItemsChangedCommand?.Execute(selectedItems);
+    }
+
     private void OnSelectedItemChanged(object oldValue, object newValue)
     {
-        if (SelectionMode != SelectionMode.Single)
+        if (SelectionMode == SelectionMode.Single)
         {
-            return;
+            if (oldValue is not null)
+            {
+                dataController.RefreshSelectionForItem(oldValue);
+            }
+
+            if (newValue is not null)
+            {
+                dataController.RefreshSelectionForItem(newValue);
+            }
         }
 
-        if (oldValue is not null)
-        {
-            dataController.RefreshSelectionForItem(oldValue);
-        }
-
-        if (newValue is not null)
-        {
-            dataController.RefreshSelectionForItem(newValue);
-        }
+        NotifySelectedItemChanged(newValue);
     }
 
     private void OnSelectedItemsChanged(IList oldValue, IList newValue)
     {
         if (oldValue is INotifyCollectionChanged observableOld)
         {
-            observableOld.CollectionChanged -= SelectedItemsChanged;
+            observableOld.CollectionChanged -= OnSelectedItemsCollectionChanged;
         }
 
         if (newValue is INotifyCollectionChanged observableNew)
         {
-            observableNew.CollectionChanged += SelectedItemsChanged;
+            observableNew.CollectionChanged += OnSelectedItemsCollectionChanged;
         }
 
         dataController.RefreshAllSelection();
+        NotifySelectedItemsChanged(newValue);
     }
 
-    private void SelectedItemsChanged(object sender, NotifyCollectionChangedEventArgs e)
+    private void OnSelectedItemsCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
         if (isSelectedItemsUpdating || SelectionMode != SelectionMode.Multiple)
         {
@@ -603,6 +638,8 @@ public partial class TreeView : ContentView
         {
             isSelectedItemsUpdating = false;
         }
+
+        NotifySelectedItemsChanged(SelectedItems);
     }
 
     partial void UpdatePlatformAnimationState();

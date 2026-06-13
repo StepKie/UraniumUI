@@ -62,6 +62,104 @@ public class TreeView_Test
     }
 
     [Fact]
+    public void SelectedItemChanged_Event_ShouldFire_WhenSelectedItemChanges()
+    {
+        var itemSource = new[] { "1", "2", "3", "4" };
+        var control = AnimationReadyHandler.Prepare(new TreeView
+        {
+            ItemsSource = itemSource,
+            SelectionMode = SelectionMode.Single,
+        });
+        object selectedItem = null;
+        var callCount = 0;
+
+        control.SelectedItemChanged += (_, item) =>
+        {
+            callCount++;
+            selectedItem = item;
+        };
+
+        control.SelectedItem = itemSource[1];
+
+        callCount.ShouldBe(1);
+        selectedItem.ShouldBe(itemSource[1]);
+    }
+
+    [Fact]
+    public void SelectedItemChangedCommand_ShouldExecute_WhenSelectedItemChanges()
+    {
+        var itemSource = new[] { "1", "2", "3", "4" };
+        var command = new RecordingCommand();
+        var control = AnimationReadyHandler.Prepare(new TreeView
+        {
+            ItemsSource = itemSource,
+            SelectionMode = SelectionMode.Single,
+            SelectedItemChangedCommand = command,
+        });
+
+        control.SelectedItem = itemSource[2];
+
+        command.ExecuteCount.ShouldBe(1);
+        command.LastParameter.ShouldBe(itemSource[2]);
+    }
+
+    [Fact]
+    public void SelectedItemsChanged_Event_ShouldFire_WhenCollectionChanges()
+    {
+        var control = AnimationReadyHandler.Prepare(new TreeView
+        {
+            SelectionMode = SelectionMode.Multiple,
+        });
+        IList selectedItems = null;
+        var callCount = 0;
+
+        control.SelectedItemsChanged += (_, items) =>
+        {
+            callCount++;
+            selectedItems = items;
+        };
+
+        control.SelectedItems.Add("1");
+
+        callCount.ShouldBe(1);
+        selectedItems.ShouldBeSameAs(control.SelectedItems);
+        selectedItems.Cast<object>().ShouldContain("1");
+    }
+
+    [Fact]
+    public void SelectedItemsChanged_Event_ShouldFire_WhenCollectionReferenceChanges()
+    {
+        var control = AnimationReadyHandler.Prepare(new TreeView
+        {
+            SelectionMode = SelectionMode.Multiple,
+        });
+        var replacement = new ObservableCollection<object> { "1" };
+        IList selectedItems = null;
+
+        control.SelectedItemsChanged += (_, items) => selectedItems = items;
+
+        control.SelectedItems = replacement;
+
+        selectedItems.ShouldBeSameAs(replacement);
+    }
+
+    [Fact]
+    public void SelectedItemsChangedCommand_ShouldExecute_WhenCollectionChanges()
+    {
+        var command = new RecordingCommand();
+        var control = AnimationReadyHandler.Prepare(new TreeView
+        {
+            SelectionMode = SelectionMode.Multiple,
+            SelectedItemsChangedCommand = command,
+        });
+
+        control.SelectedItems.Add("1");
+
+        command.ExecuteCount.ShouldBe(1);
+        command.LastParameter.ShouldBeSameAs(control.SelectedItems);
+    }
+
+    [Fact]
     public void DataController_ShouldShowOnlyRootNodes_Initially()
     {
         var roots = new[]
@@ -713,6 +811,23 @@ public class TreeView_Test
         public bool CanExecute(object parameter) => true;
 
         public void Execute(object parameter) => execute((T)parameter);
+    }
+
+    private sealed class RecordingCommand : ICommand
+    {
+        public int ExecuteCount { get; private set; }
+
+        public object LastParameter { get; private set; }
+
+        public event EventHandler CanExecuteChanged { add { } remove { } }
+
+        public bool CanExecute(object parameter) => true;
+
+        public void Execute(object parameter)
+        {
+            ExecuteCount++;
+            LastParameter = parameter;
+        }
     }
 
     private sealed class CountingHierarchicalSelectBehavior : TreeViewHierarchicalSelectBehavior
