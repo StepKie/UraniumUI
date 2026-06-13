@@ -141,6 +141,7 @@ public partial class DataGrid : Border
             }
 
             Columns = CurrentType?.GetProperties(BindingFlags.Instance | BindingFlags.Public)
+                .Where(property => property.GetCustomAttribute<DataGridIgnoreAttribute>() is null)
                 .Select(s => new DataGridColumn
                 {
                     Title = s.GetCustomAttribute<DisplayNameAttribute>()?.DisplayName ?? s.GetCustomAttribute<DisplayAttribute>()?.Name ?? s.Name,

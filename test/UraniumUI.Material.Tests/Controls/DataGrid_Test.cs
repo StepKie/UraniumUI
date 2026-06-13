@@ -1,8 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Maui.Controls.Xaml;
 using Shouldly;
 using UraniumUI.Material.Controls;
@@ -190,6 +188,22 @@ public class DataGrid_Test
         source.Name.ShouldBe("Two");
     }
 
+    [Fact]
+    public void UseAutoColumns_ShouldIgnoreProperties_WithDataGridIgnoreAttribute()
+    {
+        var control = AnimationReadyHandler.Prepare(new DataGrid
+        {
+            UseAutoColumns = true,
+            ItemsSource = new List<AutoColumnRow>
+            {
+                new() { Id = 1, Name = "One", Hidden = "secret" },
+            },
+        });
+
+        control.Columns.Select(column => column.Title).ShouldBe(["Identity", "Name"]);
+        control.Columns.Select(column => ((Binding)column.ValueBinding).Path).ShouldBe([nameof(AutoColumnRow.Id), nameof(AutoColumnRow.Name)]);
+    }
+
     private sealed class DataGridRow
     {
         public int Id { get; init; }
@@ -212,6 +226,17 @@ public class DataGrid_Test
         {
             return serviceType == typeof(IProvideValueTarget) ? this : null;
         }
+    }
+
+    private sealed class AutoColumnRow
+    {
+        [DisplayName("Identity")]
+        public int Id { get; init; }
+
+        public string Name { get; init; }
+
+        [DataGridIgnore]
+        public string Hidden { get; init; }
     }
 
     internal class DataGridTestViewModel : UraniumBindableObject
