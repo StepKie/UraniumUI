@@ -1,6 +1,7 @@
 using UraniumUI.Controls;
 using UraniumUI.Tests.Core;
 using UraniumUI.Views;
+using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace UraniumUI.Tests.Controls;
 
@@ -47,13 +48,79 @@ public class MauiDropdown_Test
             Placeholder = "Choose",
             ItemDisplayBinding = new Binding(nameof(TestItem.Name))
         };
-        var selectedLabel = ((Grid)control.Content).Children.OfType<Label>().First();
+        var selectedContent = GetSelectedContent(control);
+        var selectedLabel = Assert.IsType<Label>(selectedContent.Content);
 
         Assert.Equal("Choose", selectedLabel.Text);
 
         control.SelectedItem = new TestItem("Katherine");
 
+        selectedLabel = Assert.IsType<Label>(selectedContent.Content);
         Assert.Equal("Katherine", selectedLabel.Text);
+    }
+
+    [Fact]
+    public void SelectedItem_ShouldUseItemTemplate_WhenSelectedItemTemplateIsNotSet()
+    {
+        var item = new TestItem("Ada");
+        var control = new MauiDropdown
+        {
+            ItemTemplate = new DataTemplate(() => new Label { StyleId = "ItemTemplate" }),
+            SelectedItem = item,
+        };
+
+        var selectedContent = GetSelectedContent(control);
+        var selectedView = Assert.IsType<Label>(selectedContent.Content);
+
+        Assert.Equal("ItemTemplate", selectedView.StyleId);
+        Assert.Same(item, selectedView.BindingContext);
+    }
+
+    [Fact]
+    public void SelectedItem_ShouldPreferSelectedItemTemplate()
+    {
+        var item = new TestItem("Ada");
+        var control = new MauiDropdown
+        {
+            ItemTemplate = new DataTemplate(() => new Label { StyleId = "ItemTemplate" }),
+            SelectedItemTemplate = new DataTemplate(() => new Label { StyleId = "SelectedItemTemplate" }),
+            SelectedItem = item,
+        };
+
+        var selectedContent = GetSelectedContent(control);
+        var selectedView = Assert.IsType<Label>(selectedContent.Content);
+
+        Assert.Equal("SelectedItemTemplate", selectedView.StyleId);
+        Assert.Same(item, selectedView.BindingContext);
+    }
+
+    [Fact]
+    public void ItemTemplateChanged_ShouldRefreshSelectedItemView()
+    {
+        var item = new TestItem("Ada");
+        var control = new MauiDropdown
+        {
+            SelectedItem = item,
+        };
+
+        control.ItemTemplate = new DataTemplate(() => new Label { StyleId = "ItemTemplate" });
+
+        var selectedContent = GetSelectedContent(control);
+        var selectedView = Assert.IsType<Label>(selectedContent.Content);
+
+        Assert.Equal("ItemTemplate", selectedView.StyleId);
+        Assert.Same(item, selectedView.BindingContext);
+    }
+
+    [Fact]
+    public void Constructor_ShouldUsePathForArrow()
+    {
+        var control = new MauiDropdown();
+        var contentGrid = Assert.IsType<Grid>(control.Content);
+
+        var arrowPath = Assert.IsType<Path>(contentGrid.Children[1]);
+
+        Assert.NotNull(arrowPath.Data);
     }
 
     [Fact]
@@ -127,6 +194,12 @@ public class MauiDropdown_Test
     }
 
     private sealed record TestItem(string Name);
+
+    private static ContentView GetSelectedContent(MauiDropdown control)
+    {
+        var contentGrid = Assert.IsType<Grid>(control.Content);
+        return Assert.IsType<ContentView>(contentGrid.Children[0]);
+    }
 
     private sealed class TestMauiDropdown : MauiDropdown
     {

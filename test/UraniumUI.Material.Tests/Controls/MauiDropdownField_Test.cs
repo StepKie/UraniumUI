@@ -36,6 +36,17 @@ public class MauiDropdownField_Test
     }
 
     [Fact]
+    public void SelectedItemTemplate_ShouldBeForwarded_ToDropdownView()
+    {
+        var control = AnimationReadyHandler.Prepare(new MauiDropdownField());
+        var selectedItemTemplate = new DataTemplate(() => new Label());
+
+        control.SelectedItemTemplate = selectedItemTemplate;
+
+        control.DropdownView.SelectedItemTemplate.ShouldBeSameAs(selectedItemTemplate);
+    }
+
+    [Fact]
     public void Constructor_ShouldApplyMaterialThemeColors_ToDropdownView()
     {
         Application.Current.UserAppTheme = AppTheme.Light;

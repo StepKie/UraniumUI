@@ -3,14 +3,17 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using Microsoft.Maui.Controls.Shapes;
 using UraniumUI.Extensions;
+using UraniumUI.Pages;
 using UraniumUI.Views;
+using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace UraniumUI.Controls;
 
 public class MauiDropdown : ContentView
 {
     private readonly Label selectedLabel;
-    private readonly Label arrowLabel;
+    private readonly ContentView selectedContent;
+    private readonly Path arrowPath;
     private DropdownOverlayRegistration overlayRegistration;
 
     public MauiDropdown()
@@ -21,12 +24,23 @@ public class MauiDropdown : ContentView
             LineBreakMode = LineBreakMode.TailTruncation,
         };
 
-        arrowLabel = new Label
+        selectedContent = new ContentView
         {
-            Text = "v",
+            VerticalOptions = LayoutOptions.Center,
+            HorizontalOptions = LayoutOptions.Fill,
+            InputTransparent = true,
+            Content = selectedLabel,
+        };
+
+        arrowPath = new Path
+        {
+            Data = UraniumShapes.ArrowDown,
+            WidthRequest = 14,
+            HeightRequest = 9,
             VerticalOptions = LayoutOptions.Center,
             HorizontalOptions = LayoutOptions.End,
             InputTransparent = true,
+            Fill = TextColor.ToSolidColorBrush(),
         };
 
         var contentGrid = new Grid
@@ -40,8 +54,8 @@ public class MauiDropdown : ContentView
             BackgroundColor = Colors.Transparent,
         };
 
-        contentGrid.Add(selectedLabel, column: 0);
-        contentGrid.Add(arrowLabel, column: 1);
+        contentGrid.Add(selectedContent, column: 0);
+        contentGrid.Add(arrowPath, column: 1);
 
         Content = contentGrid;
 
@@ -145,20 +159,11 @@ public class MauiDropdown : ContentView
 
     protected virtual View CreateItemView(object item)
     {
-        var template = ItemTemplate is DataTemplateSelector selector
-            ? selector.SelectTemplate(item, this)
-            : ItemTemplate;
+        var view = CreateTemplateView(ItemTemplate, item);
 
-        if (template is not null)
+        if (view is not null)
         {
-            var content = template.CreateContent();
-            var view = content as View;
-
-            if (view is not null)
-            {
-                view.BindingContext = item;
-                return view;
-            }
+            return view;
         }
 
         return new Label
@@ -173,6 +178,33 @@ public class MauiDropdown : ContentView
             VerticalOptions = LayoutOptions.Center,
             Padding = new Thickness(12, 10),
         };
+    }
+
+    protected virtual View CreateSelectedItemView(object item)
+    {
+        return CreateTemplateView(SelectedItemTemplate ?? ItemTemplate, item);
+    }
+
+    private View CreateTemplateView(DataTemplate template, object item)
+    {
+        template = template is DataTemplateSelector selector
+            ? selector.SelectTemplate(item, this)
+            : template;
+
+        if (template is null)
+        {
+            return null;
+        }
+
+        var content = template.CreateContent();
+        var view = content as View;
+
+        if (view is not null)
+        {
+            view.BindingContext = item;
+        }
+
+        return view;
     }
 
     protected virtual string GetTextForItem(object item)
@@ -236,6 +268,13 @@ public class MauiDropdown : ContentView
     protected virtual void OnSelectedItemChanged()
     {
         UpdateSelectedText();
+        UpdateTextStyle();
+    }
+
+    protected virtual void OnTemplatePropertyChanged()
+    {
+        Close();
+        UpdateSelectedText();
     }
 
     protected virtual void OnTextPropertyChanged()
@@ -261,7 +300,7 @@ public class MauiDropdown : ContentView
 
     private void UpdateSelectedText()
     {
-        if (selectedLabel is null)
+        if (selectedContent is null || selectedLabel is null)
         {
             return;
         }
@@ -270,16 +309,26 @@ public class MauiDropdown : ContentView
         {
             selectedLabel.Text = Placeholder;
             selectedLabel.TextColor = PlaceholderColor;
+            selectedContent.Content = selectedLabel;
+            return;
+        }
+
+        var selectedItemView = CreateSelectedItemView(SelectedItem);
+
+        if (selectedItemView is not null)
+        {
+            selectedContent.Content = selectedItemView;
             return;
         }
 
         selectedLabel.Text = GetTextForItem(SelectedItem);
         selectedLabel.TextColor = TextColor;
+        selectedContent.Content = selectedLabel;
     }
 
     private void UpdateTextStyle()
     {
-        if (selectedLabel is null || arrowLabel is null)
+        if (selectedLabel is null || arrowPath is null)
         {
             return;
         }
@@ -290,11 +339,7 @@ public class MauiDropdown : ContentView
         selectedLabel.FontAutoScalingEnabled = FontAutoScalingEnabled;
         selectedLabel.HorizontalTextAlignment = HorizontalTextAlignment;
 
-        arrowLabel.FontSize = FontSize;
-        arrowLabel.FontFamily = FontFamily;
-        arrowLabel.FontAttributes = FontAttributes;
-        arrowLabel.FontAutoScalingEnabled = FontAutoScalingEnabled;
-        arrowLabel.TextColor = SelectedItem is null ? PlaceholderColor : TextColor;
+        arrowPath.Fill = (SelectedItem is null ? PlaceholderColor : TextColor).ToSolidColorBrush();
     }
 
     public IEnumerable ItemsSource { get => (IEnumerable)GetValue(ItemsSourceProperty); set => SetValue(ItemsSourceProperty, value); }
@@ -313,7 +358,14 @@ public class MauiDropdown : ContentView
     public DataTemplate ItemTemplate { get => (DataTemplate)GetValue(ItemTemplateProperty); set => SetValue(ItemTemplateProperty, value); }
 
     public static readonly BindableProperty ItemTemplateProperty = BindableProperty.Create(
-        nameof(ItemTemplate), typeof(DataTemplate), typeof(MauiDropdown));
+        nameof(ItemTemplate), typeof(DataTemplate), typeof(MauiDropdown),
+        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnTemplatePropertyChanged());
+
+    public DataTemplate SelectedItemTemplate { get => (DataTemplate)GetValue(SelectedItemTemplateProperty); set => SetValue(SelectedItemTemplateProperty, value); }
+
+    public static readonly BindableProperty SelectedItemTemplateProperty = BindableProperty.Create(
+        nameof(SelectedItemTemplate), typeof(DataTemplate), typeof(MauiDropdown),
+        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnTemplatePropertyChanged());
 
     public BindingBase ItemDisplayBinding { get => (BindingBase)GetValue(ItemDisplayBindingProperty); set => SetValue(ItemDisplayBindingProperty, value); }
 

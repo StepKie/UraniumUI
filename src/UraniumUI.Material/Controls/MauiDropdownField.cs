@@ -55,6 +55,7 @@ public class MauiDropdownField : InputField
         DropdownView.SetBinding(MauiDropdown.TextColorProperty, new Binding(nameof(TextColor), source: this));
         DropdownView.SetBinding(MauiDropdown.HorizontalTextAlignmentProperty, new Binding(nameof(HorizontalTextAlignment), source: this));
         DropdownView.SetBinding(MauiDropdown.ItemTemplateProperty, new Binding(nameof(ItemTemplate), source: this));
+        DropdownView.SetBinding(MauiDropdown.SelectedItemTemplateProperty, new Binding(nameof(SelectedItemTemplate), source: this));
         DropdownView.SetBinding(MauiDropdown.ItemDisplayBindingProperty, new Binding(nameof(ItemDisplayBinding), source: this));
     }
 
@@ -167,6 +168,11 @@ public class MauiDropdownField : InputField
 
     public static readonly BindableProperty ItemTemplateProperty = BindableProperty.Create(
         nameof(ItemTemplate), typeof(DataTemplate), typeof(MauiDropdownField));
+
+    public DataTemplate SelectedItemTemplate { get => (DataTemplate)GetValue(SelectedItemTemplateProperty); set => SetValue(SelectedItemTemplateProperty, value); }
+
+    public static readonly BindableProperty SelectedItemTemplateProperty = BindableProperty.Create(
+        nameof(SelectedItemTemplate), typeof(DataTemplate), typeof(MauiDropdownField));
 
     public BindingBase ItemDisplayBinding { get => (BindingBase)GetValue(ItemDisplayBindingProperty); set => SetValue(ItemDisplayBindingProperty, value); }
 
