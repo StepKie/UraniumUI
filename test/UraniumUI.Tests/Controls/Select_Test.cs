@@ -308,6 +308,36 @@ public class Select_Test
     }
 
     [Fact]
+    public void Open_ShouldNotUseNegativePopupWidth_WhenMarginsExceedRootWidth()
+    {
+        var pageRoot = new Grid();
+        var page = new ContentPage
+        {
+            Content = pageRoot
+        };
+        var control = new Select
+        {
+            ItemsSource = new[] { "One", "Two" },
+            DropDownMargin = new Thickness(40, 4),
+            WidthRequest = 20,
+            HeightRequest = 30,
+        };
+        pageRoot.Add(control);
+        pageRoot.Arrange(new Rect(0, 0, 50, 200));
+        control.Arrange(new Rect(10, 10, 20, 30));
+
+        control.Open();
+
+        var overlay = Assert.Single(pageRoot.Children.OfType<AbsoluteLayout>());
+        var popup = Assert.Single(overlay.Children.OfType<Border>());
+        var popupBounds = AbsoluteLayout.GetLayoutBounds(popup);
+
+        Assert.True(popupBounds.Width >= 0);
+
+        control.Close();
+    }
+
+    [Fact]
     public void ItemContainer_ShouldApplyFeedbackBackgrounds()
     {
         var item = "One";

@@ -312,8 +312,10 @@ internal sealed class PopupOverlayHost
         }
 
         var anchorBounds = GetBoundsRelativeTo(activeAnchor, root);
-        var width = activeOptions.Width > 0 ? activeOptions.Width : anchorBounds.Width;
-        width = Math.Min(Math.Max(width, anchorBounds.Width), root.Width - activeOptions.Margin.HorizontalThickness);
+        var availableWidth = Math.Max(0, root.Width - activeOptions.Margin.HorizontalThickness);
+        var requestedWidth = activeOptions.Width > 0 ? activeOptions.Width : anchorBounds.Width;
+        var minimumWidth = Math.Min(anchorBounds.Width, availableWidth);
+        var width = Math.Min(Math.Max(requestedWidth, minimumWidth), availableWidth);
 
         var x = Math.Min(Math.Max(activeOptions.Margin.Left, anchorBounds.X), Math.Max(activeOptions.Margin.Left, root.Width - width - activeOptions.Margin.Right));
 
