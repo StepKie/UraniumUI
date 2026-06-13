@@ -296,7 +296,7 @@ public class Select_Test
         pageContent.Add(control);
 
         control.Open();
-        var root = Assert.IsType<Grid>(page.Content);
+        var root = Assert.IsType<PopupOverlayRootGrid>(page.Content);
         var overlay = Assert.Single(root.Children.OfType<AbsoluteLayout>());
 
         control.Close();
@@ -324,7 +324,7 @@ public class Select_Test
         pageContent.Add(control);
 
         control.Open();
-        var root = Assert.IsType<Grid>(page.Content);
+        var root = Assert.IsType<PopupOverlayRootGrid>(page.Content);
 
         control.Close();
         Assert.Same(root, page.Content);
@@ -355,7 +355,8 @@ public class Select_Test
 
         PopupOverlay.Prepare(control);
 
-        var root = Assert.IsType<Grid>(page.Content);
+        var root = Assert.IsType<PopupOverlayRootGrid>(page.Content);
+        Assert.Equal(nameof(PopupOverlayRootGrid), root.StyleId);
         Assert.Same(pageContent, root.Children[0]);
         Assert.DoesNotContain(root.Children, child => child is AbsoluteLayout);
 
@@ -471,7 +472,7 @@ public class Select_Test
         };
         pageContent.Add(control);
         var host = new PopupOverlayHost(page);
-        var root = Assert.IsType<Grid>(page.Content);
+        var root = Assert.IsType<PopupOverlayRootGrid>(page.Content);
         var popup = new Border();
 
         root.Arrange(new Rect(0, 0, 1000, 700));
@@ -548,7 +549,7 @@ public class Select_Test
         propertyItems.Add(control);
 
         var host = new PopupOverlayHost(page);
-        var root = Assert.IsType<Grid>(page.Content);
+        var root = Assert.IsType<PopupOverlayRootGrid>(page.Content);
         var popup = new Border();
 
         root.Arrange(new Rect(0, 0, 1000, 700));
@@ -596,7 +597,7 @@ public class Select_Test
 
         control.Open();
 
-        var root = Assert.IsType<Grid>(page.Content);
+        var root = Assert.IsType<PopupOverlayRootGrid>(page.Content);
         var overlay = Assert.Single(root.Children.OfType<AbsoluteLayout>());
         var dismissLayer = Assert.IsType<Grid>(overlay.Children[0]);
         Assert.Equal(Colors.Black.WithAlpha(.05f), dismissLayer.BackgroundColor);

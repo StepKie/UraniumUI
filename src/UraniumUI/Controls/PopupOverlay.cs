@@ -42,6 +42,10 @@ internal sealed class PopupOverlayRegistration : IDisposable
     }
 }
 
+internal sealed class PopupOverlayRootGrid : Grid
+{
+}
+
 internal static class PopupOverlay
 {
     private static readonly ConditionalWeakTable<Page, PopupOverlayHost> hosts = new();
@@ -203,7 +207,7 @@ internal sealed class PopupOverlayHost
 
     private void EnsureHost()
     {
-        if (TryUseCurrentHost() || TryUsePageGridHost())
+        if (TryUseCurrentHost() || TryUsePopupOverlayRootHost() || TryUsePageGridHost())
         {
             return;
         }
@@ -232,6 +236,21 @@ internal sealed class PopupOverlayHost
         page.Content = root;
         AttachOriginalContentToRoot(insertAtStart: true);
 
+        return true;
+    }
+
+    private bool TryUsePopupOverlayRootHost()
+    {
+        if (page.Content is not PopupOverlayRootGrid existingRoot)
+        {
+            return false;
+        }
+
+        root = existingRoot;
+        overlayLayer = existingRoot.Children.OfType<AbsoluteLayout>().FirstOrDefault(x => x.StyleId == nameof(PopupOverlay)) ?? overlayLayer ?? CreateOverlayLayer();
+        originalContent = existingRoot.Children.FirstOrDefault(x => !ReferenceEquals(x, overlayLayer)) as View;
+        ownsRoot = true;
+        RegisterHostElements();
         return true;
     }
 
@@ -265,8 +284,9 @@ internal sealed class PopupOverlayHost
 
     private Grid CreateRoot()
     {
-        return new Grid
+        return new PopupOverlayRootGrid
         {
+            StyleId = nameof(PopupOverlayRootGrid),
             HorizontalOptions = LayoutOptions.Fill,
             VerticalOptions = LayoutOptions.Fill,
         };
