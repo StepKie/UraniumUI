@@ -50,6 +50,29 @@ public class SelectField_Test
     }
 
     [Fact]
+    public void ItemDisplayBinding_ShouldBeForwarded_ToDropdownView()
+    {
+        var control = AnimationReadyHandler.Prepare(new SelectField());
+        var itemDisplayBinding = new Binding(nameof(DisplayTestItem.Name));
+
+        control.ItemDisplayBinding = itemDisplayBinding;
+
+        control.DropdownView.ItemDisplayBinding.ShouldBeSameAs(itemDisplayBinding);
+    }
+
+    [Fact]
+    public void SelectedItem_ShouldUseItemDisplayBinding_ForClosedText()
+    {
+        var control = AnimationReadyHandler.Prepare(new SelectField());
+        var item = new DisplayTestItem("Ada Lovelace");
+
+        control.ItemDisplayBinding = new Binding(nameof(DisplayTestItem.Name));
+        control.SelectedItem = item;
+
+        GetSelectedLabel(control.DropdownView).Text.ShouldBe("Ada Lovelace");
+    }
+
+    [Fact]
     public void SelectedItem_ShouldSyncBetweenDropdownAndField_WhenBoundToSameReactiveSource()
     {
         var dropdown = AnimationReadyHandler.Prepare(new Select());
@@ -143,6 +166,15 @@ public class SelectField_Test
                 PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedItem)));
             }
         }
+    }
+
+    private sealed record DisplayTestItem(string Name);
+
+    private static Label GetSelectedLabel(UraniumUI.Controls.Select control)
+    {
+        var contentGrid = control.Content.ShouldBeOfType<Grid>();
+        var selectedContent = contentGrid.Children[0].ShouldBeOfType<ContentView>();
+        return selectedContent.Content.ShouldBeOfType<Label>();
     }
 
     private static Path GetArrowPath(UraniumUI.Controls.Select control)

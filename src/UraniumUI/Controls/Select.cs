@@ -15,6 +15,7 @@ public class Select : ContentView
     private readonly ContentView selectedContent;
     private readonly Path arrowPath;
     private PopupOverlayRegistration overlayRegistration;
+    private BindingBase itemDisplayBinding;
     private INotifyPropertyChanged selectedItemNotifier;
     private int arrowRotationVersion;
 
@@ -434,11 +435,16 @@ public class Select : ContentView
         nameof(SelectedItemTemplate), typeof(DataTemplate), typeof(Select),
         propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnTemplatePropertyChanged());
 
-    public BindingBase ItemDisplayBinding { get => (BindingBase)GetValue(ItemDisplayBindingProperty); set => SetValue(ItemDisplayBindingProperty, value); }
-
-    public static readonly BindableProperty ItemDisplayBindingProperty = BindableProperty.Create(
-        nameof(ItemDisplayBinding), typeof(BindingBase), typeof(Select),
-        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnTextPropertyChanged());
+    public BindingBase ItemDisplayBinding
+    {
+        get => itemDisplayBinding;
+        set
+        {
+            itemDisplayBinding = value;
+            OnTextPropertyChanged();
+            OnPropertyChanged();
+        }
+    }
 
     public string Placeholder { get => (string)GetValue(PlaceholderProperty); set => SetValue(PlaceholderProperty, value); }
 
