@@ -77,6 +77,30 @@ public class MauiDropdown_Test
     }
 
     [Fact]
+    public void Open_ShouldUseUnstyledDismissLayer_WithLowOpacityBackdrop()
+    {
+        var pageContent = new VerticalStackLayout();
+        var page = new ContentPage
+        {
+            Content = pageContent
+        };
+        var control = new MauiDropdown
+        {
+            ItemsSource = new[] { "One", "Two" }
+        };
+        pageContent.Add(control);
+
+        control.Open();
+
+        var root = Assert.IsType<Grid>(page.Content);
+        var overlay = Assert.Single(root.Children.OfType<AbsoluteLayout>());
+        var dismissLayer = Assert.IsType<Grid>(overlay.Children[0]);
+        Assert.Equal(Colors.Black.WithAlpha(.05f), dismissLayer.BackgroundColor);
+
+        control.Close();
+    }
+
+    [Fact]
     public void ItemContainer_ShouldApplyFeedbackBackgrounds()
     {
         var item = "One";

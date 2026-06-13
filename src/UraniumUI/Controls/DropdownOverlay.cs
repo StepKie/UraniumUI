@@ -92,7 +92,7 @@ internal sealed class DropdownOverlayHost
     private View originalContent;
     private DropdownOverlayRegistration activeRegistration;
     private VisualElement activeAnchor;
-    private BoxView activeDismissLayer;
+    private View activeDismissLayer;
     private View activePopup;
     private DropdownOverlayOptions activeOptions;
     private bool activePopupAnimated;
@@ -208,9 +208,9 @@ internal sealed class DropdownOverlayHost
         page.Content = root;
     }
 
-    private BoxView CreateDismissLayer()
+    private View CreateDismissLayer()
     {
-        var dismissLayer = new BoxView
+        var dismissLayer = new Grid
         {
             BackgroundColor = Colors.Black.WithAlpha(.05f),
         };
