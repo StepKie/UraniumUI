@@ -212,7 +212,7 @@ internal sealed class DropdownOverlayHost
     {
         var dismissLayer = new BoxView
         {
-            BackgroundColor = Colors.Transparent,
+            BackgroundColor = Colors.Black.WithAlpha(.05f),
         };
 
         dismissLayer.GestureRecognizers.Add(new TapGestureRecognizer
