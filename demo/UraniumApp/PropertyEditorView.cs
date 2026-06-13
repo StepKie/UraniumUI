@@ -1,4 +1,4 @@
-﻿using InputKit.Shared.Controls;
+using InputKit.Shared.Controls;
 using InputKit.Shared.Layouts;
 using Microsoft.Maui.Controls;
 using System;
@@ -19,7 +19,6 @@ namespace UraniumApp
 {
     public class PropertyEditorView : ContentView
     {
-
         public object Value { get => GetValue(ValueProperty); set => SetValue(ValueProperty, value); }
         public static readonly BindableProperty ValueProperty = BindableProperty.Create(
             nameof(Value),
@@ -125,8 +124,6 @@ namespace UraniumApp
         {
             try
             {
-
-
                 if (Value is null)
                 {
                     _propertiesContainer.Children.Clear();
