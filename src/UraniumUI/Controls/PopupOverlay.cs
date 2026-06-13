@@ -69,13 +69,31 @@ internal static class PopupOverlay
         return host.Show(anchor, popup, options ?? new PopupOverlayOptions());
     }
 
+    public static void Prepare(VisualElement anchor)
+    {
+        if (anchor is null)
+        {
+            return;
+        }
+
+        var page = FindParentPage(anchor, useApplicationFallback: false);
+        if (page is ContentPage contentPage)
+        {
+            var host = hosts.GetValue(contentPage, page => new PopupOverlayHost((ContentPage)page));
+            host.Prepare();
+            return;
+        }
+
+        FindParentHost(anchor)?.Prepare();
+    }
+
     internal static void RegisterHostElement(VisualElement element, PopupOverlayHost host)
     {
         hostsByElement.Remove(element);
         hostsByElement.Add(element, host);
     }
 
-    private static Page FindParentPage(Element element)
+    private static Page FindParentPage(Element element, bool useApplicationFallback = true)
     {
         while (element is not null)
         {
@@ -87,7 +105,7 @@ internal static class PopupOverlay
             element = element.Parent;
         }
 
-        return Application.Current?.Windows.FirstOrDefault()?.Page;
+        return useApplicationFallback ? Application.Current?.Windows.FirstOrDefault()?.Page : null;
     }
 
     private static PopupOverlayHost FindParentHost(Element element)
@@ -127,6 +145,11 @@ internal sealed class PopupOverlayHost
         EnsureHost();
     }
 
+    public void Prepare()
+    {
+        EnsureHost();
+    }
+
     public PopupOverlayRegistration Show(VisualElement anchor, View popup, PopupOverlayOptions options)
     {
         CloseActive();
@@ -148,8 +171,6 @@ internal sealed class PopupOverlayHost
         root.SizeChanged += OnRootSizeChanged;
         anchor.SizeChanged += OnAnchorSizeChanged;
         RegisterScrollParents(anchor);
-        PositionPopup();
-        DispatchPositionPopup();
 
         PopupOverlayRegistration registration = null;
         registration = new PopupOverlayRegistration(() =>
@@ -170,25 +191,13 @@ internal sealed class PopupOverlayHost
             anchor.SizeChanged -= OnAnchorSizeChanged;
             UnregisterScrollParents();
 
-            if (ownsRoot && ReferenceEquals(page.Content, root))
-            {
-                if (originalContent is not null)
-                {
-                    root.Children.Remove(originalContent);
-                }
-
-                page.Content = originalContent;
-            }
-
-            activeRegistration = null;
-            activeAnchor = null;
-            activeDismissLayer = null;
-            activePopup = null;
-            activeOptions = null;
-            activePopupAnimated = false;
+            ResetActivePopupState();
         });
 
         activeRegistration = registration;
+        PositionPopup();
+        DispatchPositionPopup();
+
         return registration;
     }
 
@@ -220,8 +229,8 @@ internal sealed class PopupOverlayHost
         }
 
         RegisterHostElements();
-        AttachOriginalContentToRoot(insertAtStart: true);
         page.Content = root;
+        AttachOriginalContentToRoot(insertAtStart: true);
 
         return true;
     }
@@ -250,9 +259,8 @@ internal sealed class PopupOverlayHost
         overlayLayer ??= CreateOverlayLayer();
 
         RegisterHostElements();
-        AttachOriginalContentToRoot(insertAtStart: false);
-
         page.Content = root;
+        AttachOriginalContentToRoot(insertAtStart: false);
     }
 
     private Grid CreateRoot()
@@ -371,15 +379,39 @@ internal sealed class PopupOverlayHost
     {
         try
         {
-            root.Dispatcher?.DispatchDelayed(delay, PositionPopup);
+            GetDispatcher()?.DispatchDelayed(delay, () => PositionPopup());
         }
-        catch (InvalidOperationException)
+        catch (Exception ex) when (ex is InvalidOperationException or ObjectDisposedException)
         {
             // Unit tests can run without an application dispatcher.
         }
     }
 
+    private IDispatcher GetDispatcher()
+    {
+        try
+        {
+            return root?.Dispatcher;
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ObjectDisposedException)
+        {
+            return null;
+        }
+    }
+
     private void PositionPopup()
+    {
+        try
+        {
+            TryPositionPopup();
+        }
+        catch (ObjectDisposedException)
+        {
+            CancelActivePopup();
+        }
+    }
+
+    private void TryPositionPopup()
     {
         var placementWidth = overlayLayer.Width > 0 ? overlayLayer.Width : root.Width;
         var placementHeight = overlayLayer.Height > 0 ? overlayLayer.Height : root.Height;
@@ -426,6 +458,36 @@ internal sealed class PopupOverlayHost
             activePopupAnimated = true;
             _ = AnimatePopup(showAbove);
         }
+    }
+
+    private void CancelActivePopup()
+    {
+        var registration = activeRegistration;
+
+        if (registration is null)
+        {
+            return;
+        }
+
+        try
+        {
+            registration.Close();
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ObjectDisposedException)
+        {
+            // Navigation can dispose native services while delayed positioning callbacks are still queued.
+            ResetActivePopupState();
+        }
+    }
+
+    private void ResetActivePopupState()
+    {
+        activeRegistration = null;
+        activeAnchor = null;
+        activeDismissLayer = null;
+        activePopup = null;
+        activeOptions = null;
+        activePopupAnimated = false;
     }
 
     private async Task AnimatePopup(bool showAbove)

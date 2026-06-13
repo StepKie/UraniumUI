@@ -282,7 +282,7 @@ public class Select_Test
     }
 
     [Fact]
-    public void Close_ShouldRestoreWrappedNonGridContent_ForPageInteraction()
+    public void Close_ShouldKeepWrappedNonGridContent_ForPageInteraction()
     {
         var pageContent = new VerticalStackLayout();
         var page = new ContentPage
@@ -301,7 +301,8 @@ public class Select_Test
 
         control.Close();
 
-        Assert.Same(pageContent, page.Content);
+        Assert.Same(root, page.Content);
+        Assert.Same(pageContent, root.Children[0]);
         Assert.DoesNotContain(root.Children, child => ReferenceEquals(child, overlay));
         Assert.False(overlay.IsVisible);
         Assert.True(overlay.InputTransparent);
@@ -309,7 +310,7 @@ public class Select_Test
     }
 
     [Fact]
-    public void OpenCloseOpen_ShouldRewrapNonGridContentWithoutDuplicatingContent()
+    public void OpenCloseOpen_ShouldReuseWrappedNonGridContentWithoutDuplicatingContent()
     {
         var pageContent = new VerticalStackLayout();
         var page = new ContentPage
@@ -326,13 +327,43 @@ public class Select_Test
         var root = Assert.IsType<Grid>(page.Content);
 
         control.Close();
-        Assert.Same(pageContent, page.Content);
+        Assert.Same(root, page.Content);
+        Assert.Same(pageContent, root.Children[0]);
 
         control.Open();
 
         Assert.Same(root, page.Content);
         Assert.Equal(1, root.Children.Count(child => ReferenceEquals(child, pageContent)));
         Assert.Same(pageContent, root.Children[0]);
+
+        control.Close();
+    }
+
+    [Fact]
+    public void Prepare_ShouldWrapNonGridContentBeforeFirstOpen()
+    {
+        var pageContent = new VerticalStackLayout();
+        var page = new ContentPage
+        {
+            Content = pageContent
+        };
+        var control = new Select
+        {
+            ItemsSource = new[] { "One", "Two" }
+        };
+        pageContent.Add(control);
+
+        PopupOverlay.Prepare(control);
+
+        var root = Assert.IsType<Grid>(page.Content);
+        Assert.Same(pageContent, root.Children[0]);
+        Assert.DoesNotContain(root.Children, child => child is AbsoluteLayout);
+
+        control.Open();
+
+        var overlay = Assert.Single(root.Children.OfType<AbsoluteLayout>());
+        Assert.True(overlay.IsVisible);
+        Assert.False(overlay.InputTransparent);
 
         control.Close();
     }

@@ -72,6 +72,8 @@ public class Select : StatefulContentView
         TappedCommand = new Command(Toggle);
         KeyDown += OnKeyDown;
         Unfocused += OnUnfocused;
+        Loaded += OnLoaded;
+        Unloaded += OnUnloaded;
 
         this.SetAppThemeColor(TextColorProperty, Colors.Black, Colors.White);
         UpdateSelectedText();
@@ -490,6 +492,28 @@ public class Select : StatefulContentView
     private void OnUnfocused(object sender, FocusEventArgs e)
     {
         Close();
+    }
+
+    private void OnLoaded(object sender, EventArgs e)
+    {
+        PreparePopupOverlay();
+    }
+
+    private void OnUnloaded(object sender, EventArgs e)
+    {
+        Close();
+    }
+
+    private void PreparePopupOverlay()
+    {
+        try
+        {
+            PopupOverlay.Prepare(GetPopupAnchor() ?? this);
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or ObjectDisposedException)
+        {
+            // The control can be loaded/unloaded while navigation is replacing the page tree.
+        }
     }
 
     protected override void OnHandlerChanging(HandlerChangingEventArgs args)
