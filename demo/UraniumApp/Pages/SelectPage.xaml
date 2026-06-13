@@ -36,45 +36,71 @@
     </ContentPage.Resources>
 
     <Grid RowDefinitions="*">
-        <ScrollView>
-            <VerticalStackLayout Padding="20" Spacing="20">
-                <Label Text="Select" FontSize="Title" />
-                <Label Text="Overlay-hosted MAUI Select controls with templated items." FontSize="Micro" Opacity=".6" />
+        <material:TabView TabPlacement="Top">
+            <material:TabItem Title="Select">
+                <ScrollView>
+                    <VerticalStackLayout Padding="20" Spacing="20">
+                        <Label Text="Select" FontSize="Title" />
+                        <Label Text="Overlay-hosted MAUI Select with templated items." FontSize="Micro" Opacity=".6" />
 
-                <HorizontalStackLayout Padding="0,0,0,8">
-                    <Button Text="Source" StyleClass="OutlinedButton" Command="{x:Static uranium:Commands.OpenLinkCommand}" CommandParameter="{StaticResource SourceLink}" ImageSource="{FontImageSource Glyph={x:Static uranium:MaterialSharp.Code}, FontFamily=MaterialSharp, Color={AppThemeBinding {StaticResource OnBackground}, Dark={StaticResource OnBackgroundDark}}}" />
-                </HorizontalStackLayout>
+                        <HorizontalStackLayout Padding="0,0,0,8">
+                            <Button Text="Source" StyleClass="OutlinedButton" Command="{x:Static uranium:Commands.OpenLinkCommand}" CommandParameter="{StaticResource SourceLink}" ImageSource="{FontImageSource Glyph={x:Static uranium:MaterialSharp.Code}, FontFamily=MaterialSharp, Color={AppThemeBinding {StaticResource OnBackground}, Dark={StaticResource OnBackgroundDark}}}" />
+                        </HorizontalStackLayout>
 
-                <Label Text="Scroll this page, then open either select. The overlay should follow the field's visible screen position and selecting an item should update both controls." />
+                        <Label Text="Scroll this page, then open the select. The overlay should follow the field's visible screen position." />
 
-                <uranium:Select
-                        WidthRequest="320"
-                        Placeholder="Choose a profile"
-                        ItemsSource="{Binding Profiles}"
-                        SelectedItem="{Binding SelectedProfile}"
-                        ItemTemplate="{StaticResource RichSelectItemTemplate}"
-                        DropDownBackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}"
-                        DropDownBorderColor="{AppThemeBinding Light={StaticResource Outline}, Dark={StaticResource OutlineDark}}"
-                        SelectedItemBackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}"
-                        HoveredItemBackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceVariantDark}}"
-                        PressedItemBackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}" />
+                        <uranium:Select
+                                WidthRequest="320"
+                                Placeholder="Choose a profile"
+                                ItemsSource="{Binding Profiles}"
+                                SelectedItem="{Binding SelectedProfile}"
+                                ItemTemplate="{StaticResource RichSelectItemTemplate}"
+                                DropDownBackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}"
+                                DropDownBorderColor="{AppThemeBinding Light={StaticResource Outline}, Dark={StaticResource OutlineDark}}"
+                                SelectedItemBackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}"
+                                HoveredItemBackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceVariantDark}}"
+                                PressedItemBackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}" />
 
-                <material:SelectField
-                        Title="Material field"
-                        WidthRequest="320"
-                        AllowClear="True"
-                        ItemsSource="{Binding Profiles}"
-                        SelectedItem="{Binding SelectedProfile}"
-                        ItemTemplate="{StaticResource RichSelectItemTemplate}"
-                        SelectedItemTemplate="{StaticResource CompactSelectSelectedItemTemplate}" />
+                        <HorizontalStackLayout Spacing="12">
+                            <Button Text="Select Grace in code" StyleClass="OutlinedButton" Clicked="SelectGrace_Clicked" />
+                            <Button Text="Clear" StyleClass="TextButton" Clicked="Clear_Clicked" />
+                        </HorizontalStackLayout>
 
-                <HorizontalStackLayout Spacing="12">
-                    <Button Text="Select Grace in code" StyleClass="OutlinedButton" Clicked="SelectGrace_Clicked" />
-                    <Button Text="Clear" StyleClass="TextButton" Clicked="Clear_Clicked" />
-                </HorizontalStackLayout>
+                        <BoxView HeightRequest="500" Color="Transparent" />
+                    </VerticalStackLayout>
+                </ScrollView>
+            </material:TabItem>
 
-                <BoxView HeightRequest="500" Color="Transparent" />
-            </VerticalStackLayout>
-        </ScrollView>
+            <material:TabItem Title="SelectField">
+                <ScrollView>
+                    <VerticalStackLayout Padding="20" Spacing="20">
+                        <Label Text="SelectField" FontSize="Title" />
+                        <Label Text="Material InputField wrapper for Select with clear and selected-item templates." FontSize="Micro" Opacity=".6" />
+
+                        <HorizontalStackLayout Padding="0,0,0,8">
+                            <Button Text="Source" StyleClass="OutlinedButton" Command="{x:Static uranium:Commands.OpenLinkCommand}" CommandParameter="{StaticResource SourceLink}" ImageSource="{FontImageSource Glyph={x:Static uranium:MaterialSharp.Code}, FontFamily=MaterialSharp, Color={AppThemeBinding {StaticResource OnBackground}, Dark={StaticResource OnBackgroundDark}}}" />
+                        </HorizontalStackLayout>
+
+                        <Label Text="Scroll this page, then open the field. The overlay should follow the field's visible screen position." />
+
+                        <material:SelectField
+                                Title="Material field"
+                                WidthRequest="320"
+                                AllowClear="True"
+                                ItemsSource="{Binding Profiles}"
+                                SelectedItem="{Binding SelectedProfile}"
+                                ItemTemplate="{StaticResource RichSelectItemTemplate}"
+                                SelectedItemTemplate="{StaticResource CompactSelectSelectedItemTemplate}" />
+
+                        <HorizontalStackLayout Spacing="12">
+                            <Button Text="Select Grace in code" StyleClass="OutlinedButton" Clicked="SelectGrace_Clicked" />
+                            <Button Text="Clear" StyleClass="TextButton" Clicked="Clear_Clicked" />
+                        </HorizontalStackLayout>
+
+                        <BoxView HeightRequest="500" Color="Transparent" />
+                    </VerticalStackLayout>
+                </ScrollView>
+            </material:TabItem>
+        </material:TabView>
     </Grid>
 </ContentPage>
