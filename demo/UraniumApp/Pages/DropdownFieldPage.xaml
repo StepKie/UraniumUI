@@ -89,16 +89,13 @@
 
             </material:TabItem>
             <material:TabItem Title="MauiDropdown">
-                <ScrollView>
-                    <VerticalStackLayout Padding="20" Spacing="20">
-                        <Label Text="MauiDropdown" FontSize="Title" />
-                        <Label Text="Pure MAUI dropdown with overlay-hosted templated items" FontSize="Micro" Opacity=".6" />
+                <VerticalStackLayout Padding="20" Spacing="20">
+                    <Label Text="MauiDropdown" FontSize="Title" />
+                    <Label Text="Pure MAUI dropdown with overlay-hosted templated items" FontSize="Micro" Opacity=".6" />
 
-                        <Label Text="Scroll this page, then open the dropdown. The overlay should follow the field's visible screen position." />
+                    <Label Text="Scroll this page, then open the dropdown. The overlay should follow the field's visible screen position." />
 
-                        <BoxView HeightRequest="220" Color="Transparent" />
-
-                        <uranium:MauiDropdown
+                    <uranium:MauiDropdown
                             WidthRequest="320"
                             Placeholder="Choose a profile"
                             ItemsSource="{Binding TemplatedItems}"
@@ -110,7 +107,7 @@
                             HoveredItemBackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceVariantDark}}"
                             PressedItemBackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}" />
 
-                        <material:MauiDropdownField
+                    <material:MauiDropdownField
                             Title="Material field"
                             WidthRequest="320"
                             AllowClear="True"
@@ -119,9 +116,8 @@
                             ItemTemplate="{StaticResource RichDropdownItemTemplate}"
                             SelectedItemTemplate="{StaticResource CompactDropdownSelectedItemTemplate}" />
 
-                        <BoxView HeightRequest="500" Color="Transparent" />
-                    </VerticalStackLayout>
-                </ScrollView>
+                    <BoxView HeightRequest="500" Color="Transparent" />
+                </VerticalStackLayout>
             </material:TabItem>
             <material:TabItem Title="Dropdown">
                 <VerticalStackLayout Padding="20">

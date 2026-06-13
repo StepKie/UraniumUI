@@ -77,6 +77,11 @@ public class MauiDropdownField : InputField
             ColorResource.GetColor("OutlineDark", Colors.Gray));
 
         DropdownView.SetAppThemeColor(
+            MauiDropdown.PlaceholderColorProperty,
+            ColorResource.GetColor("OnBackground", Colors.DarkGray).WithAlpha(.5f),
+            ColorResource.GetColor("OnBackgroundDark", Colors.LightGray).WithAlpha(.5f));
+
+        DropdownView.SetAppThemeColor(
             MauiDropdown.SelectedItemBackgroundColorProperty,
             ColorResource.GetColor("PrimaryContainer", Colors.LightGray),
             ColorResource.GetColor("PrimaryContainerDark", Colors.DarkGray));

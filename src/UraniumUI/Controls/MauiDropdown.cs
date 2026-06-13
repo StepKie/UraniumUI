@@ -15,6 +15,8 @@ public class MauiDropdown : ContentView
     private readonly ContentView selectedContent;
     private readonly Path arrowPath;
     private DropdownOverlayRegistration overlayRegistration;
+    private INotifyPropertyChanged selectedItemNotifier;
+    private int arrowRotationVersion;
 
     public MauiDropdown()
     {
@@ -64,6 +66,7 @@ public class MauiDropdown : ContentView
             Command = new Command(Toggle)
         });
 
+        this.SetAppThemeColor(TextColorProperty, Colors.Black, Colors.White);
         UpdateSelectedText();
         UpdateTextStyle();
     }
@@ -93,6 +96,7 @@ public class MauiDropdown : ContentView
         overlayRegistration = registration;
         overlayRegistration.Closed += OnOverlayClosed;
         OnPropertyChanged(nameof(IsDropDownOpen));
+        UpdateArrowRotation(isOpen: true);
     }
 
     public void Close()
@@ -245,6 +249,12 @@ public class MauiDropdown : ContentView
         if (args.NewHandler is null)
         {
             Close();
+
+            if (selectedItemNotifier is not null)
+            {
+                selectedItemNotifier.PropertyChanged -= OnSelectedItemPropertyChanged;
+                selectedItemNotifier = null;
+            }
         }
 
         base.OnHandlerChanging(args);
@@ -265,8 +275,20 @@ public class MauiDropdown : ContentView
         Close();
     }
 
-    protected virtual void OnSelectedItemChanged()
+    protected virtual void OnSelectedItemChanged(object oldValue, object newValue)
     {
+        if (oldValue is INotifyPropertyChanged oldNotifier)
+        {
+            oldNotifier.PropertyChanged -= OnSelectedItemPropertyChanged;
+        }
+
+        selectedItemNotifier = newValue as INotifyPropertyChanged;
+
+        if (selectedItemNotifier is not null)
+        {
+            selectedItemNotifier.PropertyChanged += OnSelectedItemPropertyChanged;
+        }
+
         UpdateSelectedText();
         UpdateTextStyle();
     }
@@ -288,6 +310,11 @@ public class MauiDropdown : ContentView
         Close();
     }
 
+    private void OnSelectedItemPropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        UpdateSelectedText();
+    }
+
     private void OnOverlayClosed(object sender, EventArgs e)
     {
         if (overlayRegistration is not null)
@@ -295,6 +322,46 @@ public class MauiDropdown : ContentView
             overlayRegistration.Closed -= OnOverlayClosed;
             overlayRegistration = null;
             OnPropertyChanged(nameof(IsDropDownOpen));
+            UpdateArrowRotation(isOpen: false);
+        }
+    }
+
+    private void UpdateArrowRotation(bool isOpen)
+    {
+        if (arrowPath is null)
+        {
+            return;
+        }
+
+        var rotation = isOpen ? 180d : 0d;
+        var animationVersion = ++arrowRotationVersion;
+
+        if (arrowPath.Handler is null)
+        {
+            arrowPath.Rotation = rotation;
+            return;
+        }
+
+        arrowPath.CancelAnimations();
+        _ = RotateArrow(rotation, animationVersion);
+    }
+
+    private async Task RotateArrow(double rotation, int animationVersion)
+    {
+        try
+        {
+            await arrowPath.RotateTo(rotation, 120, Easing.CubicOut);
+        }
+        catch
+        {
+            // The arrow may be detached while this visual-only animation is still running.
+        }
+        finally
+        {
+            if (animationVersion == arrowRotationVersion)
+            {
+                arrowPath.Rotation = rotation;
+            }
         }
     }
 
@@ -353,7 +420,7 @@ public class MauiDropdown : ContentView
     public static readonly BindableProperty SelectedItemProperty = BindableProperty.Create(
         nameof(SelectedItem), typeof(object), typeof(MauiDropdown),
         defaultBindingMode: BindingMode.TwoWay,
-        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnSelectedItemChanged());
+        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnSelectedItemChanged(oldValue, newValue));
 
     public DataTemplate ItemTemplate { get => (DataTemplate)GetValue(ItemTemplateProperty); set => SetValue(ItemTemplateProperty, value); }
 

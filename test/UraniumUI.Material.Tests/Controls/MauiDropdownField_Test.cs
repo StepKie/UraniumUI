@@ -1,6 +1,9 @@
 using Shouldly;
+using System.ComponentModel;
+using UraniumUI.Controls;
 using UraniumUI.Material.Controls;
 using UraniumUI.Tests.Core;
+using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace UraniumUI.Material.Tests.Controls;
 
@@ -47,6 +50,29 @@ public class MauiDropdownField_Test
     }
 
     [Fact]
+    public void SelectedItem_ShouldSyncBetweenDropdownAndField_WhenBoundToSameReactiveSource()
+    {
+        var dropdown = AnimationReadyHandler.Prepare(new MauiDropdown());
+        var field = AnimationReadyHandler.Prepare(new MauiDropdownField());
+        AnimationReadyHandler.Prepare(field.DropdownView);
+        var viewModel = new ReactiveTestViewModel();
+        dropdown.BindingContext = viewModel;
+        field.BindingContext = viewModel;
+        dropdown.SetBinding(MauiDropdown.SelectedItemProperty, new Binding(nameof(ReactiveTestViewModel.SelectedItem)));
+        field.SetBinding(MauiDropdownField.SelectedItemProperty, new Binding(nameof(ReactiveTestViewModel.SelectedItem)));
+
+        dropdown.SelectedItem = "Ada";
+
+        viewModel.SelectedItem.ShouldBe("Ada");
+        field.SelectedItem.ShouldBe("Ada");
+
+        field.SelectedItem = "Grace";
+
+        viewModel.SelectedItem.ShouldBe("Grace");
+        dropdown.SelectedItem.ShouldBe("Grace");
+    }
+
+    [Fact]
     public void Constructor_ShouldApplyMaterialThemeColors_ToDropdownView()
     {
         Application.Current.UserAppTheme = AppTheme.Light;
@@ -65,6 +91,29 @@ public class MauiDropdownField_Test
         control.DropdownView.HoveredItemBackgroundColor.ShouldBe(Colors.Green);
         control.DropdownView.PressedItemBackgroundColor.ShouldBe(Colors.Orange.WithAlpha(.18f));
         control.DropdownView.TextColor.ShouldBe(Colors.Purple);
+        control.DropdownView.PlaceholderColor.ShouldBe(Colors.Purple.WithAlpha(.5f));
+    }
+
+    [Fact]
+    public void Constructor_ShouldApplyMaterialThemePlaceholderColor_ToDropdownArrow()
+    {
+        var originalTheme = Application.Current.UserAppTheme;
+
+        try
+        {
+            Application.Current.UserAppTheme = AppTheme.Dark;
+            Application.Current.Resources["OnBackgroundDark"] = Colors.White;
+
+            var control = AnimationReadyHandler.Prepare(new MauiDropdownField());
+            var arrowPath = GetArrowPath(control.DropdownView);
+
+            var arrowBrush = arrowPath.Fill.ShouldBeOfType<SolidColorBrush>();
+            arrowBrush.Color.ShouldBe(Colors.White.WithAlpha(.5f));
+        }
+        finally
+        {
+            Application.Current.UserAppTheme = originalTheme;
+        }
     }
 
     public class TestViewModel : UraniumBindableObject
@@ -72,5 +121,33 @@ public class MauiDropdownField_Test
         private object selectedItem;
 
         public object SelectedItem { get => selectedItem; set => SetProperty(ref selectedItem, value); }
+    }
+
+    public class ReactiveTestViewModel : INotifyPropertyChanged
+    {
+        private object selectedItem;
+
+        public event PropertyChangedEventHandler PropertyChanged;
+
+        public object SelectedItem
+        {
+            get => selectedItem;
+            set
+            {
+                if (selectedItem == value)
+                {
+                    return;
+                }
+
+                selectedItem = value;
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(nameof(SelectedItem)));
+            }
+        }
+    }
+
+    private static Path GetArrowPath(UraniumUI.Controls.MauiDropdown control)
+    {
+        var contentGrid = control.Content.ShouldBeOfType<Grid>();
+        return contentGrid.Children[1].ShouldBeOfType<Path>();
     }
 }

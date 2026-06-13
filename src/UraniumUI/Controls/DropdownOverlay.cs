@@ -45,6 +45,7 @@ internal sealed class DropdownOverlayRegistration : IDisposable
 internal static class DropdownOverlay
 {
     private static readonly ConditionalWeakTable<Page, DropdownOverlayHost> hosts = new();
+    private static readonly ConditionalWeakTable<VisualElement, DropdownOverlayHost> hostsByElement = new();
 
     public static DropdownOverlayRegistration Show(VisualElement anchor, View popup, DropdownOverlayOptions options)
     {
@@ -61,11 +62,17 @@ internal static class DropdownOverlay
         var page = FindParentPage(anchor);
         if (page is not ContentPage contentPage)
         {
-            return null;
+            return FindParentHost(anchor)?.Show(anchor, popup, options ?? new DropdownOverlayOptions());
         }
 
         var host = hosts.GetValue(contentPage, page => new DropdownOverlayHost((ContentPage)page));
         return host.Show(anchor, popup, options ?? new DropdownOverlayOptions());
+    }
+
+    internal static void RegisterHostElement(VisualElement element, DropdownOverlayHost host)
+    {
+        hostsByElement.Remove(element);
+        hostsByElement.Add(element, host);
     }
 
     private static Page FindParentPage(Element element)
@@ -82,6 +89,21 @@ internal static class DropdownOverlay
 
         return Application.Current?.Windows.FirstOrDefault()?.Page;
     }
+
+    private static DropdownOverlayHost FindParentHost(Element element)
+    {
+        while (element is not null)
+        {
+            if (element is VisualElement visualElement && hostsByElement.TryGetValue(visualElement, out var host))
+            {
+                return host;
+            }
+
+            element = element.Parent;
+        }
+
+        return null;
+    }
 }
 
 internal sealed class DropdownOverlayHost
@@ -90,6 +112,7 @@ internal sealed class DropdownOverlayHost
     private Grid root;
     private AbsoluteLayout overlayLayer;
     private View originalContent;
+    private bool ownsRoot;
     private DropdownOverlayRegistration activeRegistration;
     private VisualElement activeAnchor;
     private View activeDismissLayer;
@@ -114,10 +137,7 @@ internal sealed class DropdownOverlayHost
         activeOptions = options;
         activePopupAnimated = false;
 
-        if (!root.Children.Contains(overlayLayer))
-        {
-            root.Children.Add(overlayLayer);
-        }
+        AddOverlayLayerToRoot();
 
         overlayLayer.IsVisible = true;
         overlayLayer.InputTransparent = false;
@@ -136,26 +156,24 @@ internal sealed class DropdownOverlayHost
                 return;
             }
 
-            var activeRoot = root;
             var activeOverlayLayer = overlayLayer;
-            var activeOriginalContent = originalContent;
 
             activeOverlayLayer.Children.Remove(popup);
             activeOverlayLayer.Children.Remove(activeDismissLayer);
             activeOverlayLayer.IsVisible = false;
             activeOverlayLayer.InputTransparent = true;
-            activeRoot.Children.Remove(activeOverlayLayer);
+            root.Children.Remove(activeOverlayLayer);
             root.SizeChanged -= OnRootSizeChanged;
             anchor.SizeChanged -= OnAnchorSizeChanged;
 
-            if (ReferenceEquals(page.Content, activeRoot))
+            if (ownsRoot && ReferenceEquals(page.Content, root))
             {
-                if (activeOriginalContent is not null)
+                if (originalContent is not null)
                 {
-                    activeRoot.Children.Remove(activeOriginalContent);
+                    root.Children.Remove(originalContent);
                 }
 
-                page.Content = activeOriginalContent;
+                page.Content = originalContent;
             }
 
             activeRegistration = null;
@@ -164,9 +182,6 @@ internal sealed class DropdownOverlayHost
             activePopup = null;
             activeOptions = null;
             activePopupAnimated = false;
-            originalContent = null;
-            overlayLayer = null;
-            root = null;
         });
 
         activeRegistration = registration;
@@ -175,28 +190,55 @@ internal sealed class DropdownOverlayHost
 
     private void EnsureHost()
     {
-        if (root is not null && overlayLayer is not null && ReferenceEquals(page.Content, root))
+        if (root is not null && overlayLayer is not null)
         {
-            return;
+            if (ReferenceEquals(page.Content, root))
+            {
+                return;
+            }
+
+            if (ownsRoot && ReferenceEquals(page.Content, originalContent))
+            {
+                if (originalContent is not null && !root.Children.Contains(originalContent))
+                {
+                    root.Children.Insert(0, originalContent);
+                }
+
+                RegisterHostElements();
+                page.Content = root;
+                return;
+            }
         }
 
-        if (page.Content is Grid existingRoot && existingRoot.Children.OfType<AbsoluteLayout>().FirstOrDefault(x => x.StyleId == nameof(DropdownOverlay)) is AbsoluteLayout existingOverlay)
+        if (page.Content is Grid existingRoot)
         {
             root = existingRoot;
-            overlayLayer = existingOverlay;
-            originalContent = existingRoot.Children.OfType<View>().FirstOrDefault(x => !ReferenceEquals(x, existingOverlay));
+            overlayLayer = existingRoot.Children.OfType<AbsoluteLayout>().FirstOrDefault(x => x.StyleId == nameof(DropdownOverlay)) ?? overlayLayer ?? CreateOverlayLayer();
+            originalContent = existingRoot;
+            ownsRoot = false;
+            RegisterHostElements();
             return;
         }
 
         originalContent = page.Content;
-        root = new Grid();
+        root = ownsRoot && root is not null ? root : new Grid();
+        ownsRoot = true;
 
-        if (originalContent is not null)
+        if (originalContent is not null && !root.Children.Contains(originalContent))
         {
             root.Children.Add(originalContent);
         }
 
-        overlayLayer = new AbsoluteLayout
+        overlayLayer ??= CreateOverlayLayer();
+
+        RegisterHostElements();
+
+        page.Content = root;
+    }
+
+    private AbsoluteLayout CreateOverlayLayer()
+    {
+        return new AbsoluteLayout
         {
             StyleId = nameof(DropdownOverlay),
             BackgroundColor = Colors.Transparent,
@@ -204,8 +246,29 @@ internal sealed class DropdownOverlayHost
             IsVisible = false,
             ZIndex = 9999,
         };
+    }
 
-        page.Content = root;
+    private void AddOverlayLayerToRoot()
+    {
+        Grid.SetRow(overlayLayer, 0);
+        Grid.SetColumn(overlayLayer, 0);
+        Grid.SetRowSpan(overlayLayer, Math.Max(1, root.RowDefinitions.Count));
+        Grid.SetColumnSpan(overlayLayer, Math.Max(1, root.ColumnDefinitions.Count));
+
+        if (!root.Children.Contains(overlayLayer))
+        {
+            root.Children.Add(overlayLayer);
+        }
+    }
+
+    private void RegisterHostElements()
+    {
+        DropdownOverlay.RegisterHostElement(root, this);
+
+        if (originalContent is not null)
+        {
+            DropdownOverlay.RegisterHostElement(originalContent, this);
+        }
     }
 
     private View CreateDismissLayer()
