@@ -7,9 +7,9 @@ using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace UraniumUI.Material.Tests.Controls;
 
-public class MauiDropdownField_Test
+public class SelectField_Test
 {
-    public MauiDropdownField_Test()
+    public SelectField_Test()
     {
         ApplicationExtensions.CreateAndSetMockApplication();
     }
@@ -17,10 +17,10 @@ public class MauiDropdownField_Test
     [Fact]
     public void SelectedItem_Binding_ToSource_UsesTwoWayByDefault()
     {
-        var control = AnimationReadyHandler.Prepare(new MauiDropdownField());
+        var control = AnimationReadyHandler.Prepare(new SelectField());
         var viewModel = new TestViewModel { SelectedItem = "http://" };
         control.BindingContext = viewModel;
-        control.SetBinding(MauiDropdownField.SelectedItemProperty, new Binding(nameof(TestViewModel.SelectedItem)));
+        control.SetBinding(SelectField.SelectedItemProperty, new Binding(nameof(TestViewModel.SelectedItem)));
 
         control.SelectedItem = "https://";
 
@@ -30,7 +30,7 @@ public class MauiDropdownField_Test
     [Fact]
     public void ItemTemplate_ShouldBeForwarded_ToDropdownView()
     {
-        var control = AnimationReadyHandler.Prepare(new MauiDropdownField());
+        var control = AnimationReadyHandler.Prepare(new SelectField());
         var itemTemplate = new DataTemplate(() => new Label());
 
         control.ItemTemplate = itemTemplate;
@@ -41,7 +41,7 @@ public class MauiDropdownField_Test
     [Fact]
     public void SelectedItemTemplate_ShouldBeForwarded_ToDropdownView()
     {
-        var control = AnimationReadyHandler.Prepare(new MauiDropdownField());
+        var control = AnimationReadyHandler.Prepare(new SelectField());
         var selectedItemTemplate = new DataTemplate(() => new Label());
 
         control.SelectedItemTemplate = selectedItemTemplate;
@@ -52,14 +52,14 @@ public class MauiDropdownField_Test
     [Fact]
     public void SelectedItem_ShouldSyncBetweenDropdownAndField_WhenBoundToSameReactiveSource()
     {
-        var dropdown = AnimationReadyHandler.Prepare(new MauiDropdown());
-        var field = AnimationReadyHandler.Prepare(new MauiDropdownField());
+        var dropdown = AnimationReadyHandler.Prepare(new Select());
+        var field = AnimationReadyHandler.Prepare(new SelectField());
         AnimationReadyHandler.Prepare(field.DropdownView);
         var viewModel = new ReactiveTestViewModel();
         dropdown.BindingContext = viewModel;
         field.BindingContext = viewModel;
-        dropdown.SetBinding(MauiDropdown.SelectedItemProperty, new Binding(nameof(ReactiveTestViewModel.SelectedItem)));
-        field.SetBinding(MauiDropdownField.SelectedItemProperty, new Binding(nameof(ReactiveTestViewModel.SelectedItem)));
+        dropdown.SetBinding(Select.SelectedItemProperty, new Binding(nameof(ReactiveTestViewModel.SelectedItem)));
+        field.SetBinding(SelectField.SelectedItemProperty, new Binding(nameof(ReactiveTestViewModel.SelectedItem)));
 
         dropdown.SelectedItem = "Ada";
 
@@ -83,7 +83,7 @@ public class MauiDropdownField_Test
         Application.Current.Resources["Primary"] = Colors.Orange;
         Application.Current.Resources["OnBackground"] = Colors.Purple;
 
-        var control = AnimationReadyHandler.Prepare(new MauiDropdownField());
+        var control = AnimationReadyHandler.Prepare(new SelectField());
 
         control.DropdownView.DropDownBackgroundColor.ShouldBe(Colors.Pink);
         control.DropdownView.DropDownBorderColor.ShouldBe(Colors.Blue);
@@ -104,7 +104,7 @@ public class MauiDropdownField_Test
             Application.Current.UserAppTheme = AppTheme.Dark;
             Application.Current.Resources["OnBackgroundDark"] = Colors.White;
 
-            var control = AnimationReadyHandler.Prepare(new MauiDropdownField());
+            var control = AnimationReadyHandler.Prepare(new SelectField());
             var arrowPath = GetArrowPath(control.DropdownView);
 
             var arrowBrush = arrowPath.Fill.ShouldBeOfType<SolidColorBrush>();
@@ -145,7 +145,7 @@ public class MauiDropdownField_Test
         }
     }
 
-    private static Path GetArrowPath(UraniumUI.Controls.MauiDropdown control)
+    private static Path GetArrowPath(UraniumUI.Controls.Select control)
     {
         var contentGrid = control.Content.ShouldBeOfType<Grid>();
         return contentGrid.Children[1].ShouldBeOfType<Path>();

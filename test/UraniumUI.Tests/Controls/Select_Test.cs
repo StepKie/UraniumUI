@@ -6,9 +6,9 @@ using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace UraniumUI.Tests.Controls;
 
-public class MauiDropdown_Test
+public class Select_Test
 {
-    public MauiDropdown_Test()
+    public Select_Test()
     {
         ApplicationExtensions.CreateAndSetMockApplication();
     }
@@ -16,7 +16,7 @@ public class MauiDropdown_Test
     [Fact]
     public void ItemTemplate_ShouldCreateView_WithItemBindingContext()
     {
-        var control = new TestMauiDropdown
+        var control = new TestSelect
         {
             ItemTemplate = new DataTemplate(() => new Label())
         };
@@ -31,7 +31,7 @@ public class MauiDropdown_Test
     [Fact]
     public void ItemDisplayBinding_ShouldSetDefaultItemText()
     {
-        var control = new TestMauiDropdown
+        var control = new TestSelect
         {
             ItemDisplayBinding = new Binding(nameof(TestItem.Name))
         };
@@ -44,7 +44,7 @@ public class MauiDropdown_Test
     [Fact]
     public void SelectedItem_ShouldUpdateClosedStateText()
     {
-        var control = new MauiDropdown
+        var control = new Select
         {
             Placeholder = "Choose",
             ItemDisplayBinding = new Binding(nameof(TestItem.Name))
@@ -64,7 +64,7 @@ public class MauiDropdown_Test
     public void SelectedItem_ShouldUseItemTemplate_WhenSelectedItemTemplateIsNotSet()
     {
         var item = new TestItem("Ada");
-        var control = new MauiDropdown
+        var control = new Select
         {
             ItemTemplate = new DataTemplate(() => new Label { StyleId = "ItemTemplate" }),
             SelectedItem = item,
@@ -81,7 +81,7 @@ public class MauiDropdown_Test
     public void SelectedItem_ShouldPreferSelectedItemTemplate()
     {
         var item = new TestItem("Ada");
-        var control = new MauiDropdown
+        var control = new Select
         {
             ItemTemplate = new DataTemplate(() => new Label { StyleId = "ItemTemplate" }),
             SelectedItemTemplate = new DataTemplate(() => new Label { StyleId = "SelectedItemTemplate" }),
@@ -100,7 +100,7 @@ public class MauiDropdown_Test
     {
         var firstItem = new TestItem("Ada");
         var secondItem = new TestItem("Grace");
-        var control = new MauiDropdown
+        var control = new Select
         {
             ItemTemplate = new DataTemplate(() => new Label { StyleId = "ItemTemplate" }),
             SelectedItem = firstItem,
@@ -119,7 +119,7 @@ public class MauiDropdown_Test
     public void SelectedItemPropertyChanged_ShouldRefreshSelectedText()
     {
         var item = new MutableTestItem("Ada");
-        var control = new MauiDropdown
+        var control = new Select
         {
             ItemDisplayBinding = new Binding(nameof(MutableTestItem.Name)),
             SelectedItem = item,
@@ -140,7 +140,7 @@ public class MauiDropdown_Test
     {
         var oldItem = new MutableTestItem("Ada");
         var currentItem = new MutableTestItem("Grace");
-        var control = new MauiDropdown
+        var control = new Select
         {
             ItemTemplate = new DataTemplate(() => new Label()),
             SelectedItem = oldItem,
@@ -163,7 +163,7 @@ public class MauiDropdown_Test
     public void ItemTemplateChanged_ShouldRefreshSelectedItemView()
     {
         var item = new TestItem("Ada");
-        var control = new MauiDropdown
+        var control = new Select
         {
             SelectedItem = item,
         };
@@ -180,7 +180,7 @@ public class MauiDropdown_Test
     [Fact]
     public void Constructor_ShouldUsePathForArrow()
     {
-        var control = new MauiDropdown();
+        var control = new Select();
 
         var arrowPath = GetArrowPath(control);
 
@@ -191,7 +191,7 @@ public class MauiDropdown_Test
     public void OpenAndClose_ShouldRotateArrow()
     {
         var pageContent = new VerticalStackLayout();
-        var control = new MauiDropdown
+        var control = new Select
         {
             ItemsSource = new[] { "One", "Two" }
         };
@@ -219,7 +219,7 @@ public class MauiDropdown_Test
         {
             Content = pageContent
         };
-        var control = new MauiDropdown
+        var control = new Select
         {
             ItemsSource = new[] { "One", "Two" }
         };
@@ -256,7 +256,7 @@ public class MauiDropdown_Test
         {
             Content = pageRoot
         };
-        var control = new MauiDropdown
+        var control = new Select
         {
             ItemsSource = new[] { "One", "Two" }
         };
@@ -291,7 +291,7 @@ public class MauiDropdown_Test
         {
             Content = pageContent
         };
-        var control = new MauiDropdown
+        var control = new Select
         {
             ItemsSource = new[] { "One", "Two" }
         };
@@ -311,7 +311,7 @@ public class MauiDropdown_Test
     public void ItemContainer_ShouldApplyFeedbackBackgrounds()
     {
         var item = "One";
-        var control = new TestMauiDropdown
+        var control = new TestSelect
         {
             SelectedItem = item,
             SelectedItemBackgroundColor = Colors.Red,
@@ -362,19 +362,19 @@ public class MauiDropdown_Test
         }
     }
 
-    private static ContentView GetSelectedContent(MauiDropdown control)
+    private static ContentView GetSelectedContent(Select control)
     {
         var contentGrid = Assert.IsType<Grid>(control.Content);
         return Assert.IsType<ContentView>(contentGrid.Children[0]);
     }
 
-    private static Path GetArrowPath(MauiDropdown control)
+    private static Path GetArrowPath(Select control)
     {
         var contentGrid = Assert.IsType<Grid>(control.Content);
         return Assert.IsType<Path>(contentGrid.Children[1]);
     }
 
-    private sealed class TestMauiDropdown : MauiDropdown
+    private sealed class TestSelect : Select
     {
         public View CreateItem(object item)
         {

@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:local="clr-namespace:UraniumApp"
              xmlns:uranium="http://schemas.enisn-projects.io/dotnet/maui/uraniumui"
              xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
              x:Class="UraniumApp.Pages.DropdownFieldPage"
@@ -10,31 +9,6 @@
     <ContentPage.Resources>
         <x:String x:Key="DocLink">https://enisn-projects.io/docs/en/uranium/2.9/infrastructure/Dropdown</x:String>
         <x:String x:Key="SourceLink">https://github.com/enisn/UraniumUI/blob/develop/demo/UraniumApp/Pages/DropdownFieldPage.xaml</x:String>
-        <DataTemplate x:Key="RichDropdownItemTemplate">
-            <Grid Padding="12" ColumnDefinitions="36,*" ColumnSpacing="12">
-                <Border WidthRequest="32" HeightRequest="32" StrokeThickness="0" BackgroundColor="{Binding Color}">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="16" />
-                    </Border.StrokeShape>
-                    <Label Text="{Binding Initial}" TextColor="White" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
-                </Border>
-                <VerticalStackLayout Grid.Column="1" Spacing="2">
-                    <Label Text="{Binding Name}" FontAttributes="Bold" />
-                    <Label Text="{Binding Description}" FontSize="Micro" Opacity=".65" />
-                </VerticalStackLayout>
-            </Grid>
-        </DataTemplate>
-        <DataTemplate x:Key="CompactDropdownSelectedItemTemplate">
-            <Grid ColumnDefinitions="24,*" ColumnSpacing="8">
-                <Border WidthRequest="22" HeightRequest="22" StrokeThickness="0" BackgroundColor="{Binding Color}" VerticalOptions="Center">
-                    <Border.StrokeShape>
-                        <RoundRectangle CornerRadius="11" />
-                    </Border.StrokeShape>
-                    <Label Text="{Binding Initial}" TextColor="White" FontSize="Micro" FontAttributes="Bold" HorizontalOptions="Center" VerticalOptions="Center" />
-                </Border>
-                <Label Grid.Column="1" Text="{Binding Name}" FontAttributes="Bold" VerticalOptions="Center" LineBreakMode="TailTruncation" />
-            </Grid>
-        </DataTemplate>
     </ContentPage.Resources>
 
     <Grid RowDefinitions="*">
@@ -87,37 +61,6 @@
                     </VerticalStackLayout>
                 </ScrollView>
 
-            </material:TabItem>
-            <material:TabItem Title="MauiDropdown">
-                <VerticalStackLayout Padding="20" Spacing="20">
-                    <Label Text="MauiDropdown" FontSize="Title" />
-                    <Label Text="Pure MAUI dropdown with overlay-hosted templated items" FontSize="Micro" Opacity=".6" />
-
-                    <Label Text="Scroll this page, then open the dropdown. The overlay should follow the field's visible screen position." />
-
-                    <uranium:MauiDropdown
-                            WidthRequest="320"
-                            Placeholder="Choose a profile"
-                            ItemsSource="{Binding TemplatedItems}"
-                            SelectedItem="{Binding SelectedTemplatedItem}"
-                            ItemTemplate="{StaticResource RichDropdownItemTemplate}"
-                            DropDownBackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}"
-                            DropDownBorderColor="{AppThemeBinding Light={StaticResource Outline}, Dark={StaticResource OutlineDark}}"
-                            SelectedItemBackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}"
-                            HoveredItemBackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceVariantDark}}"
-                            PressedItemBackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}" />
-
-                    <material:MauiDropdownField
-                            Title="Material field"
-                            WidthRequest="320"
-                            AllowClear="True"
-                            ItemsSource="{Binding TemplatedItems}"
-                            SelectedItem="{Binding SelectedTemplatedItem}"
-                            ItemTemplate="{StaticResource RichDropdownItemTemplate}"
-                            SelectedItemTemplate="{StaticResource CompactDropdownSelectedItemTemplate}" />
-
-                    <BoxView HeightRequest="500" Color="Transparent" />
-                </VerticalStackLayout>
             </material:TabItem>
             <material:TabItem Title="Dropdown">
                 <VerticalStackLayout Padding="20">

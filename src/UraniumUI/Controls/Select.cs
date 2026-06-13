@@ -9,7 +9,7 @@ using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace UraniumUI.Controls;
 
-public class MauiDropdown : ContentView
+public class Select : ContentView
 {
     private readonly Label selectedLabel;
     private readonly ContentView selectedContent;
@@ -18,7 +18,7 @@ public class MauiDropdown : ContentView
     private INotifyPropertyChanged selectedItemNotifier;
     private int arrowRotationVersion;
 
-    public MauiDropdown()
+    public Select()
     {
         selectedLabel = new Label
         {
@@ -412,117 +412,117 @@ public class MauiDropdown : ContentView
     public IEnumerable ItemsSource { get => (IEnumerable)GetValue(ItemsSourceProperty); set => SetValue(ItemsSourceProperty, value); }
 
     public static readonly BindableProperty ItemsSourceProperty = BindableProperty.Create(
-        nameof(ItemsSource), typeof(IEnumerable), typeof(MauiDropdown),
-        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnItemsSourceChanged((IEnumerable)oldValue, (IEnumerable)newValue));
+        nameof(ItemsSource), typeof(IEnumerable), typeof(Select),
+        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnItemsSourceChanged((IEnumerable)oldValue, (IEnumerable)newValue));
 
     public object SelectedItem { get => GetValue(SelectedItemProperty); set => SetValue(SelectedItemProperty, value); }
 
     public static readonly BindableProperty SelectedItemProperty = BindableProperty.Create(
-        nameof(SelectedItem), typeof(object), typeof(MauiDropdown),
+        nameof(SelectedItem), typeof(object), typeof(Select),
         defaultBindingMode: BindingMode.TwoWay,
-        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnSelectedItemChanged(oldValue, newValue));
+        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnSelectedItemChanged(oldValue, newValue));
 
     public DataTemplate ItemTemplate { get => (DataTemplate)GetValue(ItemTemplateProperty); set => SetValue(ItemTemplateProperty, value); }
 
     public static readonly BindableProperty ItemTemplateProperty = BindableProperty.Create(
-        nameof(ItemTemplate), typeof(DataTemplate), typeof(MauiDropdown),
-        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnTemplatePropertyChanged());
+        nameof(ItemTemplate), typeof(DataTemplate), typeof(Select),
+        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnTemplatePropertyChanged());
 
     public DataTemplate SelectedItemTemplate { get => (DataTemplate)GetValue(SelectedItemTemplateProperty); set => SetValue(SelectedItemTemplateProperty, value); }
 
     public static readonly BindableProperty SelectedItemTemplateProperty = BindableProperty.Create(
-        nameof(SelectedItemTemplate), typeof(DataTemplate), typeof(MauiDropdown),
-        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnTemplatePropertyChanged());
+        nameof(SelectedItemTemplate), typeof(DataTemplate), typeof(Select),
+        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnTemplatePropertyChanged());
 
     public BindingBase ItemDisplayBinding { get => (BindingBase)GetValue(ItemDisplayBindingProperty); set => SetValue(ItemDisplayBindingProperty, value); }
 
     public static readonly BindableProperty ItemDisplayBindingProperty = BindableProperty.Create(
-        nameof(ItemDisplayBinding), typeof(BindingBase), typeof(MauiDropdown),
-        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnTextPropertyChanged());
+        nameof(ItemDisplayBinding), typeof(BindingBase), typeof(Select),
+        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnTextPropertyChanged());
 
     public string Placeholder { get => (string)GetValue(PlaceholderProperty); set => SetValue(PlaceholderProperty, value); }
 
     public static readonly BindableProperty PlaceholderProperty = BindableProperty.Create(
-        nameof(Placeholder), typeof(string), typeof(MauiDropdown),
-        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).UpdateSelectedText());
+        nameof(Placeholder), typeof(string), typeof(Select),
+        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).UpdateSelectedText());
 
     public Color PlaceholderColor { get => (Color)GetValue(PlaceholderColorProperty); set => SetValue(PlaceholderColorProperty, value); }
 
     public static readonly BindableProperty PlaceholderColorProperty = BindableProperty.Create(
-        nameof(PlaceholderColor), typeof(Color), typeof(MauiDropdown), Colors.Gray,
-        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnTextPropertyChanged());
+        nameof(PlaceholderColor), typeof(Color), typeof(Select), Colors.Gray,
+        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnTextPropertyChanged());
 
     public Color TextColor { get => (Color)GetValue(TextColorProperty); set => SetValue(TextColorProperty, value); }
 
     public static readonly BindableProperty TextColorProperty = BindableProperty.Create(
-        nameof(TextColor), typeof(Color), typeof(MauiDropdown), Colors.Black,
-        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnTextPropertyChanged());
+        nameof(TextColor), typeof(Color), typeof(Select), Colors.Black,
+        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnTextPropertyChanged());
 
     [TypeConverter(typeof(FontSizeConverter))]
     public double FontSize { get => (double)GetValue(FontSizeProperty); set => SetValue(FontSizeProperty, value); }
 
     public static readonly BindableProperty FontSizeProperty = BindableProperty.Create(
-        nameof(FontSize), typeof(double), typeof(MauiDropdown), Label.FontSizeProperty.DefaultValue,
-        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnTextPropertyChanged());
+        nameof(FontSize), typeof(double), typeof(Select), Label.FontSizeProperty.DefaultValue,
+        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnTextPropertyChanged());
 
     public string FontFamily { get => (string)GetValue(FontFamilyProperty); set => SetValue(FontFamilyProperty, value); }
 
     public static readonly BindableProperty FontFamilyProperty = BindableProperty.Create(
-        nameof(FontFamily), typeof(string), typeof(MauiDropdown), Label.FontFamilyProperty.DefaultValue,
-        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnTextPropertyChanged());
+        nameof(FontFamily), typeof(string), typeof(Select), Label.FontFamilyProperty.DefaultValue,
+        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnTextPropertyChanged());
 
     public FontAttributes FontAttributes { get => (FontAttributes)GetValue(FontAttributesProperty); set => SetValue(FontAttributesProperty, value); }
 
     public static readonly BindableProperty FontAttributesProperty = BindableProperty.Create(
-        nameof(FontAttributes), typeof(FontAttributes), typeof(MauiDropdown), Label.FontAttributesProperty.DefaultValue,
-        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnTextPropertyChanged());
+        nameof(FontAttributes), typeof(FontAttributes), typeof(Select), Label.FontAttributesProperty.DefaultValue,
+        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnTextPropertyChanged());
 
     public bool FontAutoScalingEnabled { get => (bool)GetValue(FontAutoScalingEnabledProperty); set => SetValue(FontAutoScalingEnabledProperty, value); }
 
     public static readonly BindableProperty FontAutoScalingEnabledProperty = BindableProperty.Create(
-        nameof(FontAutoScalingEnabled), typeof(bool), typeof(MauiDropdown), Label.FontAutoScalingEnabledProperty.DefaultValue,
-        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnTextPropertyChanged());
+        nameof(FontAutoScalingEnabled), typeof(bool), typeof(Select), Label.FontAutoScalingEnabledProperty.DefaultValue,
+        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnTextPropertyChanged());
 
     public TextAlignment HorizontalTextAlignment { get => (TextAlignment)GetValue(HorizontalTextAlignmentProperty); set => SetValue(HorizontalTextAlignmentProperty, value); }
 
     public static readonly BindableProperty HorizontalTextAlignmentProperty = BindableProperty.Create(
-        nameof(HorizontalTextAlignment), typeof(TextAlignment), typeof(MauiDropdown), TextAlignment.Start,
-        propertyChanged: (bindable, oldValue, newValue) => ((MauiDropdown)bindable).OnTextPropertyChanged());
+        nameof(HorizontalTextAlignment), typeof(TextAlignment), typeof(Select), TextAlignment.Start,
+        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnTextPropertyChanged());
 
     public double MaxDropDownHeight { get => (double)GetValue(MaxDropDownHeightProperty); set => SetValue(MaxDropDownHeightProperty, value); }
 
     public static readonly BindableProperty MaxDropDownHeightProperty = BindableProperty.Create(
-        nameof(MaxDropDownHeight), typeof(double), typeof(MauiDropdown), 240d);
+        nameof(MaxDropDownHeight), typeof(double), typeof(Select), 240d);
 
     public Thickness DropDownMargin { get => (Thickness)GetValue(DropDownMarginProperty); set => SetValue(DropDownMarginProperty, value); }
 
     public static readonly BindableProperty DropDownMarginProperty = BindableProperty.Create(
-        nameof(DropDownMargin), typeof(Thickness), typeof(MauiDropdown), new Thickness(0, 4));
+        nameof(DropDownMargin), typeof(Thickness), typeof(Select), new Thickness(0, 4));
 
     public Color DropDownBackgroundColor { get => (Color)GetValue(DropDownBackgroundColorProperty); set => SetValue(DropDownBackgroundColorProperty, value); }
 
     public static readonly BindableProperty DropDownBackgroundColorProperty = BindableProperty.Create(
-        nameof(DropDownBackgroundColor), typeof(Color), typeof(MauiDropdown), Colors.White);
+        nameof(DropDownBackgroundColor), typeof(Color), typeof(Select), Colors.White);
 
     public Color DropDownBorderColor { get => (Color)GetValue(DropDownBorderColorProperty); set => SetValue(DropDownBorderColorProperty, value); }
 
     public static readonly BindableProperty DropDownBorderColorProperty = BindableProperty.Create(
-        nameof(DropDownBorderColor), typeof(Color), typeof(MauiDropdown), Colors.LightGray);
+        nameof(DropDownBorderColor), typeof(Color), typeof(Select), Colors.LightGray);
 
     public double DropDownBorderThickness { get => (double)GetValue(DropDownBorderThicknessProperty); set => SetValue(DropDownBorderThicknessProperty, value); }
 
     public static readonly BindableProperty DropDownBorderThicknessProperty = BindableProperty.Create(
-        nameof(DropDownBorderThickness), typeof(double), typeof(MauiDropdown), 1d);
+        nameof(DropDownBorderThickness), typeof(double), typeof(Select), 1d);
 
     public CornerRadius DropDownCornerRadius { get => (CornerRadius)GetValue(DropDownCornerRadiusProperty); set => SetValue(DropDownCornerRadiusProperty, value); }
 
     public static readonly BindableProperty DropDownCornerRadiusProperty = BindableProperty.Create(
-        nameof(DropDownCornerRadius), typeof(CornerRadius), typeof(MauiDropdown), new CornerRadius(6));
+        nameof(DropDownCornerRadius), typeof(CornerRadius), typeof(Select), new CornerRadius(6));
 
     public Shadow DropDownShadow { get => (Shadow)GetValue(DropDownShadowProperty); set => SetValue(DropDownShadowProperty, value); }
 
     public static readonly BindableProperty DropDownShadowProperty = BindableProperty.Create(
-        nameof(DropDownShadow), typeof(Shadow), typeof(MauiDropdown), new Shadow
+        nameof(DropDownShadow), typeof(Shadow), typeof(Select), new Shadow
         {
             Brush = Brush.Black,
             Opacity = .18f,
@@ -533,15 +533,15 @@ public class MauiDropdown : ContentView
     public Color SelectedItemBackgroundColor { get => (Color)GetValue(SelectedItemBackgroundColorProperty); set => SetValue(SelectedItemBackgroundColorProperty, value); }
 
     public static readonly BindableProperty SelectedItemBackgroundColorProperty = BindableProperty.Create(
-        nameof(SelectedItemBackgroundColor), typeof(Color), typeof(MauiDropdown), Colors.Transparent);
+        nameof(SelectedItemBackgroundColor), typeof(Color), typeof(Select), Colors.Transparent);
 
     public Color HoveredItemBackgroundColor { get => (Color)GetValue(HoveredItemBackgroundColorProperty); set => SetValue(HoveredItemBackgroundColorProperty, value); }
 
     public static readonly BindableProperty HoveredItemBackgroundColorProperty = BindableProperty.Create(
-        nameof(HoveredItemBackgroundColor), typeof(Color), typeof(MauiDropdown), Colors.Black.WithAlpha(.06f));
+        nameof(HoveredItemBackgroundColor), typeof(Color), typeof(Select), Colors.Black.WithAlpha(.06f));
 
     public Color PressedItemBackgroundColor { get => (Color)GetValue(PressedItemBackgroundColorProperty); set => SetValue(PressedItemBackgroundColorProperty, value); }
 
     public static readonly BindableProperty PressedItemBackgroundColorProperty = BindableProperty.Create(
-        nameof(PressedItemBackgroundColor), typeof(Color), typeof(MauiDropdown), Colors.Black.WithAlpha(.12f));
+        nameof(PressedItemBackgroundColor), typeof(Color), typeof(Select), Colors.Black.WithAlpha(.12f));
 }
