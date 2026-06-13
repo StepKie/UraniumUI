@@ -1,4 +1,7 @@
-﻿using UraniumUI;
+﻿using System.Runtime.CompilerServices;
+using UraniumUI;
+
+[assembly: InternalsVisibleTo("UraniumUI.Tests")]
 
 [assembly: XmlnsDefinition(Constants.XamlNamespace, Constants.NamespacePrefix + nameof(UraniumUI.Controls))]
 [assembly: XmlnsDefinition(Constants.XamlNamespace, Constants.NamespacePrefix + nameof(UraniumUI.Layouts))]

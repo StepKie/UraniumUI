@@ -84,6 +84,10 @@ Set `AllowClear` to `true` to show a clear button when a value is selected.
 </material:SelectField>
 ```
 
+## Keyboard and accessibility
+
+`SelectField` forwards focus to its inner `Select`, so it supports the same keyboard behavior: `Tab` focus, `Enter`/`Space` activation, `Up`/`Down` item navigation, `Home`/`End` jumps, and `Escape` dismissal. The clear button is keyboard-focusable when visible and exposes a screen-reader description.
+
 ## Properties
 
 | Property | Description |

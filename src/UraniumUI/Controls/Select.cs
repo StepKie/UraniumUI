@@ -9,15 +9,21 @@ using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace UraniumUI.Controls;
 
-public class Select : ContentView
+public class Select : StatefulContentView
 {
     private readonly Label selectedLabel;
     private readonly ContentView selectedContent;
     private readonly Path arrowPath;
+    private readonly List<object> activeItems = new();
+    private readonly List<StatefulContentView> activeItemContainers = new();
     private PopupOverlayRegistration overlayRegistration;
     private BindingBase itemDisplayBinding;
     private INotifyPropertyChanged selectedItemNotifier;
+    private ScrollView activeScrollView;
+    private int activeItemIndex = -1;
     private int arrowRotationVersion;
+    private string generatedSemanticDescription;
+    private string generatedSemanticHint;
 
     public Select()
     {
@@ -62,14 +68,15 @@ public class Select : ContentView
 
         Content = contentGrid;
 
-        GestureRecognizers.Add(new TapGestureRecognizer
-        {
-            Command = new Command(Toggle)
-        });
+        IsFocusable = true;
+        TappedCommand = new Command(Toggle);
+        KeyDown += OnKeyDown;
+        Unfocused += OnUnfocused;
 
         this.SetAppThemeColor(TextColorProperty, Colors.Black, Colors.White);
         UpdateSelectedText();
         UpdateTextStyle();
+        UpdateSemanticProperties();
     }
 
     public bool IsDropDownOpen => overlayRegistration is not null;
@@ -91,13 +98,16 @@ public class Select : ContentView
 
         if (registration is null)
         {
+            ClearActiveItems();
             return;
         }
 
         overlayRegistration = registration;
         overlayRegistration.Closed += OnOverlayClosed;
         OnPropertyChanged(nameof(IsDropDownOpen));
+        SetActiveItemIndex(GetInitialActiveItemIndex(useLastWhenNoSelection: false));
         UpdateArrowRotation(isOpen: true);
+        UpdateSemanticProperties();
     }
 
     public void Close()
@@ -107,6 +117,8 @@ public class Select : ContentView
 
     protected virtual View CreateDropDownView()
     {
+        ClearActiveItems();
+
         var itemsLayout = new VerticalStackLayout
         {
             Spacing = 0,
@@ -116,11 +128,14 @@ public class Select : ContentView
         {
             foreach (var item in ItemsSource)
             {
-                itemsLayout.Add(CreateItemContainer(item));
+                activeItems.Add(item);
+                var itemContainer = CreateItemContainer(item);
+                activeItemContainers.Add(itemContainer as StatefulContentView);
+                itemsLayout.Add(itemContainer);
             }
         }
 
-        var scrollView = new ScrollView
+        activeScrollView = new ScrollView
         {
             Content = itemsLayout,
             MaximumHeightRequest = MaxDropDownHeight,
@@ -133,23 +148,25 @@ public class Select : ContentView
             StrokeThickness = DropDownBorderThickness,
             StrokeShape = new RoundRectangle { CornerRadius = DropDownCornerRadius },
             Padding = 0,
-            Content = scrollView,
+            Content = activeScrollView,
             Shadow = DropDownShadow,
         };
     }
 
     protected virtual View CreateItemContainer(object item)
     {
+        var itemIndex = activeItems.Count - 1;
         var content = CreateItemView(item);
         var container = new StatefulContentView
         {
             Content = content,
             HorizontalOptions = LayoutOptions.Fill,
+            IsFocusable = false,
         };
 
         void RestoreBackground()
         {
-            container.BackgroundColor = Equals(item, SelectedItem) ? SelectedItemBackgroundColor : Colors.Transparent;
+            UpdateItemContainerBackground(container, item, itemIndex);
         }
 
         RestoreBackground();
@@ -233,6 +250,17 @@ public class Select : ContentView
         Close();
     }
 
+    protected virtual void Activate()
+    {
+        if (IsDropDownOpen)
+        {
+            SelectActiveItem();
+            return;
+        }
+
+        OpenFromKeyboard(useLastWhenNoSelection: false);
+    }
+
     protected virtual void Toggle()
     {
         if (IsDropDownOpen)
@@ -243,6 +271,220 @@ public class Select : ContentView
         {
             Open();
         }
+    }
+
+    private void OnKeyDown(object sender, StatefulContentViewKeyEventArgs e)
+    {
+        if (!IsEnabled)
+        {
+            return;
+        }
+
+        e.Handled = e.Key switch
+        {
+            StatefulContentViewKey.Enter => HandleActionKey(),
+            StatefulContentViewKey.Space => HandleActionKey(),
+            StatefulContentViewKey.Escape => HandleEscapeKey(),
+            StatefulContentViewKey.ArrowDown => HandleArrowKey(moveBy: 1, useLastWhenNoSelection: false),
+            StatefulContentViewKey.ArrowUp => HandleArrowKey(moveBy: -1, useLastWhenNoSelection: true),
+            StatefulContentViewKey.Home => HandleHomeOrEndKey(useLastItem: false),
+            StatefulContentViewKey.End => HandleHomeOrEndKey(useLastItem: true),
+            _ => false,
+        };
+    }
+
+    private bool HandleActionKey()
+    {
+        Activate();
+        return true;
+    }
+
+    private bool HandleEscapeKey()
+    {
+        if (!IsDropDownOpen)
+        {
+            return false;
+        }
+
+        Close();
+        return true;
+    }
+
+    private bool HandleArrowKey(int moveBy, bool useLastWhenNoSelection)
+    {
+        if (!IsDropDownOpen)
+        {
+            OpenFromKeyboard(useLastWhenNoSelection);
+            return true;
+        }
+
+        MoveActiveItem(moveBy);
+        return true;
+    }
+
+    private bool HandleHomeOrEndKey(bool useLastItem)
+    {
+        if (!IsDropDownOpen)
+        {
+            OpenFromKeyboard(useLastItem);
+            return true;
+        }
+
+        SetActiveItemIndex(useLastItem ? activeItems.Count - 1 : 0);
+        return true;
+    }
+
+    private void OpenFromKeyboard(bool useLastWhenNoSelection)
+    {
+        if (!IsDropDownOpen)
+        {
+            Open();
+        }
+
+        if (IsDropDownOpen)
+        {
+            SetActiveItemIndex(GetInitialActiveItemIndex(useLastWhenNoSelection));
+        }
+    }
+
+    private void MoveActiveItem(int moveBy)
+    {
+        if (activeItems.Count == 0)
+        {
+            return;
+        }
+
+        var currentIndex = activeItemIndex >= 0 ? activeItemIndex : GetSelectedItemIndex();
+
+        if (currentIndex < 0)
+        {
+            currentIndex = moveBy > 0 ? -1 : activeItems.Count;
+        }
+
+        SetActiveItemIndex(Math.Clamp(currentIndex + moveBy, 0, activeItems.Count - 1));
+    }
+
+    private void SelectActiveItem()
+    {
+        if (activeItems.Count == 0)
+        {
+            Close();
+            return;
+        }
+
+        if (activeItemIndex < 0 || activeItemIndex >= activeItems.Count)
+        {
+            SetActiveItemIndex(GetInitialActiveItemIndex(useLastWhenNoSelection: false));
+        }
+
+        if (activeItemIndex >= 0 && activeItemIndex < activeItems.Count)
+        {
+            SelectItem(activeItems[activeItemIndex]);
+        }
+    }
+
+    private int GetInitialActiveItemIndex(bool useLastWhenNoSelection)
+    {
+        if (activeItems.Count == 0)
+        {
+            return -1;
+        }
+
+        var selectedIndex = GetSelectedItemIndex();
+
+        if (selectedIndex >= 0)
+        {
+            return selectedIndex;
+        }
+
+        return useLastWhenNoSelection ? activeItems.Count - 1 : 0;
+    }
+
+    private int GetSelectedItemIndex()
+    {
+        for (var i = 0; i < activeItems.Count; i++)
+        {
+            if (Equals(activeItems[i], SelectedItem))
+            {
+                return i;
+            }
+        }
+
+        return -1;
+    }
+
+    private void SetActiveItemIndex(int itemIndex)
+    {
+        activeItemIndex = activeItems.Count == 0 ? -1 : Math.Clamp(itemIndex, 0, activeItems.Count - 1);
+        UpdateItemContainerBackgrounds();
+        ScrollActiveItemIntoView();
+    }
+
+    private void UpdateItemContainerBackgrounds()
+    {
+        for (var i = 0; i < activeItemContainers.Count; i++)
+        {
+            UpdateItemContainerBackground(activeItemContainers[i], activeItems[i], i);
+        }
+    }
+
+    private void UpdateItemContainerBackground(StatefulContentView container, object item, int itemIndex)
+    {
+        if (container is null)
+        {
+            return;
+        }
+
+        if (itemIndex >= 0 && itemIndex == activeItemIndex)
+        {
+            container.BackgroundColor = HoveredItemBackgroundColor;
+            return;
+        }
+
+        container.BackgroundColor = Equals(item, SelectedItem) ? SelectedItemBackgroundColor : Colors.Transparent;
+    }
+
+    private void ScrollActiveItemIntoView()
+    {
+        if (activeItemIndex < 0 || activeItemIndex >= activeItemContainers.Count || activeScrollView is null)
+        {
+            return;
+        }
+
+        var scrollView = activeScrollView;
+        var container = activeItemContainers[activeItemIndex];
+
+        if (container is null)
+        {
+            return;
+        }
+
+        _ = ScrollActiveItemIntoViewAsync(scrollView, container);
+    }
+
+    private static async Task ScrollActiveItemIntoViewAsync(ScrollView scrollView, Element itemContainer)
+    {
+        try
+        {
+            await scrollView.ScrollToAsync(itemContainer, ScrollToPosition.MakeVisible, animated: false);
+        }
+        catch
+        {
+            // The popup can be detached while keyboard navigation is still updating selection.
+        }
+    }
+
+    private void ClearActiveItems()
+    {
+        activeItems.Clear();
+        activeItemContainers.Clear();
+        activeScrollView = null;
+        activeItemIndex = -1;
+    }
+
+    private void OnUnfocused(object sender, FocusEventArgs e)
+    {
+        Close();
     }
 
     protected override void OnHandlerChanging(HandlerChangingEventArgs args)
@@ -292,18 +534,22 @@ public class Select : ContentView
 
         UpdateSelectedText();
         UpdateTextStyle();
+        UpdateItemContainerBackgrounds();
+        UpdateSemanticProperties();
     }
 
     protected virtual void OnTemplatePropertyChanged()
     {
         Close();
         UpdateSelectedText();
+        UpdateSemanticProperties();
     }
 
     protected virtual void OnTextPropertyChanged()
     {
         UpdateSelectedText();
         UpdateTextStyle();
+        UpdateSemanticProperties();
     }
 
     private void OnItemsSourceCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
@@ -314,6 +560,7 @@ public class Select : ContentView
     private void OnSelectedItemPropertyChanged(object sender, PropertyChangedEventArgs e)
     {
         UpdateSelectedText();
+        UpdateSemanticProperties();
     }
 
     private void OnOverlayClosed(object sender, EventArgs e)
@@ -322,8 +569,10 @@ public class Select : ContentView
         {
             overlayRegistration.Closed -= OnOverlayClosed;
             overlayRegistration = null;
+            ClearActiveItems();
             OnPropertyChanged(nameof(IsDropDownOpen));
             UpdateArrowRotation(isOpen: false);
+            UpdateSemanticProperties();
         }
     }
 
@@ -410,6 +659,38 @@ public class Select : ContentView
         arrowPath.Fill = (SelectedItem is null ? PlaceholderColor : TextColor).ToSolidColorBrush();
     }
 
+    private void UpdateSemanticProperties()
+    {
+        var description = SelectedItem is null ? Placeholder : GetTextForItem(SelectedItem);
+
+        SetGeneratedSemanticDescription(string.IsNullOrWhiteSpace(description) ? nameof(Select) : description);
+        SetGeneratedSemanticHint(IsDropDownOpen
+            ? "Use Up and Down arrow keys to choose an item. Press Enter to select. Press Escape to close."
+            : "Press Enter or Space to open. Use Up and Down arrow keys to choose an item.");
+    }
+
+    private void SetGeneratedSemanticDescription(string description)
+    {
+        var currentDescription = SemanticProperties.GetDescription(this);
+
+        if (string.IsNullOrEmpty(currentDescription) || currentDescription == generatedSemanticDescription)
+        {
+            SemanticProperties.SetDescription(this, description);
+            generatedSemanticDescription = description;
+        }
+    }
+
+    private void SetGeneratedSemanticHint(string hint)
+    {
+        var currentHint = SemanticProperties.GetHint(this);
+
+        if (string.IsNullOrEmpty(currentHint) || currentHint == generatedSemanticHint)
+        {
+            SemanticProperties.SetHint(this, hint);
+            generatedSemanticHint = hint;
+        }
+    }
+
     public IEnumerable ItemsSource { get => (IEnumerable)GetValue(ItemsSourceProperty); set => SetValue(ItemsSourceProperty, value); }
 
     public static readonly BindableProperty ItemsSourceProperty = BindableProperty.Create(
@@ -450,7 +731,7 @@ public class Select : ContentView
 
     public static readonly BindableProperty PlaceholderProperty = BindableProperty.Create(
         nameof(Placeholder), typeof(string), typeof(Select),
-        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).UpdateSelectedText());
+        propertyChanged: (bindable, oldValue, newValue) => ((Select)bindable).OnTextPropertyChanged());
 
     public Color PlaceholderColor { get => (Color)GetValue(PlaceholderColorProperty); set => SetValue(PlaceholderColorProperty, value); }
 

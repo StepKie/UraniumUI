@@ -188,6 +188,76 @@ public class Select_Test
     }
 
     [Fact]
+    public void Constructor_ShouldBeFocusable_ForKeyboardNavigation()
+    {
+        var control = new Select();
+
+        Assert.True(control.IsFocusable);
+        Assert.NotNull(control.TappedCommand);
+    }
+
+    [Fact]
+    public void Placeholder_ShouldUpdateSemanticDescription()
+    {
+        var control = new Select
+        {
+            Placeholder = "Choose a profile"
+        };
+
+        Assert.Equal("Choose a profile", SemanticProperties.GetDescription(control));
+    }
+
+    [Fact]
+    public void SelectedItem_ShouldUpdateSemanticDescription()
+    {
+        var control = new Select
+        {
+            ItemDisplayBinding = new Binding(nameof(TestItem.Name)),
+            SelectedItem = new TestItem("Ada")
+        };
+
+        Assert.Equal("Ada", SemanticProperties.GetDescription(control));
+    }
+
+    [Fact]
+    public void KeyboardEnter_ShouldOpenDropdown()
+    {
+        var control = CreateSelectOnPage("One", "Two");
+
+        var handled = control.SendKeyDown(StatefulContentViewKey.Enter);
+
+        Assert.True(handled);
+        Assert.True(control.IsDropDownOpen);
+
+        control.Close();
+    }
+
+    [Fact]
+    public void KeyboardArrowDownAndEnter_ShouldSelectActiveItem()
+    {
+        var control = CreateSelectOnPage("One", "Two", "Three");
+
+        control.Open();
+        control.SendKeyDown(StatefulContentViewKey.ArrowDown);
+        control.SendKeyDown(StatefulContentViewKey.Enter);
+
+        Assert.Equal("Two", control.SelectedItem);
+        Assert.False(control.IsDropDownOpen);
+    }
+
+    [Fact]
+    public void KeyboardEscape_ShouldCloseDropdown()
+    {
+        var control = CreateSelectOnPage("One", "Two");
+        control.Open();
+
+        var handled = control.SendKeyDown(StatefulContentViewKey.Escape);
+
+        Assert.True(handled);
+        Assert.False(control.IsDropDownOpen);
+    }
+
+    [Fact]
     public void OpenAndClose_ShouldRotateArrow()
     {
         var pageContent = new VerticalStackLayout();
@@ -351,6 +421,7 @@ public class Select_Test
 
         var container = Assert.IsType<StatefulContentView>(control.CreateContainer(item));
 
+        Assert.False(container.IsFocusable);
         Assert.Equal(Colors.Red, container.BackgroundColor);
 
         container.HoverCommand.Execute(null);
@@ -402,6 +473,21 @@ public class Select_Test
     {
         var contentGrid = Assert.IsType<Grid>(control.Content);
         return Assert.IsType<Path>(contentGrid.Children[1]);
+    }
+
+    private static Select CreateSelectOnPage(params string[] items)
+    {
+        var pageContent = new VerticalStackLayout();
+        var control = new Select
+        {
+            ItemsSource = items
+        };
+        _ = new ContentPage
+        {
+            Content = pageContent
+        };
+        pageContent.Add(control);
+        return control;
     }
 
     private sealed class TestSelect : Select

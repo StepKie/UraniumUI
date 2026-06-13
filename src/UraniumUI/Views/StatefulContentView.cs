@@ -2,6 +2,30 @@
 using UraniumUI.Handlers;
 
 namespace UraniumUI.Views;
+
+internal enum StatefulContentViewKey
+{
+    Enter,
+    Space,
+    Escape,
+    ArrowDown,
+    ArrowUp,
+    Home,
+    End,
+}
+
+internal sealed class StatefulContentViewKeyEventArgs : EventArgs
+{
+    public StatefulContentViewKeyEventArgs(StatefulContentViewKey key)
+    {
+        Key = key;
+    }
+
+    public StatefulContentViewKey Key { get; }
+
+    public bool Handled { get; set; }
+}
+
 public class StatefulContentView : ContentView, IStatefulView
 {
     public event EventHandler<EventArgs> Pressed;
@@ -9,6 +33,8 @@ public class StatefulContentView : ContentView, IStatefulView
     public event EventHandler<EventArgs> Hovered;
     public event EventHandler<EventArgs> HoverExited;
     public event EventHandler<EventArgs> Tapped;
+
+    internal event EventHandler<StatefulContentViewKeyEventArgs> KeyDown;
 
     internal void InvokePressed() => Pressed?.Invoke(this, EventArgs.Empty);
 
@@ -19,6 +45,13 @@ public class StatefulContentView : ContentView, IStatefulView
     internal void InvokeHoverExited() => HoverExited?.Invoke(this, EventArgs.Empty);
 
     internal void InvokeTapped() => Tapped?.Invoke(this, EventArgs.Empty);
+
+    internal bool SendKeyDown(StatefulContentViewKey key)
+    {
+        var args = new StatefulContentViewKeyEventArgs(key);
+        KeyDown?.Invoke(this, args);
+        return args.Handled;
+    }
 
     public ICommand PressedCommand { get => (ICommand)GetValue(PressedCommandProperty); set => SetValue(PressedCommandProperty, value); }
 

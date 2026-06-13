@@ -18,6 +18,12 @@
 - `AutoFormView` default editor mappings are configured in `src/UraniumUI/Options/AutoFormViewOptionsExtensions.cs`; Material replaces those mappings in `src/UraniumUI.Material/Extensions/AutoFormViewMaterialConfigurationExtensions.cs`.
 - Icon packages embed font files and expose font registration methods (`AddMaterialSymbolsFonts`, `AddFontAwesomeIconFonts`, `AddFluentIconFonts`); update the extension method and embedded resources together.
 
+## Accessibility Requirements
+- Treat accessibility as part of the component contract, not a follow-up polish item. New or changed interactive controls must be reachable by keyboard unless they are explicitly decorative.
+- For custom controls, verify tab focus, visible focus state, Enter/Space activation, Escape dismissal for popups/overlays, arrow-key navigation for list/menu/select patterns, disabled-state behavior, and screen-reader descriptions/hints.
+- Prefer existing focusable primitives such as `StatefulContentView` and its handlers before adding new platform handlers. If a new handler is needed, keep focus and key behavior consistent across supported platforms.
+- Add focused tests for MAUI-level accessibility behavior where possible, and document keyboard interaction in the component docs.
+
 ## Docs And Templates
 - DocFX config is `docs/docfx.json`; it generates API metadata from `src/**/*.csproj` into root `api/` and site output into `_site/`. Treat `api/*.yml` as generated output, not source prose.
 - Docs navigation exists in both `docs/en/toc.yml` and `docs/en/docs-nav.json`; update both when adding, moving, or removing docs pages.

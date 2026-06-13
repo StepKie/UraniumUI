@@ -41,6 +41,8 @@ public class SelectField : InputField
     {
         base.RegisterForEvents();
 
+        SemanticProperties.SetDescription(iconClear, "Clear selection");
+        SemanticProperties.SetHint(iconClear, "Clears the selected value.");
         iconClear.TappedCommand = new Command(OnClearTapped);
         UpdateClearIconState();
         ConfigureMaterialDropDownColors();

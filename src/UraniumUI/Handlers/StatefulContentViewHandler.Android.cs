@@ -12,6 +12,8 @@ using static Microsoft.Maui.Controls.VisualStateManager;
 namespace UraniumUI.Handlers;
 public partial class StatefulContentViewHandler
 {
+    private bool suppressActionKeyUp;
+
     protected override ContentViewGroup CreatePlatformView()
     {
         var platformView = base.CreatePlatformView();
@@ -20,6 +22,9 @@ public partial class StatefulContentViewHandler
         platformView.Hover += NativeView_Hover;
         platformView.Click += PlatformView_Click;
         platformView.LongClick += PlatformView_LongClick;
+        platformView.KeyPress += PlatformView_KeyPress;
+        platformView.Focusable = StatefulView.IsFocusable;
+        platformView.FocusableInTouchMode = StatefulView.IsFocusable;
 
         return platformView;
     }
@@ -28,7 +33,9 @@ public partial class StatefulContentViewHandler
     {
         platformView.Touch -= OnTouch;
         platformView.Hover -= NativeView_Hover;
+        platformView.Click -= PlatformView_Click;
         platformView.LongClick -= PlatformView_LongClick;
+        platformView.KeyPress -= PlatformView_KeyPress;
         base.DisconnectHandler(platformView);
     }
 
@@ -79,9 +86,54 @@ public partial class StatefulContentViewHandler
         ExecuteCommandIfCan(StatefulView.LongPressCommand);
     }
 
+    private void PlatformView_KeyPress(object sender, Android.Views.View.KeyEventArgs e)
+    {
+        var key = ToStatefulKey(e.KeyCode);
+
+        if (key is null)
+        {
+            return;
+        }
+
+        if (e.Event.Action == KeyEventActions.Down && StatefulView.SendKeyDown(key.Value))
+        {
+            e.Handled = true;
+            suppressActionKeyUp = IsActionKey(e.KeyCode);
+            return;
+        }
+
+        if (e.Event.Action == KeyEventActions.Up && IsActionKey(e.KeyCode) && suppressActionKeyUp)
+        {
+            suppressActionKeyUp = false;
+            e.Handled = true;
+        }
+    }
+
+    private static StatefulContentViewKey? ToStatefulKey(Keycode key)
+    {
+        return key switch
+        {
+            Keycode.Enter => StatefulContentViewKey.Enter,
+            Keycode.Space => StatefulContentViewKey.Space,
+            Keycode.Escape => StatefulContentViewKey.Escape,
+            Keycode.Back => StatefulContentViewKey.Escape,
+            Keycode.DpadDown => StatefulContentViewKey.ArrowDown,
+            Keycode.DpadUp => StatefulContentViewKey.ArrowUp,
+            Keycode.MoveHome => StatefulContentViewKey.Home,
+            Keycode.MoveEnd => StatefulContentViewKey.End,
+            _ => null,
+        };
+    }
+
+    private static bool IsActionKey(Keycode key)
+    {
+        return key == Keycode.Enter || key == Keycode.Space;
+    }
+
     public static void MapIsFocusable(StatefulContentViewHandler handler, StatefulContentView view)
     {
-        handler.StatefulView.IsFocusable = view.IsFocusable;
+        handler.PlatformView.Focusable = view.IsFocusable;
+        handler.PlatformView.FocusableInTouchMode = view.IsFocusable;
     }
 }
 #endif

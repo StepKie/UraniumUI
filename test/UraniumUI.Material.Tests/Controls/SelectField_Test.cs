@@ -3,6 +3,7 @@ using System.ComponentModel;
 using UraniumUI.Controls;
 using UraniumUI.Material.Controls;
 using UraniumUI.Tests.Core;
+using UraniumUI.Views;
 using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace UraniumUI.Material.Tests.Controls;
@@ -70,6 +71,27 @@ public class SelectField_Test
         control.SelectedItem = item;
 
         GetSelectedLabel(control.DropdownView).Text.ShouldBe("Ada Lovelace");
+    }
+
+    [Fact]
+    public void Constructor_ShouldUseFocusableDropdownView()
+    {
+        var control = AnimationReadyHandler.Prepare(new SelectField());
+
+        control.DropdownView.IsFocusable.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void AllowClear_ShouldExposeSemanticDescription_ForClearButton()
+    {
+        var control = AnimationReadyHandler.Prepare(new SelectField());
+
+        control.AllowClear = true;
+
+        var clearButton = control.Attachments.OfType<StatefulContentView>().Single();
+
+        SemanticProperties.GetDescription(clearButton).ShouldBe("Clear selection");
+        SemanticProperties.GetHint(clearButton).ShouldBe("Clears the selected value.");
     }
 
     [Fact]

@@ -60,6 +60,18 @@ Use `ItemTemplate` to customize the rows shown in the opened list. Use `Selected
 
 If `SelectedItemTemplate` is not set, `Select` uses `ItemTemplate` for the closed selected value. If no template is set, it uses `ItemDisplayBinding` or `ToString()`.
 
+## Keyboard and accessibility
+
+`Select` is focusable by keyboard. It uses the platform focus visual provided by UraniumUI's focusable content handler and exposes generated semantic description/hint text from the selected value or placeholder.
+
+| Key | Behavior |
+| --- | --- |
+| `Tab` | Moves focus to and from the closed control. |
+| `Enter` / `Space` | Opens the list. When the list is open, selects the active item. |
+| `Down` / `Up` | Opens the list and moves the active item. |
+| `Home` / `End` | Moves to the first or last item while the list is open. |
+| `Escape` | Closes the list without changing selection. |
+
 ## Properties
 
 | Property | Description |
