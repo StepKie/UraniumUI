@@ -208,7 +208,7 @@ namespace UraniumApp
 
         public static View EditorForEnum(BindableProperty bindableProperty, object source)
         {
-            var editor = new PickerField();
+            var editor = new SelectField();
 
             var values = Enum.GetValues(bindableProperty.ReturnType);
             if (values.Length <= 5)
@@ -217,7 +217,7 @@ namespace UraniumApp
             }
 
             editor.ItemsSource = values;
-            editor.SetBinding(PickerField.SelectedItemProperty, new Binding(bindableProperty.PropertyName, source: source));
+            editor.SetBinding(SelectField.SelectedItemProperty, new Binding(bindableProperty.PropertyName, source: source));
             editor.Title = bindableProperty.PropertyName;
             editor.AllowClear = false;
             return editor;
@@ -277,14 +277,14 @@ namespace UraniumApp
 
         public static View EditorForKeyboard(BindableProperty bindableProperty, object source)
         {
-            var editor = new PickerField();
+            var editor = new SelectField();
 
             editor.ItemsSource = typeof(Keyboard)
                 .GetProperties(BindingFlags.Public | BindingFlags.Static)
                 .Select(x => x.GetValue(null))
                 .ToArray();
 
-            editor.SetBinding(PickerField.SelectedItemProperty, new Binding(bindableProperty.PropertyName, source: source));
+            editor.SetBinding(SelectField.SelectedItemProperty, new Binding(bindableProperty.PropertyName, source: source));
             editor.Title = bindableProperty.PropertyName;
             editor.AllowClear = false;
             return editor;
