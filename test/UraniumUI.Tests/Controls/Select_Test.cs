@@ -466,6 +466,90 @@ public class Select_Test
     }
 
     [Fact]
+    public void HostShow_ShouldPositionPopupRelativeToWrappedScrollRootNestedSidePanel()
+    {
+        var pageContent = new VerticalStackLayout();
+        var pageScroll = new ScrollView
+        {
+            Content = pageContent,
+        };
+        var showcaseRoot = new Grid
+        {
+            ColumnDefinitions =
+            {
+                new ColumnDefinition(new GridLength(7, GridUnitType.Star)),
+                new ColumnDefinition(new GridLength(3, GridUnitType.Star)),
+            }
+        };
+        var preview = new ContentView();
+        var sidePanel = new ContentView();
+        var propertyRoot = new Grid
+        {
+            RowDefinitions =
+            {
+                new RowDefinition(GridLength.Auto),
+                new RowDefinition(GridLength.Auto),
+                new RowDefinition(GridLength.Star),
+            }
+        };
+        var propertyScroll = new ScrollView();
+        var propertyItems = new VerticalStackLayout();
+        var control = new Select
+        {
+            WidthRequest = 220,
+            HeightRequest = 55,
+        };
+        var page = new ContentPage
+        {
+            Content = pageScroll
+        };
+
+        pageContent.Add(new BoxView { HeightRequest = 900 });
+        pageContent.Add(showcaseRoot);
+        showcaseRoot.Add(preview);
+        showcaseRoot.Add(sidePanel, column: 1);
+        sidePanel.Content = propertyRoot;
+        propertyRoot.Add(new Label { Text = "Properties" }, row: 0);
+        propertyRoot.Add(new BoxView(), row: 1);
+        propertyRoot.Add(propertyScroll, row: 2);
+        propertyScroll.Content = propertyItems;
+        propertyItems.Add(new Label { Text = "Before" });
+        propertyItems.Add(control);
+
+        var host = new PopupOverlayHost(page);
+        var root = Assert.IsType<Grid>(page.Content);
+        var popup = new Border();
+
+        root.Arrange(new Rect(0, 0, 1000, 700));
+        pageScroll.Arrange(new Rect(0, 0, 1000, 700));
+        pageContent.Arrange(new Rect(0, -700, 1000, 1600));
+        showcaseRoot.Arrange(new Rect(20, 900, 960, 500));
+        preview.Arrange(new Rect(0, 0, 672, 500));
+        sidePanel.Arrange(new Rect(672, 0, 288, 500));
+        propertyRoot.Arrange(new Rect(0, 0, 288, 500));
+        propertyScroll.Arrange(new Rect(0, 50, 288, 450));
+        propertyItems.Arrange(new Rect(0, 0, 288, 700));
+        control.Arrange(new Rect(20, 180, 220, 55));
+
+        var registration = host.Show(control, popup, new PopupOverlayOptions
+        {
+            Width = 220,
+            MaxHeight = 240,
+            Margin = new Thickness(0, 4),
+        });
+
+        var overlay = Assert.Single(root.Children.OfType<AbsoluteLayout>());
+        var popupBounds = AbsoluteLayout.GetLayoutBounds(popup);
+
+        Assert.Same(pageScroll, root.Children[0]);
+        Assert.Contains(popup, overlay.Children);
+        Assert.True(popupBounds.X >= 690, popupBounds.ToString());
+        Assert.True(popupBounds.Y > 200, popupBounds.ToString());
+
+        registration.Close();
+    }
+
+    [Fact]
     public void Open_ShouldUseUnstyledDismissLayer_WithLowOpacityBackdrop()
     {
         var pageContent = new VerticalStackLayout();

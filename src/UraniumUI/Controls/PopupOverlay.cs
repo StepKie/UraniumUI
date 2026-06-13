@@ -510,19 +510,6 @@ internal sealed class PopupOverlayHost
 
     internal static Rect GetBoundsRelativeTo(VisualElement element, VisualElement relativeTo)
     {
-        var logicalBounds = GetLogicalBoundsRelativeTo(element, relativeTo);
-        var platformBounds = GetPlatformBoundsRelativeTo(element, relativeTo);
-
-        if (platformBounds is not null && ShouldUsePlatformBounds(platformBounds.Value, logicalBounds))
-        {
-            return platformBounds.Value;
-        }
-
-        return logicalBounds;
-    }
-
-    private static Rect GetLogicalBoundsRelativeTo(VisualElement element, VisualElement relativeTo)
-    {
         var x = 0d;
         var y = 0d;
         var current = element;
@@ -542,71 +529,5 @@ internal sealed class PopupOverlayHost
         }
 
         return new Rect(x, y, element.Width, element.Height);
-    }
-
-    private static bool ShouldUsePlatformBounds(Rect platformBounds, Rect logicalBounds)
-    {
-        if (!IsFinite(platformBounds.X) || !IsFinite(platformBounds.Y))
-        {
-            return false;
-        }
-
-        var platformHasNoOffset = IsCloseToZero(platformBounds.X) && IsCloseToZero(platformBounds.Y);
-        var logicalHasOffset = !IsCloseToZero(logicalBounds.X) || !IsCloseToZero(logicalBounds.Y);
-        return !platformHasNoOffset || !logicalHasOffset;
-    }
-
-    private static bool IsFinite(double value)
-    {
-        return !double.IsNaN(value) && !double.IsInfinity(value);
-    }
-
-    private static bool IsCloseToZero(double value)
-    {
-        return Math.Abs(value) < .5d;
-    }
-
-    private static Rect? GetPlatformBoundsRelativeTo(VisualElement element, VisualElement relativeTo)
-    {
-        try
-        {
-#if WINDOWS
-            if (element.Handler?.PlatformView is Microsoft.UI.Xaml.UIElement elementView &&
-                relativeTo.Handler?.PlatformView is Microsoft.UI.Xaml.UIElement relativeView)
-            {
-                var point = elementView.TransformToVisual(relativeView).TransformPoint(new Windows.Foundation.Point(0, 0));
-                return new Rect(point.X, point.Y, element.Width, element.Height);
-            }
-#elif ANDROID
-            if (element.Handler?.PlatformView is Android.Views.View elementView &&
-                relativeTo.Handler?.PlatformView is Android.Views.View relativeView)
-            {
-                var elementLocation = new int[2];
-                var relativeLocation = new int[2];
-                elementView.GetLocationOnScreen(elementLocation);
-                relativeView.GetLocationOnScreen(relativeLocation);
-                var density = relativeView.Context?.Resources?.DisplayMetrics?.Density ?? 1f;
-                if (density <= 0)
-                {
-                    density = 1f;
-                }
-
-                return new Rect((elementLocation[0] - relativeLocation[0]) / density, (elementLocation[1] - relativeLocation[1]) / density, element.Width, element.Height);
-            }
-#elif IOS || MACCATALYST
-            if (element.Handler?.PlatformView is UIKit.UIView elementView &&
-                relativeTo.Handler?.PlatformView is UIKit.UIView relativeView)
-            {
-                var point = elementView.ConvertPointToView(CoreGraphics.CGPoint.Empty, relativeView);
-                return new Rect(point.X, point.Y, element.Width, element.Height);
-            }
-#endif
-        }
-        catch
-        {
-            // Fall back to MAUI logical coordinates until platform views are connected.
-        }
-
-        return null;
     }
 }
