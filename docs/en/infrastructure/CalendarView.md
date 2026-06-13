@@ -19,6 +19,8 @@ Then you can use it with the `uranium:CalendarView` tag.
     MaximumDate="{Binding MaximumDate}" />
 ```
 
+![CalendarView Light](../images/calendarview-demo-android-simple-light.gif)
+
 ## Properties
 
 - **SelectedDate**: The selected date. Supports `DateTime?` and can be `null`.

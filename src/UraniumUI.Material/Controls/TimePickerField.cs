@@ -34,11 +34,7 @@ public class TimePickerField : InputField
         HorizontalOptions = LayoutOptions.End,
         IsVisible = false,
         Padding = new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0),
-        Content = new Path
-        {
-            Data = UraniumShapes.X,
-            Fill = ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.DarkGray).WithAlpha(.5f),
-        }
+        Content = CreateClearIconPath(null),
     };
 
     public override bool HasValue => Time != null;
