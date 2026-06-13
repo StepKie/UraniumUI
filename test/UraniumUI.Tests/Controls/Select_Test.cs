@@ -636,6 +636,68 @@ public class Select_Test
     }
 
     [Fact]
+    public void Open_ShouldShrinkPopupHeight_ToShortContent()
+    {
+        var pageRoot = new Grid();
+        var control = new Select
+        {
+            ItemsSource = new[] { "One", "Two" },
+            ItemTemplate = new DataTemplate(() => new BoxView { HeightRequest = 20 }),
+            WidthRequest = 200,
+            HeightRequest = 40,
+            MaxDropDownHeight = 240,
+        };
+        _ = new ContentPage
+        {
+            Content = pageRoot
+        };
+        pageRoot.Add(control);
+        pageRoot.Arrange(new Rect(0, 0, 400, 600));
+        control.Arrange(new Rect(20, 20, 200, 40));
+
+        control.Open();
+
+        var overlay = Assert.Single(pageRoot.Children.OfType<AbsoluteLayout>());
+        var popup = Assert.Single(overlay.Children.OfType<Border>());
+        var popupBounds = AbsoluteLayout.GetLayoutBounds(popup);
+
+        Assert.InRange(popupBounds.Height, 1, control.MaxDropDownHeight - 1);
+
+        control.Close();
+    }
+
+    [Fact]
+    public void Open_ShouldCapPopupHeight_ForLongContent()
+    {
+        var pageRoot = new Grid();
+        var control = new Select
+        {
+            ItemsSource = Enumerable.Range(0, 20).ToArray(),
+            ItemTemplate = new DataTemplate(() => new BoxView { HeightRequest = 20 }),
+            WidthRequest = 200,
+            HeightRequest = 40,
+            MaxDropDownHeight = 80,
+        };
+        _ = new ContentPage
+        {
+            Content = pageRoot
+        };
+        pageRoot.Add(control);
+        pageRoot.Arrange(new Rect(0, 0, 400, 600));
+        control.Arrange(new Rect(20, 20, 200, 40));
+
+        control.Open();
+
+        var overlay = Assert.Single(pageRoot.Children.OfType<AbsoluteLayout>());
+        var popup = Assert.Single(overlay.Children.OfType<Border>());
+        var popupBounds = AbsoluteLayout.GetLayoutBounds(popup);
+
+        Assert.Equal(control.MaxDropDownHeight, popupBounds.Height);
+
+        control.Close();
+    }
+
+    [Fact]
     public void ItemContainer_ShouldApplyFeedbackBackgrounds()
     {
         var item = "One";

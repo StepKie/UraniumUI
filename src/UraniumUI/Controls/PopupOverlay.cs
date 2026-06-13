@@ -42,6 +42,11 @@ internal sealed class PopupOverlayRegistration : IDisposable
     }
 }
 
+internal interface IPopupOverlayContent
+{
+    double MeasurePopupHeight(double width, double maxHeight);
+}
+
 internal sealed class PopupOverlayRootGrid : Grid
 {
 }
@@ -455,11 +460,7 @@ internal sealed class PopupOverlayHost
         var firstPassMaxHeight = Math.Max(0, Math.Min(desiredMaxHeight, Math.Max(availableBelow, availableAbove)));
 
         activePopup.MaximumHeightRequest = firstPassMaxHeight;
-        var measuredHeight = activePopup.Measure(width, firstPassMaxHeight).Height;
-        if (double.IsNaN(measuredHeight) || measuredHeight <= 0)
-        {
-            measuredHeight = firstPassMaxHeight;
-        }
+        var measuredHeight = MeasurePopupHeight(width, firstPassMaxHeight);
 
         var showAbove = availableBelow < measuredHeight && availableAbove > availableBelow;
         var availableHeight = Math.Max(0, showAbove ? availableAbove : availableBelow);
@@ -471,13 +472,32 @@ internal sealed class PopupOverlayHost
             : Math.Min(anchorBounds.Bottom, placementHeight - height - activeOptions.Margin.Bottom);
 
         AbsoluteLayout.SetLayoutFlags(activePopup, AbsoluteLayoutFlags.None);
-        AbsoluteLayout.SetLayoutBounds(activePopup, new Rect(x, y, width, AbsoluteLayout.AutoSize));
+        AbsoluteLayout.SetLayoutBounds(activePopup, new Rect(x, y, width, height));
 
         if (!activePopupAnimated)
         {
             activePopupAnimated = true;
             _ = AnimatePopup(showAbove);
         }
+    }
+
+    private double MeasurePopupHeight(double width, double maxHeight)
+    {
+        var measuredHeight = activePopup is IPopupOverlayContent popupContent
+            ? popupContent.MeasurePopupHeight(width, maxHeight)
+            : activePopup.Measure(width, maxHeight).Height;
+
+        if (!IsUsableHeight(measuredHeight))
+        {
+            measuredHeight = maxHeight;
+        }
+
+        return Math.Min(measuredHeight, maxHeight);
+    }
+
+    private static bool IsUsableHeight(double height)
+    {
+        return !double.IsNaN(height) && !double.IsInfinity(height) && height > 0;
     }
 
     private void CancelActivePopup()

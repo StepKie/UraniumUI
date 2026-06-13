@@ -124,6 +124,7 @@ public class Select : StatefulContentView
         var itemsLayout = new VerticalStackLayout
         {
             Spacing = 0,
+            VerticalOptions = LayoutOptions.Start,
         };
 
         if (ItemsSource is not null)
@@ -141,9 +142,10 @@ public class Select : StatefulContentView
         {
             Content = itemsLayout,
             MaximumHeightRequest = MaxDropDownHeight,
+            VerticalOptions = LayoutOptions.Start,
         };
 
-        return new Border
+        return new SelectDropDownBorder(itemsLayout)
         {
             BackgroundColor = DropDownBackgroundColor,
             Stroke = DropDownBorderColor,
@@ -152,7 +154,81 @@ public class Select : StatefulContentView
             Padding = 0,
             Content = activeScrollView,
             Shadow = DropDownShadow,
+            VerticalOptions = LayoutOptions.Start,
         };
+    }
+
+    private sealed class SelectDropDownBorder : Border, IPopupOverlayContent
+    {
+        private readonly VerticalStackLayout itemsLayout;
+
+        public SelectDropDownBorder(VerticalStackLayout itemsLayout)
+        {
+            this.itemsLayout = itemsLayout;
+        }
+
+        public double MeasurePopupHeight(double width, double maxHeight)
+        {
+            var strokeThickness = Math.Max(0, StrokeThickness);
+            var contentWidth = Math.Max(0, width - Padding.HorizontalThickness - (strokeThickness * 2));
+            var height = Padding.VerticalThickness + (strokeThickness * 2);
+            var itemCount = 0;
+
+            foreach (var child in itemsLayout.Children)
+            {
+                if (child is not View view)
+                {
+                    continue;
+                }
+
+                var itemHeight = MeasureNaturalHeight(view, contentWidth);
+                if (!IsUsableHeight(itemHeight))
+                {
+                    return double.NaN;
+                }
+
+                if (itemCount > 0)
+                {
+                    height += itemsLayout.Spacing;
+                }
+
+                height += itemHeight;
+                itemCount++;
+
+                if (height >= maxHeight)
+                {
+                    return maxHeight;
+                }
+            }
+
+            return Math.Min(height, maxHeight);
+        }
+
+        private static double MeasureNaturalHeight(View view, double width)
+        {
+            if (view.HeightRequest >= 0)
+            {
+                return view.HeightRequest;
+            }
+
+            if (view is ContentView { Content: View content } contentView)
+            {
+                var contentWidth = Math.Max(0, width - contentView.Padding.HorizontalThickness);
+                var contentHeight = MeasureNaturalHeight(content, contentWidth);
+
+                if (IsUsableHeight(contentHeight))
+                {
+                    return contentHeight + contentView.Padding.VerticalThickness;
+                }
+            }
+
+            return view.Measure(width, double.PositiveInfinity).Height;
+        }
+
+        private static bool IsUsableHeight(double height)
+        {
+            return !double.IsNaN(height) && !double.IsInfinity(height) && height > 0;
+        }
     }
 
     protected virtual VisualElement GetPopupAnchor()
@@ -181,7 +257,7 @@ public class Select : StatefulContentView
         container.HoverCommand = new Command(() => container.BackgroundColor = HoveredItemBackgroundColor);
         container.PressedCommand = new Command(() => container.BackgroundColor = PressedItemBackgroundColor);
         container.HoverExitCommand = new Command(RestoreBackground);
-        container.TappedCommand = new Command(() => SelectItem(item));
+        container.TappedCommand = new Command(() => SelectItemFromPointer(item));
 
         return container;
     }
@@ -255,6 +331,12 @@ public class Select : StatefulContentView
     {
         SelectedItem = item;
         Close();
+    }
+
+    private void SelectItemFromPointer(object item)
+    {
+        SelectItem(item);
+        Unfocus();
     }
 
     protected virtual void Activate()
