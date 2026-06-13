@@ -37,18 +37,18 @@
                         </material:TextField.Behaviors>
                     </material:TextField>
 
-                    <material:PickerField Title="Gender" AllowClear="True"
+                    <material:SelectField Title="Gender" AllowClear="True"
                                           SelectedItem="{Binding Gender}"
                                           Icon="{FontImage FontFamily=MaterialSharp, Glyph={x:Static m:MaterialSharp.Agender}}">
-                        <material:PickerField.ItemsSource>
+                        <material:SelectField.ItemsSource>
                             <x:Array Type="{x:Type vm:Gender}">
                                 <vm:Gender>Other</vm:Gender>
                                 <vm:Gender>Male</vm:Gender>
                                 <vm:Gender>Female</vm:Gender>
                             </x:Array>
-                        </material:PickerField.ItemsSource>
+                        </material:SelectField.ItemsSource>
                         <validation:RequiredValidation />
-                    </material:PickerField>
+                    </material:SelectField>
 
                     <material:DatePickerField Title="Birth Date"
                                         Date="{Binding BirthDate}" 
@@ -110,15 +110,17 @@
                                         Icon="{FontImage FontFamily=MaterialSharp, Glyph={x:Static m:MaterialSharp.Person}}">
                         <validation:RequiredValidation />
                         <validation:MinLengthValidation MinLength="3" />
+                        <material:TextField.Attachments>
+                        </material:TextField.Attachments>
                     </material:TextField>
 
                     <ActivityIndicator uranium:FormView.IsBusyIndicator="True"
-                                       HorizontalOptions="Center"
-                                       Color="{StaticResource Primary}" />
+                       HorizontalOptions="Center"
+                       Color="{StaticResource Primary}" />
 
                     <Button Text="Check availability"
-                            uranium:FormView.IsSubmitButton="True"
-                            StyleClass="FilledButton" />
+                        uranium:FormView.IsSubmitButton="True"
+                        StyleClass="FilledButton" />
 
                     <Label Text="{Binding AsyncValidationResult}"
                            TextColor="{StaticResource Primary}"
