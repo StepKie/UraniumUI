@@ -22,6 +22,10 @@ Then use it like this:
     ItemDisplayBinding="{Binding Name}" />
 ```
 
+| Light | Dark |
+| --- | --- |
+| ![Select Light](../images/select-demo-desktop-simple-light.gif) | ![Select Dark](../images/select-demo-desktop-simple-dark.gif) |
+
 ## Templates
 
 Use `ItemTemplate` to customize the rows shown in the opened list. Use `SelectedItemTemplate` when the closed selected value should use a more compact visual than the list rows.
@@ -49,6 +53,10 @@ Use `ItemTemplate` to customize the rows shown in the opened list. Use `Selected
     </uranium:Select.ItemTemplate>
 </uranium:Select>
 ```
+
+| Light | Dark |
+| --- | --- |
+| ![Select Templates Light](../images/select-demo-desktop-templated-light.gif) | ![Select Templates Dark](../images/select-demo-desktop-templated-dark.gif) |
 
 If `SelectedItemTemplate` is not set, `Select` uses `ItemTemplate` for the closed selected value. If no template is set, it uses `ItemDisplayBinding` or `ToString()`.
 

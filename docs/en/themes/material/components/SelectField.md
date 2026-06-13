@@ -20,6 +20,10 @@ Then use it like this:
     ItemDisplayBinding="{Binding Name}" />
 ```
 
+| Light | Dark |
+| --- | --- |
+| ![SelectField Light](../../../images/selectfield-demo-desktop-simple-light.gif) | ![SelectField Dark](../../../images/selectfield-demo-desktop-simple-dark.gif) |
+
 ## Templates
 
 `SelectField` forwards `ItemTemplate`, `SelectedItemTemplate`, and `ItemDisplayBinding` to its inner `Select` control.
@@ -48,6 +52,10 @@ Then use it like this:
     </material:SelectField.ItemTemplate>
 </material:SelectField>
 ```
+
+| Light | Dark |
+| --- | --- |
+| ![SelectField Templates Light](../../../images/selectfield-demo-desktop-templated-light.gif) | ![SelectField Templates Dark](../../../images/selectfield-demo-desktop-templated-dark.gif) |   
 
 ## AllowClear
 
