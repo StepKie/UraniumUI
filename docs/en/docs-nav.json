@@ -58,6 +58,10 @@
           "path": "infrastructure/Dropdown.md"
         },
         {
+          "text": "Select",
+          "path": "infrastructure/Select.md"
+        },
+        {
           "text": "ExpanderView",
           "path": "infrastructure/ExpanderView.md"
         },
@@ -158,6 +162,10 @@
             {
               "text": "DropdownField",
               "path": "themes/material/components/DropdownField.md"
+            },
+            {
+              "text": "SelectField",
+              "path": "themes/material/components/SelectField.md"
             },
             {
               "text": "PickerField",

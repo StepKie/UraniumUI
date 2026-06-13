@@ -12,6 +12,7 @@ public partial class StatefulContentViewHandler
     {
         var platformView = new StatefulUIContentView();
         platformView.IsFocusable = StatefulView.IsFocusable;
+        platformView.SendKeyDown = key => StatefulView.SendKeyDown(key);
         return platformView;
     }
 
@@ -159,8 +160,52 @@ public partial class StatefulContentViewHandler
     // TODO: Move it to the different file
     public class StatefulUIContentView : Microsoft.Maui.Platform.ContentView
     {
+        internal Func<StatefulContentViewKey, bool> SendKeyDown { get; set; }
+
         public bool IsFocusable { get; set; }
+
         public override bool CanBecomeFocused => IsFocusable;
+
+        public override void PressesBegan(NSSet<UIPress> presses, UIPressesEvent evt)
+        {
+            if (HandleKeyPresses(presses))
+            {
+                return;
+            }
+
+            base.PressesBegan(presses, evt);
+        }
+
+        private bool HandleKeyPresses(NSSet<UIPress> presses)
+        {
+            foreach (var press in presses)
+            {
+                var key = ToStatefulKey(press);
+
+                if (key is not null && (SendKeyDown?.Invoke(key.Value) ?? false))
+                {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        private static StatefulContentViewKey? ToStatefulKey(UIPress press)
+        {
+            return press.Key?.KeyCode switch
+            {
+                UIKeyboardHidUsage.KeyboardReturnOrEnter => StatefulContentViewKey.Enter,
+                UIKeyboardHidUsage.KeypadEnter => StatefulContentViewKey.Enter,
+                UIKeyboardHidUsage.KeyboardSpacebar => StatefulContentViewKey.Space,
+                UIKeyboardHidUsage.KeyboardEscape => StatefulContentViewKey.Escape,
+                UIKeyboardHidUsage.KeyboardDownArrow => StatefulContentViewKey.ArrowDown,
+                UIKeyboardHidUsage.KeyboardUpArrow => StatefulContentViewKey.ArrowUp,
+                UIKeyboardHidUsage.KeyboardHome => StatefulContentViewKey.Home,
+                UIKeyboardHidUsage.KeyboardEnd => StatefulContentViewKey.End,
+                _ => null,
+            };
+        }
     }
 }
 #endif

@@ -26,6 +26,8 @@
       href: infrastructure/CalendarView.md
     - name: Dropdown
       href: infrastructure/Dropdown.md
+    - name: Select
+      href: infrastructure/Select.md
     - name: ExpanderView
       href: infrastructure/ExpanderView.md
     - name: SelectableLabel
@@ -77,6 +79,8 @@
           href: themes/material/components/AutoCompleteTextField.md
         - name: DropdownField
           href: themes/material/components/DropdownField.md
+        - name: SelectField
+          href: themes/material/components/SelectField.md
         - name: PickerField
           href: themes/material/components/PickerField.md
         - name: MultiplePickerField
