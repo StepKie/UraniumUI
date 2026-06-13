@@ -95,7 +95,9 @@
                             ItemTemplate="{StaticResource RichDropdownItemTemplate}"
                             DropDownBackgroundColor="{AppThemeBinding Light={StaticResource Surface}, Dark={StaticResource SurfaceDark}}"
                             DropDownBorderColor="{AppThemeBinding Light={StaticResource Outline}, Dark={StaticResource OutlineDark}}"
-                            SelectedItemBackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}" />
+                            SelectedItemBackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}"
+                            HoveredItemBackgroundColor="{AppThemeBinding Light={StaticResource SurfaceVariant}, Dark={StaticResource SurfaceVariantDark}}"
+                            PressedItemBackgroundColor="{AppThemeBinding Light={StaticResource PrimaryContainer}, Dark={StaticResource PrimaryContainerDark}}" />
 
                         <material:MauiDropdownField
                             Title="Material field"

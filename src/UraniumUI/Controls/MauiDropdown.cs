@@ -3,6 +3,7 @@ using System.Collections.Specialized;
 using System.ComponentModel;
 using Microsoft.Maui.Controls.Shapes;
 using UraniumUI.Extensions;
+using UraniumUI.Views;
 
 namespace UraniumUI.Controls;
 
@@ -121,17 +122,23 @@ public class MauiDropdown : ContentView
     protected virtual View CreateItemContainer(object item)
     {
         var content = CreateItemView(item);
-        var container = new ContentView
+        var container = new StatefulContentView
         {
             Content = content,
-            BackgroundColor = Equals(item, SelectedItem) ? SelectedItemBackgroundColor : Colors.Transparent,
             HorizontalOptions = LayoutOptions.Fill,
         };
 
-        container.GestureRecognizers.Add(new TapGestureRecognizer
+        void RestoreBackground()
         {
-            Command = new Command(() => SelectItem(item))
-        });
+            container.BackgroundColor = Equals(item, SelectedItem) ? SelectedItemBackgroundColor : Colors.Transparent;
+        }
+
+        RestoreBackground();
+
+        container.HoverCommand = new Command(() => container.BackgroundColor = HoveredItemBackgroundColor);
+        container.PressedCommand = new Command(() => container.BackgroundColor = PressedItemBackgroundColor);
+        container.HoverExitCommand = new Command(RestoreBackground);
+        container.TappedCommand = new Command(() => SelectItem(item));
 
         return container;
     }
@@ -408,4 +415,14 @@ public class MauiDropdown : ContentView
 
     public static readonly BindableProperty SelectedItemBackgroundColorProperty = BindableProperty.Create(
         nameof(SelectedItemBackgroundColor), typeof(Color), typeof(MauiDropdown), Colors.Transparent);
+
+    public Color HoveredItemBackgroundColor { get => (Color)GetValue(HoveredItemBackgroundColorProperty); set => SetValue(HoveredItemBackgroundColorProperty, value); }
+
+    public static readonly BindableProperty HoveredItemBackgroundColorProperty = BindableProperty.Create(
+        nameof(HoveredItemBackgroundColor), typeof(Color), typeof(MauiDropdown), Colors.Black.WithAlpha(.06f));
+
+    public Color PressedItemBackgroundColor { get => (Color)GetValue(PressedItemBackgroundColorProperty); set => SetValue(PressedItemBackgroundColorProperty, value); }
+
+    public static readonly BindableProperty PressedItemBackgroundColorProperty = BindableProperty.Create(
+        nameof(PressedItemBackgroundColor), typeof(Color), typeof(MauiDropdown), Colors.Black.WithAlpha(.12f));
 }

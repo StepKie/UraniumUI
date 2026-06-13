@@ -95,6 +95,7 @@ internal sealed class DropdownOverlayHost
     private BoxView activeDismissLayer;
     private View activePopup;
     private DropdownOverlayOptions activeOptions;
+    private bool activePopupAnimated;
 
     public DropdownOverlayHost(ContentPage page)
     {
@@ -111,6 +112,7 @@ internal sealed class DropdownOverlayHost
         activeDismissLayer = CreateDismissLayer();
         activePopup = popup;
         activeOptions = options;
+        activePopupAnimated = false;
 
         if (!root.Children.Contains(overlayLayer))
         {
@@ -161,6 +163,7 @@ internal sealed class DropdownOverlayHost
             activeDismissLayer = null;
             activePopup = null;
             activeOptions = null;
+            activePopupAnimated = false;
             originalContent = null;
             overlayLayer = null;
             root = null;
@@ -274,6 +277,54 @@ internal sealed class DropdownOverlayHost
 
         AbsoluteLayout.SetLayoutFlags(activePopup, AbsoluteLayoutFlags.None);
         AbsoluteLayout.SetLayoutBounds(activePopup, new Rect(x, y, width, AbsoluteLayout.AutoSize));
+
+        if (!activePopupAnimated)
+        {
+            activePopupAnimated = true;
+            _ = AnimatePopup(showAbove);
+        }
+    }
+
+    private async Task AnimatePopup(bool showAbove)
+    {
+        var popup = activePopup;
+
+        if (popup is null)
+        {
+            return;
+        }
+
+        if (activeAnchor?.Handler is null || popup.Handler is null)
+        {
+            popup.Opacity = 1;
+            popup.Scale = 1;
+            popup.TranslationY = 0;
+            return;
+        }
+
+        popup.Opacity = 0;
+        popup.Scale = .97;
+        popup.TranslationY = showAbove ? 6 : -6;
+        popup.AnchorX = .5;
+        popup.AnchorY = showAbove ? 1 : 0;
+
+        try
+        {
+            await Task.WhenAll(
+                popup.FadeTo(1, 120, Easing.CubicOut),
+                popup.ScaleTo(1, 120, Easing.CubicOut),
+                popup.TranslateTo(0, 0, 120, Easing.CubicOut));
+        }
+        catch
+        {
+            // The popup may be detached while this visual-only animation is still running.
+        }
+        finally
+        {
+            popup.Opacity = 1;
+            popup.Scale = 1;
+            popup.TranslationY = 0;
+        }
     }
 
     internal static Rect GetBoundsRelativeTo(VisualElement element, VisualElement relativeTo)

@@ -35,6 +35,27 @@ public class MauiDropdownField_Test
         control.DropdownView.ItemTemplate.ShouldBeSameAs(itemTemplate);
     }
 
+    [Fact]
+    public void Constructor_ShouldApplyMaterialThemeColors_ToDropdownView()
+    {
+        Application.Current.UserAppTheme = AppTheme.Light;
+        Application.Current.Resources["Surface"] = Colors.Pink;
+        Application.Current.Resources["Outline"] = Colors.Blue;
+        Application.Current.Resources["PrimaryContainer"] = Colors.Red;
+        Application.Current.Resources["SurfaceVariant"] = Colors.Green;
+        Application.Current.Resources["Primary"] = Colors.Orange;
+        Application.Current.Resources["OnBackground"] = Colors.Purple;
+
+        var control = AnimationReadyHandler.Prepare(new MauiDropdownField());
+
+        control.DropdownView.DropDownBackgroundColor.ShouldBe(Colors.Pink);
+        control.DropdownView.DropDownBorderColor.ShouldBe(Colors.Blue);
+        control.DropdownView.SelectedItemBackgroundColor.ShouldBe(Colors.Red);
+        control.DropdownView.HoveredItemBackgroundColor.ShouldBe(Colors.Green);
+        control.DropdownView.PressedItemBackgroundColor.ShouldBe(Colors.Orange.WithAlpha(.18f));
+        control.DropdownView.TextColor.ShouldBe(Colors.Purple);
+    }
+
     public class TestViewModel : UraniumBindableObject
     {
         private object selectedItem;

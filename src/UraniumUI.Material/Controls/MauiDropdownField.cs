@@ -43,6 +43,7 @@ public class MauiDropdownField : InputField
 
         iconClear.TappedCommand = new Command(OnClearTapped);
         UpdateClearIconState();
+        ConfigureMaterialDropDownColors();
 
         DropdownView.SetBinding(MauiDropdown.SelectedItemProperty, new Binding(nameof(SelectedItem), BindingMode.TwoWay, source: this));
         DropdownView.SetBinding(MauiDropdown.ItemsSourceProperty, new Binding(nameof(ItemsSource), source: this));
@@ -55,6 +56,39 @@ public class MauiDropdownField : InputField
         DropdownView.SetBinding(MauiDropdown.HorizontalTextAlignmentProperty, new Binding(nameof(HorizontalTextAlignment), source: this));
         DropdownView.SetBinding(MauiDropdown.ItemTemplateProperty, new Binding(nameof(ItemTemplate), source: this));
         DropdownView.SetBinding(MauiDropdown.ItemDisplayBindingProperty, new Binding(nameof(ItemDisplayBinding), source: this));
+    }
+
+    private void ConfigureMaterialDropDownColors()
+    {
+        this.SetAppThemeColor(
+            TextColorProperty,
+            ColorResource.GetColor("OnBackground", Colors.DarkGray),
+            ColorResource.GetColor("OnBackgroundDark", Colors.LightGray));
+
+        DropdownView.SetAppThemeColor(
+            MauiDropdown.DropDownBackgroundColorProperty,
+            ColorResource.GetColor("Surface", Colors.White),
+            ColorResource.GetColor("SurfaceDark", Color.FromArgb("#2C3639")));
+
+        DropdownView.SetAppThemeColor(
+            MauiDropdown.DropDownBorderColorProperty,
+            ColorResource.GetColor("Outline", Colors.LightGray),
+            ColorResource.GetColor("OutlineDark", Colors.Gray));
+
+        DropdownView.SetAppThemeColor(
+            MauiDropdown.SelectedItemBackgroundColorProperty,
+            ColorResource.GetColor("PrimaryContainer", Colors.LightGray),
+            ColorResource.GetColor("PrimaryContainerDark", Colors.DarkGray));
+
+        DropdownView.SetAppThemeColor(
+            MauiDropdown.HoveredItemBackgroundColorProperty,
+            ColorResource.GetColor("SurfaceVariant", Colors.LightGray),
+            ColorResource.GetColor("SurfaceVariantDark", Colors.Gray));
+
+        DropdownView.SetAppThemeColor(
+            MauiDropdown.PressedItemBackgroundColorProperty,
+            ColorResource.GetColor("Primary", Colors.Gray).WithAlpha(.18f),
+            ColorResource.GetColor("PrimaryDark", Colors.LightGray).WithAlpha(.24f));
     }
 
     protected override object GetValueForValidator()

@@ -1,5 +1,6 @@
 using UraniumUI.Controls;
 using UraniumUI.Tests.Core;
+using UraniumUI.Views;
 
 namespace UraniumUI.Tests.Controls;
 
@@ -75,6 +76,32 @@ public class MauiDropdown_Test
         Assert.Same(pageContent, page.Content);
     }
 
+    [Fact]
+    public void ItemContainer_ShouldApplyFeedbackBackgrounds()
+    {
+        var item = "One";
+        var control = new TestMauiDropdown
+        {
+            SelectedItem = item,
+            SelectedItemBackgroundColor = Colors.Red,
+            HoveredItemBackgroundColor = Colors.Green,
+            PressedItemBackgroundColor = Colors.Blue,
+        };
+
+        var container = Assert.IsType<StatefulContentView>(control.CreateContainer(item));
+
+        Assert.Equal(Colors.Red, container.BackgroundColor);
+
+        container.HoverCommand.Execute(null);
+        Assert.Equal(Colors.Green, container.BackgroundColor);
+
+        container.PressedCommand.Execute(null);
+        Assert.Equal(Colors.Blue, container.BackgroundColor);
+
+        container.HoverExitCommand.Execute(null);
+        Assert.Equal(Colors.Red, container.BackgroundColor);
+    }
+
     private sealed record TestItem(string Name);
 
     private sealed class TestMauiDropdown : MauiDropdown
@@ -82,6 +109,11 @@ public class MauiDropdown_Test
         public View CreateItem(object item)
         {
             return CreateItemView(item);
+        }
+
+        public View CreateContainer(object item)
+        {
+            return CreateItemContainer(item);
         }
     }
 }
