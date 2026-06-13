@@ -124,7 +124,14 @@ public class DatePickerField : InputField
 
     protected override void OnIconChanged()
     {
+        var dateLabelMargin = Content?.Margin ?? default;
+
         base.OnIconChanged();
+
+        if (Icon != null && Content != null)
+        {
+            Content.Margin = dateLabelMargin;
+        }
 
         if (Icon == null)
         {

@@ -190,6 +190,21 @@ public class DatePickerField_Test
     }
 
     [Fact]
+    public void Icon_ShouldPreserveDateLabelLeadingMargin()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField
+        {
+            Icon = new FontImageSource
+            {
+                FontFamily = "MaterialSharp",
+                Glyph = "A",
+            },
+        });
+
+        control.Content.Margin.ShouldBe(new Thickness(10, 0));
+    }
+
+    [Fact]
     public async Task DatePrompt_ShouldUpdateDate_WhenDialogReturnsDate()
     {
         var dialogService = UseMockDialogService();
