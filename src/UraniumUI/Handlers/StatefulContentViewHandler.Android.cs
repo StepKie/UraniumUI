@@ -13,6 +13,8 @@ namespace UraniumUI.Handlers;
 public partial class StatefulContentViewHandler
 {
     private bool suppressActionKeyUp;
+    private bool touchStarted;
+    private long lastTouchTapTicks;
 
     protected override ContentViewGroup CreatePlatformView()
     {
@@ -61,6 +63,7 @@ public partial class StatefulContentViewHandler
     {
         if (e.Event.Action == MotionEventActions.Down)
         {
+            touchStarted = true;
             GoToState(StatefulView, "Pressed");
             StatefulView.InvokePressed();
             ExecuteCommandIfCan(StatefulView.PressedCommand);
@@ -68,12 +71,36 @@ public partial class StatefulContentViewHandler
         }
         else if (e.Event.Action == MotionEventActions.Up)
         {
+            if (touchStarted)
+            {
+                touchStarted = false;
+                lastTouchTapTicks = DateTime.UtcNow.Ticks;
+                ExecuteTapped();
+            }
+
+            GoToState(StatefulView, CommonStates.Normal);
+            e.Handled = false;
+        }
+        else if (e.Event.Action is MotionEventActions.Cancel or MotionEventActions.Outside)
+        {
+            touchStarted = false;
             GoToState(StatefulView, CommonStates.Normal);
             e.Handled = false;
         }
     }
 
     private void PlatformView_Click(object sender, EventArgs e)
+    {
+        if (DateTime.UtcNow.Ticks - lastTouchTapTicks < TimeSpan.TicksPerMillisecond * 500)
+        {
+            lastTouchTapTicks = 0;
+            return;
+        }
+
+        ExecuteTapped();
+    }
+
+    private void ExecuteTapped()
     {
         GoToState(StatefulView, CommonStates.Normal);
         StatefulView.InvokeTapped();
