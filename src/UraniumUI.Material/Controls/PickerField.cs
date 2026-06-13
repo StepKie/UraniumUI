@@ -217,12 +217,7 @@ public class PickerField : InputField
 
     public IList<string> Items => PickerView?.Items;
 
-    private static readonly ControlTemplate clearIconPathControlTemplate = new ControlTemplate(() => new Path
-    {
-        StyleClass = new[] { "PickerField.ClearIcon" },
-        Data = UraniumShapes.X,
-        Fill = ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.DarkGray).WithAlpha(.5f),
-    });
+    private static readonly ControlTemplate clearIconPathControlTemplate = new ControlTemplate(() => CreateClearIconPath("PickerField.ClearIcon"));
 
     protected virtual View CreateIconClear()
     {

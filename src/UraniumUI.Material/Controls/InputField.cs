@@ -1,6 +1,7 @@
 using Microsoft.Maui.Controls.Shapes;
 using System.ComponentModel;
 using UraniumUI.Extensions;
+using UraniumUI.Pages;
 using UraniumUI.Resources;
 using UraniumUI.ViewExtensions;
 
@@ -547,6 +548,32 @@ public partial class InputField : ContentView
             InitializeBorder();
 #endif
         }
+    }
+
+    /// <summary>
+    /// Creates the X-shaped clear icon Path used by the built-in clear attachments.
+    /// The fill is wired through an AppTheme binding so it follows runtime light/dark
+    /// theme switches instead of being captured once at creation time. Shape.Fill is a
+    /// Brush-typed property, so SolidColorBrush instances are provided per theme.
+    /// </summary>
+    protected static Microsoft.Maui.Controls.Shapes.Path CreateClearIconPath(string styleClass)
+    {
+        var path = new Microsoft.Maui.Controls.Shapes.Path
+        {
+            Data = UraniumShapes.X,
+        };
+
+        if (!string.IsNullOrEmpty(styleClass))
+        {
+            path.StyleClass = new[] { styleClass };
+        }
+
+        path.SetAppTheme(
+            Microsoft.Maui.Controls.Shapes.Path.FillProperty,
+            new SolidColorBrush(ColorResource.GetColor("OnBackground", Colors.DarkGray).WithAlpha(.5f)),
+            new SolidColorBrush(ColorResource.GetColor("OnBackgroundDark", Colors.DarkGray).WithAlpha(.5f)));
+
+        return path;
     }
 
     #region BindableProperties

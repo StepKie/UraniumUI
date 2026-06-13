@@ -178,12 +178,7 @@ public partial class TextField : InputField
             IsVisible = true, // this is important; having initial state of false will have SetBinding have no effect, since it will not receive input events
             Padding = new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0),
             TappedCommand = new Command(OnClearTapped),
-            Content = new Path
-            {
-                StyleClass = new[] { "TextField.ClearIcon" },
-                Data = UraniumShapes.X,
-                Fill = ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.DarkGray).WithAlpha(.5f),
-            }
+            Content = CreateClearIconPath("TextField.ClearIcon"),
         };
 
         contentView.SetId("ClearIcon");
