@@ -5,6 +5,23 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>UraniumUI | The presentation framework for .NET MAUI</title>
   <meta name="description" content="UraniumUI fills the UI gaps in plain .NET MAUI with dynamic forms, validation, theming, dialogs, and native-MAUI controls without a second app model or special coding style.">
+  <script>
+    (function () {
+      var storageKey = 'uraniumui-theme';
+
+      function getStoredTheme() {
+        try {
+          var theme = localStorage.getItem(storageKey);
+          return theme === 'dark' || theme === 'light' ? theme : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+      document.documentElement.setAttribute('data-bs-theme', getStoredTheme() || (prefersDark ? 'dark' : 'light'));
+    })();
+  </script>
   <link rel="icon" href="images/logo.ico">
   <link rel="stylesheet" href="public/main.css">
 </head>
@@ -18,6 +35,9 @@
       <a href="en/Getting-Started.html">Docs</a>
       <a href="api/UraniumUI.html">API</a>
       <a href="https://github.com/enisn/UraniumUI">GitHub</a>
+      <button class="uui-theme-toggle" type="button" data-uui-theme-toggle aria-label="Switch theme">
+        <span data-uui-theme-label>Theme</span>
+      </button>
     </nav>
   </header>
 
@@ -192,5 +212,76 @@ dotnet new uraniumui-app -n MyMauiApp</code></pre>
       </div>
     </section>
   </main>
+  <script>
+    (function () {
+      var storageKey = 'uraniumui-theme';
+      var root = document.documentElement;
+      var toggle = document.querySelector('[data-uui-theme-toggle]');
+      var label = document.querySelector('[data-uui-theme-label]');
+      var media = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+
+      function getStoredTheme() {
+        try {
+          var theme = localStorage.getItem(storageKey);
+          return theme === 'dark' || theme === 'light' ? theme : null;
+        } catch (_) {
+          return null;
+        }
+      }
+
+      function storeTheme(theme) {
+        try {
+          localStorage.setItem(storageKey, theme);
+        } catch (_) {
+        }
+      }
+
+      function getTheme() {
+        return root.getAttribute('data-bs-theme') === 'dark' ? 'dark' : 'light';
+      }
+
+      function syncToggle(theme) {
+        var nextTheme = theme === 'dark' ? 'light' : 'dark';
+        if (label) {
+          label.textContent = nextTheme === 'dark' ? 'Dark' : 'Light';
+        }
+
+        if (toggle) {
+          toggle.setAttribute('aria-label', 'Switch to ' + nextTheme + ' theme');
+          toggle.setAttribute('aria-pressed', theme === 'dark' ? 'true' : 'false');
+          toggle.title = 'Switch to ' + nextTheme + ' theme';
+        }
+      }
+
+      if (toggle) {
+        toggle.addEventListener('click', function () {
+          var nextTheme = getTheme() === 'dark' ? 'light' : 'dark';
+          root.setAttribute('data-bs-theme', nextTheme);
+          storeTheme(nextTheme);
+          syncToggle(nextTheme);
+        });
+      }
+
+      if (media) {
+        var onSystemThemeChanged = function (event) {
+          if (getStoredTheme()) {
+            return;
+          }
+
+          var theme = event.matches ? 'dark' : 'light';
+          root.setAttribute('data-bs-theme', theme);
+          syncToggle(theme);
+        };
+
+        if (media.addEventListener) {
+          media.addEventListener('change', onSystemThemeChanged);
+        } else if (media.addListener) {
+          media.addListener(onSystemThemeChanged);
+        }
+      }
+
+      syncToggle(getTheme());
+    })();
+  </script>
 </body>
 </html>

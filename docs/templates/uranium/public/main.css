@@ -280,6 +280,30 @@ body.uui-static-home {
   color: var(--bs-link-hover-color);
 }
 
+.uui-theme-toggle {
+  background: color-mix(in srgb, var(--bs-body-bg) 72%, var(--bs-body-color) 28%);
+  border: 1px solid color-mix(in srgb, var(--bs-body-color) 18%, transparent);
+  border-radius: var(--border-radius-button);
+  color: var(--bs-body-color);
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+  min-height: 40px;
+  padding: .55rem .85rem;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.uui-theme-toggle:hover {
+  background: var(--bs-primary-border-subtle);
+  color: var(--bs-link-hover-color);
+  transform: translateY(-1px);
+}
+
+.uui-theme-toggle:focus-visible {
+  outline: 3px solid color-mix(in srgb, #52d681 50%, transparent);
+  outline-offset: 2px;
+}
+
 .uui-landing {
   --uui-accent: #52d681;
   --uui-accent-strong: #2db965;
