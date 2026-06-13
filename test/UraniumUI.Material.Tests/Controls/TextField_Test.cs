@@ -212,6 +212,17 @@ public class TextField_Test
     }
 
     [Fact]
+    public void OnApplyTemplate_ShouldReevaluateClearIconState_WhenAllowClearIsInitialized()
+    {
+        var control = new TemplateAwareTextField { AllowClear = true };
+        var updatesBeforeTemplate = control.UpdateClearIconStateCallCount;
+
+        control.ApplyTemplateForTest();
+
+        control.UpdateClearIconStateCallCount.ShouldBe(updatesBeforeTemplate + 1);
+    }
+
+    [Fact]
     public void SelectionLength_ShouldBeSent_ToViewModel()
     {
         var control = AnimationReadyHandler.Prepare(new TextField());
@@ -525,5 +536,18 @@ public class TextField_Test
         public ClearButtonVisibility ClearButtonVisibility { get => clearButtonVisibility; set => SetProperty(ref clearButtonVisibility, value); }
 
         public double CharacterSpacing { get => characterSpacing; set => SetProperty(ref characterSpacing, value); }
+    }
+
+    private sealed class TemplateAwareTextField : TextField
+    {
+        public int UpdateClearIconStateCallCount { get; private set; }
+
+        public void ApplyTemplateForTest() => base.OnApplyTemplate();
+
+        protected override void UpdateClearIconState()
+        {
+            UpdateClearIconStateCallCount++;
+            base.UpdateClearIconState();
+        }
     }
 }

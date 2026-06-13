@@ -61,6 +61,12 @@ public partial class TextField : InputField
 
     partial void AfterConstructor();
 
+    protected override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+        UpdateClearIconState();
+    }
+
     protected override void OnHandlerChanged()
     {
         base.OnHandlerChanged();
