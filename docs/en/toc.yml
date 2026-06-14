@@ -1,5 +1,9 @@
 - name: Getting Started
   href: Getting-Started.md
+- name: What's New
+  items:
+    - name: What's New in v3.0
+      href: whats-new/What-Is-New-In-3.0.md
 - name: Forms & Validation
   items:
     - name: AutoFormView

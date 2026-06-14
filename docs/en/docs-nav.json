@@ -5,6 +5,15 @@
       "path": "Getting-Started.md"
     },
     {
+      "text": "What's New",
+      "items": [
+        {
+          "text": "What's New in v3.0",
+          "path": "whats-new/What-Is-New-In-3.0.md"
+        }
+      ]
+    },
+    {
       "text": "Forms & Validation",
       "items": [
         {
