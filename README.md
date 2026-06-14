@@ -1,8 +1,8 @@
 <div align="center">
     <img align="center" src="./art/logo.svg" width="33%">
     <h1 align="center">UraniumUI</h1>
-    <p><strong>The presentation framework for .NET MAUI.</strong></p>
-    <p>Fill the UI gaps in plain MAUI without adopting a second app model, proprietary layer, or special coding style.</p>
+    <p><strong>The open-source presentation framework for production .NET MAUI apps.</strong></p>
+    <p>Build app-ready MAUI screens with Material controls, dynamic forms, dialogs, data components, theming, icons, overlays, and effects without leaving XAML or MVVM.</p>
 </div>
 
 <div align="center">
@@ -18,14 +18,22 @@
     <a href="https://enisn-projects.io/docs/en/uranium/latest/Getting-Started">Documentation</a> |
     <a href="https://www.nuget.org/packages/UraniumUI/">NuGet</a> |
     <a href="https://www.nuget.org/packages/UraniumUI.Templates/">Templates</a> |
+    <a href="./demo/UraniumApp">Demo App</a> |
     <a href="https://discord.gg/nN7Yvch73v">Discord</a>
 </p>
 
-UraniumUI is a free and open-source presentation framework for .NET MAUI. It fills the UI gaps plain MAUI leaves to every team: polished controls, validation-aware forms, dialogs, icons, and app-ready presentation patterns without moving your app into a proprietary black box.
+UraniumUI is a free and open-source presentation layer for .NET MAUI. It fills the UI gaps plain MAUI leaves to every team: Material-styled inputs and buttons, generated forms, validation mapping, data grids, tree views, tab views, dialogs, bottom sheets, backdrops, icons, blur effects, code views, templates, and app-ready presentation patterns.
 
-You keep writing regular .NET MAUI: XAML, `ContentPage`, bindings, styles, resources, handlers, dependency injection, MVVM, and platform APIs. UraniumUI attaches to that model instead of replacing it.
+You keep writing regular .NET MAUI: XAML, `ContentPage`, `Shell`, bindings, styles, resources, handlers, dependency injection, MVVM, and platform APIs. UraniumUI attaches to that model instead of replacing it.
 
-It is not just a collection of styled controls. UraniumUI provides the building blocks for real app screens: generated forms, validation mapping, dialog abstractions, theme resources, icon packs, state-aware views, layout primitives, and extensibility points for your own controls.
+It is not just a collection of styled controls and it is not only an AutoFormView package. UraniumUI provides the building blocks for real app screens: form workflows, data-heavy views, hierarchical navigation, app surfaces, visual system resources, native-MAUI handlers, and extensibility points for your own controls.
+
+## Who It Is For
+
+- .NET MAUI teams building production line-of-business, admin, data-entry, or internal tools.
+- Teams that want a Material presentation layer without moving away from XAML, MVVM, resources, or MAUI handlers.
+- Apps that need more than basic controls: validation-aware fields, data grids, tree views, tabs, dialogs, bottom sheets, and reusable page surfaces.
+- Developers who want incremental adoption: use one control, add one package, or start from a full template.
 
 ## No Framework Tax
 
@@ -41,11 +49,13 @@ Plain MAUI in, better UI out.
 
 | App need | UraniumUI provides |
 | --- | --- |
-| Build forms quickly | `AutoFormView` generates editors from your model and lets you override editor mappings when needed. |
-| Validate forms consistently | InputKit validation, DataAnnotations integration, async validation, and automatic validation path mapping for generated fields. |
-| Keep UI native and flexible | Controls and handlers built on MAUI primitives instead of a closed, all-or-nothing rendering stack. |
-| Standardize app presentation | Material theme, color resources, style resources, cascading styling, icons, dialogs, and reusable page infrastructure. |
-| Escape the defaults | Replace generated editors, customize layouts, add page attachments, create themes, or use native MAUI APIs directly. |
+| Build forms quickly | `AutoFormView` generates editors from your model, while `FormView` handles validation, submit/reset behavior, busy state, and validation summaries. |
+| Validate consistently | InputKit validation, DataAnnotations integration, async validators, and property-path mapping for generated or hand-written fields. |
+| Build data screens | `DataGrid`, `Paginator`, `TreeView`, `TabView`, `Select`, `Dropdown`, `CalendarView`, and Material input fields for real application workflows. |
+| Add app surfaces | `IDialogService`, modal-page dialogs, Mopups and CommunityToolkit dialog providers, form dialogs, `BottomSheetView`, and `BackdropView`. |
+| Standardize presentation | Material color and style resources, light/dark tokens, button variants, containers, dividers, elevation, icon packs, cascading styles, and blur effects. |
+| Keep UI native and flexible | Controls and handlers built on MAUI primitives instead of a closed rendering stack or proprietary application model. |
+| Escape the defaults | Replace generated editors, customize templates, override styles, add page attachments, create themes, or use native MAUI APIs directly. |
 
 ## Quick Start
 
@@ -112,7 +122,11 @@ Add Material resources in `App.xaml`:
 
 Read the full onboarding guide: [Getting Started](https://enisn-projects.io/docs/en/uranium/latest/Getting-Started).
 
-## Aha Moment: Dynamic Forms
+## What You Can Build
+
+UraniumUI is useful when you need to ship complete MAUI screens, not just one-off controls. These are common places where it removes repeated UI plumbing.
+
+### Forms Without Boilerplate
 
 Instead of hand-writing every field, binding, validation message, and layout row, describe the form with your model and let UraniumUI generate the editable UI.
 
@@ -160,39 +174,97 @@ The same model can now drive generated editors, display names, and validation me
 
 Learn more: [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/AutoFormView) and [DataAnnotations validation](https://enisn-projects.io/docs/en/uranium/latest/validations/DataAnnotations).
 
+### Data Screens Without Rebuilding Tables
+
+Bind a collection and let `DataGrid` render rows, headers, empty states, selection columns, templates, and auto-generated columns when you want them.
+
+```xml
+<material:DataGrid ItemsSource="{Binding Customers}" UseAutoColumns="True" />
+```
+
+When the screen needs more control, define explicit `DataGridColumn` items, cell templates, header templates, selection columns, and pair the grid with `Paginator`.
+
+Learn more: [DataGrid](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/DataGrid) and [Paginator](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/Paginator).
+
+### Navigation, Hierarchies, And Multi-Section UI
+
+Use higher-level controls for the patterns that show up in real apps: hierarchical data, tabbed content, searchable/selectable lists, calendars, expanders, and dropdowns.
+
+```xml
+<material:TreeView ItemsSource="{Binding Nodes}" SelectionMode="Multiple" />
+
+<material:TabView>
+    <material:TabItem Title="Overview">
+        <material:TabItem.ContentTemplate>
+            <DataTemplate>
+                <Label Text="Overview content" />
+            </DataTemplate>
+        </material:TabItem.ContentTemplate>
+    </material:TabItem>
+</material:TabView>
+```
+
+TreeView supports custom item templates, expansion state binding, lazy loading, single/multiple selection, and hierarchical checkbox selection. TabView supports lazy content templates, custom headers, dynamic tabs, placement options, and caching strategies.
+
+Learn more: [TreeView](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/TreeView), [TabView](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/TabView), [Select](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/Select), and [CalendarView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/CalendarView).
+
+### App Surfaces, Dialogs, And Visual Polish
+
+Use `UraniumContentPage` attachments for surfaces that belong to the page instead of manually layering grids and overlays.
+
+```xml
+<uranium:UraniumContentPage.Attachments>
+    <material:BottomSheetView IsPresented="{Binding IsFiltersOpen}">
+        <VerticalStackLayout Padding="24" Spacing="16">
+            <Label Text="Filters" FontAttributes="Bold" />
+            <material:TextField Title="Search" Text="{Binding SearchText}" />
+        </VerticalStackLayout>
+    </material:BottomSheetView>
+</uranium:UraniumContentPage.Attachments>
+```
+
+The same presentation layer includes `BackdropView`, `IDialogService`, form dialogs, prompt dialogs, progress dialogs, optional Mopups and CommunityToolkit providers, Material color/style resources, icon packages, and blur effects.
+
+Learn more: [Bottom Sheet](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/BottomSheet), [Backdrop](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/Backdrop), [Dialogs](https://enisn-projects.io/docs/en/uranium/latest/dialogs/Index), and [Blurs](https://enisn-projects.io/docs/en/uranium/latest/Blurs).
+
 ## Feature Map
 
 | Area | What you get | Docs |
 | --- | --- | --- |
-| Dynamic forms | Model-driven forms, generated editors, custom editor mapping, property name mapping, layout customization, form dialogs. | [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/AutoFormView) |
-| Validation | InputKit validation, DataAnnotations package, async form validation, generated-field validation path mapping. | [Validations](https://enisn-projects.io/docs/en/uranium/latest/validations/Index) |
-| Material presentation | Text fields, picker fields, buttons, chips, checkboxes, radio buttons, containers, elevation, DataGrid, TreeView, TabView, BottomSheet, Backdrop. | [Material Theme](https://enisn-projects.io/docs/en/uranium/latest/themes/material/Index) |
-| Dialogs | `IDialogService`, default modal-page dialogs, Mopups integration, CommunityToolkit integration, prompt, confirmation, progress, custom view, and form dialogs. | [Dialogs](https://enisn-projects.io/docs/en/uranium/latest/dialogs/Index) |
-| Page architecture | `UraniumContentPage`, page attachments, `StatefulContentView`, `DynamicContentView`, `GridLayout`, `ExpanderView`, `Dropdown`, `CalendarView`. | [Core](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/UraniumContentPage) |
-| Theming | Color system, style resources, cascading styling, custom themes, icon packs, light and dark mode support. | [Color System](https://enisn-projects.io/docs/en/uranium/latest/theming/ColorSystem) |
-| Effects and web components | Blur effects and WebView-based code rendering. | [Blurs](https://enisn-projects.io/docs/en/uranium/latest/Blurs), [CodeView](https://enisn-projects.io/docs/en/uranium/latest/web-components/CodeView) |
+| Forms and validation | `FormView`, `AutoFormView`, generated editors, validation summaries, busy state, async validators, `ValidationPath`, InputKit validation, DataAnnotations integration, and form dialogs. | [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/AutoFormView), [Validations](https://enisn-projects.io/docs/en/uranium/latest/validations/Index) |
+| Core infrastructure | `UraniumContentPage`, page attachments, `StatefulContentView`, `DynamicContentView`, `GridLayout`, MAUI handlers, and primitives for custom interactive controls. | [UraniumContentPage](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/UraniumContentPage), [StatefulContentView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/StatefulContentView) |
+| Core components | `CalendarView`, `Select`, `Dropdown`, `AutoCompleteView`, `ExpanderView`, and `SelectableLabel`. | [Core Components](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/CalendarView) |
+| Material inputs | `InputField`, `TextField`, `EditorField`, `AutoCompleteTextField`, `DropdownField`, `SelectField`, `PickerField`, `MultiplePickerField`, `DatePickerField`, `TimePickerField`, validation display, clear buttons, icons, and floating-label field styling. | [Material Inputs](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/InputField) |
+| Buttons and selection | Material button styles, `ButtonView`, `Chip`, `CheckBox`, `RadioButton`, and `RadioButtonGroupView`. | [Buttons](https://enisn-projects.io/docs/en/uranium/latest/themes/material/Buttons), [Chip](https://enisn-projects.io/docs/en/uranium/latest/themes/material/Chip) |
+| Data and navigation | `DataGrid`, `DataGridColumn`, `DataGridSelectionColumn`, `Paginator`, `TreeView`, `TreeViewHierarchicalSelectBehavior`, `TabView`, and `TabItem`. | [DataGrid](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/DataGrid), [TreeView](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/TreeView), [TabView](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/TabView) |
+| Surfaces and overlays | `BottomSheetView`, `BackdropView`, `IDialogService`, default modal-page dialogs, Mopups provider, CommunityToolkit provider, confirmation prompts, text/date prompts, progress dialogs, custom view dialogs, and form dialogs. | [Bottom Sheet](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/BottomSheet), [Backdrop](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/Backdrop), [Dialogs](https://enisn-projects.io/docs/en/uranium/latest/dialogs/Index) |
+| Styling, theming, and effects | Material color resources, style resources, light/dark tokens, cascading styling, custom themes, containers, dividers, elevation, Material Symbols, Font Awesome, Fluent icons, and blur/acrylic effects. | [Color System](https://enisn-projects.io/docs/en/uranium/latest/theming/ColorSystem), [Icons](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons), [Blurs](https://enisn-projects.io/docs/en/uranium/latest/Blurs) |
+| Web components | `CodeView` for WebView-backed syntax-highlighted code rendering with bundled highlight.js assets and themes. | [CodeView](https://enisn-projects.io/docs/en/uranium/latest/web-components/CodeView) |
+| Templates | Full app template, blank app template, and `UraniumContentPage` item template with optional icon, dialog, and blur setup. | [Getting Started](https://enisn-projects.io/docs/en/uranium/latest/Getting-Started) |
 
 ## Package Map
 
 | Package | Purpose |
 | --- | --- |
-| `UraniumUI` | Core controls, handlers, dialogs, layouts, `AutoFormView`, and extensibility infrastructure. |
-| `UraniumUI.Material` | Material presentation layer and Material editor mappings for generated forms. |
-| `UraniumUI.Validations.DataAnnotations` | DataAnnotations integration for forms and generated editors. |
-| `UraniumUI.Dialogs.Mopups` | Dialog implementation backed by Mopups. |
-| `UraniumUI.Dialogs.CommunityToolkit` | Dialog implementation backed by .NET MAUI Community Toolkit. |
-| `UraniumUI.Icons.MaterialSymbols` | Material Symbols icon fonts and glyph helpers. |
-| `UraniumUI.Icons.FontAwesome` | Font Awesome icon fonts and glyph helpers. |
-| `UraniumUI.Icons.SegoeFluent` | Segoe Fluent icon fonts and glyph helpers. |
-| `UraniumUI.Blurs` | Cross-platform blur effects. |
-| `UraniumUI.WebComponents` | WebView-based components such as `CodeView`. |
+| `UraniumUI` | Core controls, handlers, `FormView`, `AutoFormView`, dialogs, page infrastructure, layouts, and extensibility primitives. |
+| `UraniumUI.Material` | Material presentation layer, theme resources, Material controls, app surfaces, data/navigation controls, and Material editor mappings for generated forms. |
+| `UraniumUI.Validations.DataAnnotations` | DataAnnotations integration for manual forms and generated editors. |
+| `UraniumUI.Dialogs.Mopups` | `IDialogService` implementation backed by Mopups. |
+| `UraniumUI.Dialogs.CommunityToolkit` | `IDialogService` implementation backed by .NET MAUI Community Toolkit popups. |
+| `UraniumUI.Icons.MaterialSymbols` | Material Symbols icon fonts, font aliases, and glyph helpers for outlined, rounded, sharp, and filled variants. |
+| `UraniumUI.Icons.FontAwesome` | Font Awesome Free regular and solid icon fonts with glyph helpers. |
+| `UraniumUI.Icons.SegoeFluent` | Segoe Fluent icon font and glyph helpers for Fluent/Windows-aligned apps. |
+| `UraniumUI.Icons.MaterialIcons` | Legacy Material Icons package; prefer `UraniumUI.Icons.MaterialSymbols` for new apps. |
+| `UraniumUI.Blurs` | Cross-platform blur/acrylic effects and optional blurred dialog surfaces. |
+| `UraniumUI.WebComponents` | WebView-backed components such as `CodeView` for syntax-highlighted code rendering. |
 | `UraniumUI.Templates` | Project and item templates for new UraniumUI apps and pages. |
 
 ## Supported Targets
 
 | Target | Support |
 | --- | --- |
-| Current version | `.NET 10` LTS |
+| UraniumUI v3.0+ | `.NET 10` |
+| .NET 9 | Supported up to UraniumUI `v2.16.0` |
 | .NET 8 | Use UraniumUI `v2.6` through `v2.12` |
 | .NET 6 and .NET 7 | Use UraniumUI `v2.5` |
 
@@ -204,15 +276,23 @@ Supported MAUI platforms:
 - Windows
 - Tizen, with limited support and optional setup
 
+## Demo App
+
+The repository includes a runnable MAUI demo app in [`demo/UraniumApp`](./demo/UraniumApp). It wires the same registration path used by real apps and contains pages for Material inputs, buttons, chips, `DataGrid`, `TreeView`, `TabView`, `BottomSheetView`, `BackdropView`, dialogs, validations, `AutoFormView`, icons, blurs, calendar, dropdown, select, expander, and layout primitives.
+
 ## Documentation
 
 - [Getting Started](https://enisn-projects.io/docs/en/uranium/latest/Getting-Started)
 - [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/AutoFormView)
 - [Validations](https://enisn-projects.io/docs/en/uranium/latest/validations/Index)
 - [Material Theme](https://enisn-projects.io/docs/en/uranium/latest/themes/material/Index)
+- [DataGrid](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/DataGrid)
+- [TreeView](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/TreeView)
+- [TabView](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/TabView)
 - [Dialogs](https://enisn-projects.io/docs/en/uranium/latest/dialogs/Index)
 - [Icons](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons)
 - [Blurs](https://enisn-projects.io/docs/en/uranium/latest/Blurs)
+- [CodeView](https://enisn-projects.io/docs/en/uranium/latest/web-components/CodeView)
 
 <img src="art/github-social-preview.png" width="100%">
 
