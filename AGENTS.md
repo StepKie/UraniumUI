@@ -10,7 +10,7 @@
 
 ## Package Boundaries
 - `src/UraniumUI` is core. Add-on packages such as `UraniumUI.Material`, `UraniumUI.Blurs`, `UraniumUI.WebComponents`, and `UraniumUI.Dialogs.*` reference core; avoid making core depend on theme, dialog implementation, icon, blur, or web-component packages.
-- Most library packages multi-target `net9.0`/`net10.0` plus MAUI platform TFMs. `UraniumUI.Validations.DataAnnotations` targets only `net9.0;net10.0` but still has `UseMaui=true`.
+- Most library packages target `net10.0` plus MAUI platform TFMs. `UraniumUI.Validations.DataAnnotations` targets only `net10.0` but still has `UseMaui=true`.
 - Public MAUI registration entrypoints live in package-level extension files: `UseUraniumUI`, `UseUraniumUIMaterial`, `UseUraniumUIBlurs`, and `UseUraniumUIWebComponents`. The demo app in `demo/UraniumApp/MauiProgram.cs` shows the full wiring.
 
 ## XAML And API Gotchas
