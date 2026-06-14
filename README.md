@@ -192,7 +192,7 @@ Learn more: [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infr
 
 | Target | Support |
 | --- | --- |
-| Current versions | `.NET 10` LTS and `.NET 9` |
+| Current version | `.NET 10` LTS |
 | .NET 8 | Use UraniumUI `v2.6` through `v2.12` |
 | .NET 6 and .NET 7 | Use UraniumUI `v2.5` |
 
