@@ -71,11 +71,14 @@ You can customize the cell item template by using `CellItemTemplate` property. I
 ### Columns
 
 #### Auto Columns
-Columns are automatically detected by **DataGrid** when `UseAutoColumns` property is set as `True`. It uses reflection to get properties of the data source. You can use DataAnnosations attributes to define Title of column in auto mode. Adding `[DisplayName]` attribute to the property will define the title of the column.
+Columns are automatically detected by **DataGrid** when `UseAutoColumns` property is set as `True`. It uses reflection to get properties of the data source. You can use DataAnnosations attributes to define Title of column in auto mode. Adding `[DisplayName]` attribute to the property will define the title of the column. Properties marked with `[DataGridIgnore]` are skipped during auto-generation.
 
 ```csharp
 [DisplayName("Identity Number")]
 public int Id { get; set; }
+
+[DataGridIgnore]
+public string InternalCode { get; set; }
 ```
 
 ![MAUI Datagrid header](../../../../images/datagrid-displayname.png)
