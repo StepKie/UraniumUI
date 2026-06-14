@@ -2,8 +2,6 @@
 
 UraniumUI v3.0 is the .NET 10 generation of UraniumUI. It updates the framework baseline, introduces new MAUI-rendered controls, improves form validation workflows, and fixes several high-impact issues across data, dialogs, inputs, buttons, and platform effects.
 
-> v3.0.0 has not been published yet. This article describes the current v3 work represented by the `develop` branch.
-
 If you are upgrading an existing app, read the [Migration Guide to v3.0](../migration-guides/Migrating-To-3.0.md) before updating packages.
 
 ## Highlights
