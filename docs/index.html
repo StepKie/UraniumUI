@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>UraniumUI | The presentation framework for .NET MAUI</title>
-  <meta name="description" content="UraniumUI fills the UI gaps in plain .NET MAUI with dynamic forms, validation, theming, dialogs, and native-MAUI controls without a second app model or special coding style.">
+  <title>UraniumUI | Open-source presentation framework for production .NET MAUI apps</title>
+  <meta name="description" content="UraniumUI helps .NET MAUI teams build production screens with Material controls, dynamic forms, validation, data grids, tree views, dialogs, overlays, theming, icons, and effects without a second app model.">
   <script>
     (function () {
       var storageKey = 'uraniumui-theme';
@@ -45,12 +45,12 @@
     <section class="uui-landing">
       <div class="uui-hero">
         <div class="uui-hero-content">
-          <p class="uui-eyebrow">Free and open-source for production .NET MAUI apps</p>
-          <h1>The presentation framework for .NET MAUI.</h1>
-          <p class="uui-hero-copy">UraniumUI fills the UI gaps plain MAUI leaves to every team: dynamic forms, validation-aware inputs, dialogs, theming, icon packs, and app-ready presentation patterns without forcing a new architecture or coding style.</p>
+          <p class="uui-eyebrow">Open-source presentation layer for production .NET MAUI apps</p>
+          <h1>Build production MAUI screens without a framework tax.</h1>
+          <p class="uui-hero-copy">UraniumUI fills the UI gaps plain MAUI leaves to every team: Material inputs, generated forms, validation mapping, data grids, tree views, tab views, dialogs, bottom sheets, backdrops, icons, blur effects, and app-ready presentation patterns without forcing a new architecture or coding style.</p>
           <div class="uui-actions">
             <a class="uui-button uui-button-primary" href="en/Getting-Started.html">Get started</a>
-            <a class="uui-button uui-button-secondary" href="en/infrastructure/AutoFormView.html">See dynamic forms</a>
+            <a class="uui-button uui-button-secondary" href="en/themes/material/Index.html">Explore components</a>
             <a class="uui-button uui-button-ghost" href="api/UraniumUI.html">API docs</a>
           </div>
         </div>
@@ -69,12 +69,12 @@
             <div class="uui-architecture-item">
               <span>Infrastructure</span>
               <strong>Reusable screen patterns</strong>
-              <p>Forms, validation, dialogs, layouts, page attachments, and stateful content.</p>
+              <p>Forms, validation, dialogs, layouts, data views, page attachments, and stateful content.</p>
             </div>
             <div class="uui-architecture-item">
               <span>Presentation</span>
               <strong>Themeable app UI</strong>
-              <p>Material resources, controls, icons, color tokens, and light/dark surfaces.</p>
+              <p>Material controls, resources, icons, color tokens, overlays, blurs, and light/dark surfaces.</p>
             </div>
           </div>
           <div class="uui-xaml-chip">Plain MAUI in. Better UI out.</div>
@@ -92,7 +92,7 @@
         </div>
         <div>
           <strong>Adopt only what fits</strong>
-          <span>Use one control, generated forms, dialogs, icons, or the full Material layer.</span>
+          <span>Use one control, data grids, generated forms, dialogs, icons, or the full Material layer.</span>
         </div>
       </div>
 
@@ -116,7 +116,7 @@
           <div class="uui-promise-card">
             <span>03</span>
             <h3>Adopt Incrementally</h3>
-            <p>Start with one control, add validation-aware fields, use dialogs, or bring in AutoFormView only where dynamic forms make sense.</p>
+            <p>Start with one control, add Material inputs, use DataGrid or TreeView, wire dialogs, or bring in AutoFormView where dynamic forms make sense.</p>
           </div>
           <div class="uui-promise-card">
             <span>04</span>
@@ -134,8 +134,8 @@
       <div class="uui-feature-grid">
         <a class="uui-card" href="en/infrastructure/AutoFormView.html">
           <span class="uui-card-icon">01</span>
-          <h3>Dynamic Forms</h3>
-          <p>Generate editable forms from your models, map types to custom editors, localize display names, control layout, and reuse the same infrastructure inside dialogs.</p>
+          <h3>Forms From Models</h3>
+          <p>Generate editable forms from your models, map types to custom editors, localize display names, control layout, and reuse the same form infrastructure inside dialogs.</p>
         </a>
         <a class="uui-card" href="en/validations/Index.html">
           <span class="uui-card-icon">02</span>
@@ -144,34 +144,44 @@
         </a>
         <a class="uui-card" href="en/themes/material/Index.html">
           <span class="uui-card-icon">03</span>
-          <h3>Material Presentation</h3>
-          <p>Ship with text fields, picker fields, buttons, chips, containers, DataGrid, TreeView, TabView, BottomSheet, Backdrop, and Material resources.</p>
+          <h3>Material Controls</h3>
+          <p>Ship with text fields, editor fields, picker fields, autocomplete, buttons, chips, checkboxes, radio buttons, containers, dividers, and elevation.</p>
+        </a>
+        <a class="uui-card" href="en/themes/material/components/DataGrid.html">
+          <span class="uui-card-icon">04</span>
+          <h3>Data and Navigation</h3>
+          <p>Build data-heavy screens with DataGrid, auto columns, Paginator, TreeView, TabView, Select, Dropdown, CalendarView, templates, and selection APIs.</p>
         </a>
         <a class="uui-card" href="en/dialogs/Index.html">
-          <span class="uui-card-icon">04</span>
-          <h3>Dialog Abstractions</h3>
-          <p>Use <code>IDialogService</code> with default modal pages, Mopups, or CommunityToolkit implementations for prompts, confirmations, progress, custom views, and forms.</p>
+          <span class="uui-card-icon">05</span>
+          <h3>Dialogs and Surfaces</h3>
+          <p>Use <code>IDialogService</code>, default modal pages, Mopups, CommunityToolkit, prompts, confirmations, progress dialogs, form dialogs, BottomSheet, and Backdrop.</p>
         </a>
         <a class="uui-card" href="en/infrastructure/UraniumContentPage.html">
-          <span class="uui-card-icon">05</span>
+          <span class="uui-card-icon">06</span>
           <h3>Page Infrastructure</h3>
           <p>Build reusable presentation shells with <code>UraniumContentPage</code>, page attachments, stateful views, dynamic content, layouts, dropdowns, and expanders.</p>
         </a>
         <a class="uui-card" href="en/theming/ColorSystem.html">
-          <span class="uui-card-icon">06</span>
-          <h3>Theming and Escape Hatches</h3>
-          <p>Use color resources, style resources, cascading styling, custom themes, and icon packs while keeping access to regular MAUI primitives.</p>
+          <span class="uui-card-icon">07</span>
+          <h3>Theming, Icons, and Effects</h3>
+          <p>Use color resources, style resources, cascading styling, custom themes, Material Symbols, Font Awesome, Fluent icons, and blur effects.</p>
+        </a>
+        <a class="uui-card" href="en/web-components/CodeView.html">
+          <span class="uui-card-icon">08</span>
+          <h3>Templates and Web Components</h3>
+          <p>Start from app templates, add UraniumContentPage item templates, and render syntax-highlighted code with WebView-backed CodeView.</p>
         </a>
       </div>
 
       <section class="uui-aha">
         <div>
-          <p class="uui-eyebrow">The aha moment</p>
-          <h2>A complete form from a model and one XAML line.</h2>
-          <p>UraniumUI can generate editors, display names, layouts, and validation messages from the same model. When the defaults are not enough, you can replace editor mappings or drop down to normal MAUI views.</p>
+          <p class="uui-eyebrow">One practical example</p>
+          <h2>When the job is a form, one model can drive the UI.</h2>
+          <p>Forms are one of UraniumUI's productivity wins: generate editors, display names, layouts, and validation messages from the same model. When the defaults are not enough, replace editor mappings or drop down to normal MAUI views.</p>
           <div class="uui-actions">
             <a class="uui-button uui-button-primary" href="en/infrastructure/AutoFormView.html">Explore AutoFormView</a>
-            <a class="uui-button uui-button-secondary" href="en/validations/DataAnnotations.html">Add DataAnnotations</a>
+            <a class="uui-button uui-button-secondary" href="en/themes/material/Index.html">Explore all components</a>
           </div>
         </div>
         <img src="en/images/autoformview-example-dark.png" alt="AutoFormView generated form example">
@@ -188,7 +198,11 @@
         <a href="https://www.nuget.org/packages/UraniumUI.Dialogs.Mopups/">UraniumUI.Dialogs.Mopups</a>
         <a href="https://www.nuget.org/packages/UraniumUI.Dialogs.CommunityToolkit/">UraniumUI.Dialogs.CommunityToolkit</a>
         <a href="https://www.nuget.org/packages/UraniumUI.Icons.MaterialSymbols/">UraniumUI.Icons.MaterialSymbols</a>
+        <a href="https://www.nuget.org/packages/UraniumUI.Icons.FontAwesome/">UraniumUI.Icons.FontAwesome</a>
+        <a href="https://www.nuget.org/packages/UraniumUI.Icons.SegoeFluent/">UraniumUI.Icons.SegoeFluent</a>
         <a href="https://www.nuget.org/packages/UraniumUI.Blurs/">UraniumUI.Blurs</a>
+        <a href="https://www.nuget.org/packages/UraniumUI.WebComponents/">UraniumUI.WebComponents</a>
+        <a href="https://www.nuget.org/packages/UraniumUI.Templates/">UraniumUI.Templates</a>
       </div>
 
       <section class="uui-start-panel">
@@ -202,7 +216,7 @@ dotnet new uraniumui-app -n MyMauiApp</code></pre>
       </section>
 
       <div class="uui-final-cta">
-        <h2>Build MAUI screens from a stronger foundation.</h2>
+        <h2>Build MAUI screens from a stronger presentation layer.</h2>
         <p>Start with the guide, inspect the API, or join the community if you are evaluating UraniumUI for a production app or team codebase.</p>
         <div class="uui-actions uui-actions-center">
           <a class="uui-button uui-button-primary" href="en/Getting-Started.html">Read the docs</a>
