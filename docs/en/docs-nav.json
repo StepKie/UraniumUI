@@ -289,6 +289,10 @@
         {
           "text": "Migration to v2.11",
           "path": "migration-guides/Migrating-To-2.11.md"
+        },
+        {
+          "text": "Migration to v3.0",
+          "path": "migration-guides/Migrating-To-3.0.md"
         }
       ]
     },
