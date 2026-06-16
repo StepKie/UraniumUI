@@ -125,4 +125,12 @@ _It might be useful if you use bottom sheet for something like filtering the con
     <material:BottomSheetView CloseOnTapOutside="false">
         <!-- Bottom Sheet Content here -->
     </material:BottomSheetView>
-``` 
+```
+
+## Accessibility
+
+Bottom sheets behave like temporary surfaces. Provide a visible heading inside the sheet, keep actions as buttons or focusable UraniumUI controls, and avoid using a passive layout with only `TapGestureRecognizer` for close, submit, or navigation actions.
+
+When `DisablePageWhenOpened="True"`, verify that keyboard focus cannot continue interacting with the dimmed page content in your target platform. When `CloseOnTapOutside="True"`, also provide an explicit close or cancel button inside the sheet so pointer-only outside-tap dismissal is not the only escape path.
+
+For custom headers, use [ButtonView](../ButtonView.md) or [StatefulContentView](../../../infrastructure/StatefulContentView.md) if the header toggles the sheet, and add `SemanticProperties.Description`/`Hint` that explain whether it expands or collapses the sheet.

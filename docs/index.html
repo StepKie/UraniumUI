@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>UraniumUI | Open-source presentation framework for production .NET MAUI apps</title>
-  <meta name="description" content="UraniumUI helps .NET MAUI teams build production screens with Material controls, dynamic forms, validation, data grids, tree views, dialogs, overlays, theming, icons, and effects without a second app model.">
+  <meta name="description" content="UraniumUI helps .NET MAUI teams build production screens with Material controls, keyboard-aware interactions, visible focus states, dynamic forms, validation, data grids, tree views, dialogs, overlays, theming, icons, and effects without a second app model.">
   <script>
     (function () {
       var storageKey = 'uraniumui-theme';
@@ -47,7 +47,7 @@
         <div class="uui-hero-content">
           <p class="uui-eyebrow">Open-source presentation layer for production .NET MAUI apps</p>
           <h1>Build production MAUI screens without a framework tax.</h1>
-          <p class="uui-hero-copy">UraniumUI fills the UI gaps plain MAUI leaves to every team: Material inputs, generated forms, validation mapping, data grids, tree views, tab views, dialogs, bottom sheets, backdrops, icons, blur effects, and app-ready presentation patterns without forcing a new architecture or coding style.</p>
+          <p class="uui-hero-copy">UraniumUI fills the UI gaps plain MAUI leaves to every team: Material inputs, generated forms, validation mapping, keyboard-friendly selection, visible focus states, data grids, tree views, tab views, dialogs, bottom sheets, backdrops, icons, blur effects, and app-ready presentation patterns without forcing a new architecture or coding style.</p>
           <div class="uui-actions">
             <a class="uui-button uui-button-primary" href="en/Getting-Started.html">Get started</a>
             <a class="uui-button uui-button-secondary" href="en/themes/material/Index.html">Explore components</a>
@@ -94,6 +94,10 @@
           <strong>Adopt only what fits</strong>
           <span>Use one control, data grids, generated forms, dialogs, icons, or the full Material layer.</span>
         </div>
+        <div>
+          <strong>Accessibility is visible</strong>
+          <span>Document keyboard paths, focus states, semantic labels, validation text, and custom clickable-area guidance.</span>
+        </div>
       </div>
 
       <section class="uui-promise">
@@ -122,6 +126,11 @@
             <span>04</span>
             <h3>Escape Hatches Stay Open</h3>
             <p>Drop down to MAUI APIs, handlers, platform code, resources, styles, or your own controls whenever a screen needs it.</p>
+          </div>
+          <div class="uui-promise-card">
+            <span>05</span>
+            <h3>Accessible Interaction Patterns</h3>
+            <p>Use keyboard-aware selects, Material input focus states, semantic descriptions, and focusable custom surfaces instead of pointer-only gestures.</p>
           </div>
         </div>
       </section>
@@ -172,7 +181,41 @@
           <h3>Templates and Web Components</h3>
           <p>Start from app templates, add UraniumContentPage item templates, and render syntax-highlighted code with WebView-backed CodeView.</p>
         </a>
+        <a class="uui-card" href="en/best-practices/Accessibility.html">
+          <span class="uui-card-icon">09</span>
+          <h3>Accessibility Guidance</h3>
+          <p>Build accessible flows with keyboard navigation, visible focus, semantic descriptions, validation text, and clickable-area patterns that behave like real controls.</p>
+        </a>
       </div>
+
+      <section class="uui-aha">
+        <div>
+          <p class="uui-eyebrow">Accessibility by default, not by accident</p>
+          <h2>Custom MAUI screens still need real interaction contracts.</h2>
+          <p>UraniumUI documents the critical paths teams often miss: popups, dialogs, bottom sheets, tabs, data grids, date pickers, autocomplete, validation text, and custom cards that should be keyboard reachable and screen-reader understandable.</p>
+          <div class="uui-actions">
+            <a class="uui-button uui-button-primary" href="en/best-practices/Accessibility.html">Read accessibility practices</a>
+            <a class="uui-button uui-button-secondary" href="en/best-practices/ClickableAreas.html">Build clickable areas</a>
+          </div>
+        </div>
+        <div class="uui-accessibility-stack" aria-label="Accessibility focus areas">
+          <div class="uui-architecture-item">
+            <span>Keyboard</span>
+            <strong>Tab, Enter, Space, arrows, Escape</strong>
+            <p>Make important workflows usable without a pointer.</p>
+          </div>
+          <div class="uui-architecture-item">
+            <span>Focus</span>
+            <strong>Visible state for every interactive control</strong>
+            <p>Keep focused, hovered, pressed, selected, disabled, and error states distinct.</p>
+          </div>
+          <div class="uui-architecture-item">
+            <span>Semantics</span>
+            <strong>Descriptions, hints, and validation text</strong>
+            <p>Add screen-reader metadata where visible UI or icon-only actions are not enough.</p>
+          </div>
+        </div>
+      </section>
 
       <section class="uui-aha">
         <div>

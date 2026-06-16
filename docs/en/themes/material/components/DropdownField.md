@@ -40,6 +40,12 @@ DropdownFields support setting an icon on the left side of the control. You can 
 ## AllowClear
 DropdownFields support clearing the selected item by setting the `AllowClear` property to `true`. Default value is `false`.
 
+## Accessibility
+
+`DropdownField` wraps the core `Dropdown` in a Material input. Use `Title` as the visible field label and ensure item text is clear when announced by platform picker/dropdown UI.
+
+If you need a fully templated combo-box style control with documented keyboard behavior, prefer [`SelectField`](SelectField.md). Its inner `Select` supports `Tab`, `Enter`/`Space`, `Up`/`Down`, `Home`/`End`, and `Escape` behavior and exposes generated semantic hints.
+
 ```xml
 <material:DropdownField 
     Title="Pick an option (Clearable)"

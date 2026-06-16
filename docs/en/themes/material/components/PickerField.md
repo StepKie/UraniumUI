@@ -43,6 +43,12 @@ PickerFields support setting an icon on the left side of the control. You can se
 ## AllowClear
 PickerFields support clearing the selected item by setting the `AllowClear` property to `true`. Default value is `true`. You can make it `false` to disable clearing.
 
+## Accessibility
+
+Use `Title` as the visible field label and keep item text clear because picker choices are announced by platform picker UI. If you need templated item rows, generated semantic hints, and documented keyboard navigation, prefer [`SelectField`](SelectField.md).
+
+When `AllowClear="True"`, verify the clear action with keyboard and screen reader in your target platforms.
+
 ```xml
 <material:PickerField 
     Title="Pick an option (Clearable)"

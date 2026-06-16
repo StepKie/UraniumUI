@@ -58,6 +58,12 @@ Then you can use it in a page like this:
 - `TextColor` (Color): The color of the input text
 - `AllowClear` (bool): Whether to show a clear button when text is entered (default: false)
 
+## Accessibility
+
+Use `Title` as the visible label and make suggestion text understandable without relying only on icons or color. On Windows, the inner autocomplete control is backed by the platform `AutoSuggestBox`, so typed text and suggestions use native text-input behavior.
+
+If `AllowClear="True"`, verify the clear action with keyboard and screen reader in your target platforms. For critical forms, also provide an explicit clear button outside the field when the clear action must be guaranteed accessible everywhere.
+
 ### Icon
 AutoCompleteTextFields support setting an icon on the left side of the control. You can set the icon by setting the `Icon` property. The icon can be any `ImageSource` object. FontImageSource is recommended as Icon since its color can be changed when focused.
 

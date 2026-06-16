@@ -72,6 +72,8 @@ If `SelectedItemTemplate` is not set, `Select` uses `ItemTemplate` for the close
 | `Home` / `End` | Moves to the first or last item while the list is open. |
 | `Escape` | Closes the list without changing selection. |
 
+When using `ItemTemplate` or `SelectedItemTemplate`, keep meaningful text in the template or set `SemanticProperties.Description` yourself if the selected value is represented by icons, color chips, avatars, or abbreviations. The opened list is keyboard-controlled by the parent `Select`, so item templates should not introduce pointer-only actions unless they are redundant.
+
 ## Properties
 
 | Property | Description |

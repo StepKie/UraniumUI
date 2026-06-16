@@ -275,9 +275,18 @@ body.uui-static-home {
   transition: background-color 160ms ease, color 160ms ease;
 }
 
-.uui-home-nav nav a:hover {
+.uui-home-nav nav a:hover,
+.uui-home-nav nav a:focus-visible {
   background: var(--bs-primary-border-subtle);
   color: var(--bs-link-hover-color);
+}
+
+.uui-home-nav nav a:focus-visible,
+.uui-button:focus-visible,
+.uui-card:focus-visible,
+.uui-package-grid a:focus-visible {
+  outline: 3px solid color-mix(in srgb, #52d681 55%, transparent);
+  outline-offset: 3px;
 }
 
 .uui-theme-toggle {
@@ -412,7 +421,8 @@ body.uui-static-home {
   transition: transform 160ms ease, background-color 160ms ease, border-color 160ms ease;
 }
 
-.uui-button:hover {
+.uui-button:hover,
+.uui-button:focus-visible {
   transform: translateY(-1px);
 }
 
@@ -472,6 +482,28 @@ body.uui-static-home {
   display: grid;
   gap: .85rem;
   padding: 1.1rem;
+}
+
+.uui-accessibility-stack {
+  display: grid;
+  gap: .85rem;
+}
+
+.uui-accessibility-stack .uui-architecture-item {
+  background: var(--uui-panel-strong);
+  border-color: var(--uui-line);
+}
+
+.uui-accessibility-stack .uui-architecture-item span {
+  color: var(--uui-accent-strong);
+}
+
+.uui-accessibility-stack .uui-architecture-item strong {
+  color: var(--uui-ink);
+}
+
+.uui-accessibility-stack .uui-architecture-item p {
+  color: var(--uui-muted);
 }
 
 .uui-architecture-item {
@@ -534,7 +566,7 @@ body.uui-static-home {
 .uui-proof-strip {
   display: grid;
   gap: 1rem;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   margin: 1rem 0 3rem;
 }
 
@@ -648,7 +680,8 @@ body.uui-static-home {
   transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease;
 }
 
-.uui-card:hover {
+.uui-card:hover,
+.uui-card:focus-visible {
   background: var(--uui-panel-strong);
   border-color: color-mix(in srgb, var(--uui-accent) 44%, var(--uui-line));
   transform: translateY(-3px);

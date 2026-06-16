@@ -8,6 +8,12 @@ The `RadioButton` component is used to select a single option from a set of opti
 
 You can visit [InputKit RadioButton Documentation](https://enisn-projects.io/docs/en/inputkit/latest/components/controls/RadioButton) to see features. UraniumUI applies only visual changes on it.
 
+## Accessibility
+
+Keep related radio buttons inside `RadioButtonGroupView` so users and screen readers understand the selection group. Use the `Text` property for each option label. On Windows, Material radio buttons are keyboard-focusable, use the system focus visual, and respond to `Enter` or `Space`.
+
+If an option is represented only by an icon or custom visual content, add `SemanticProperties.Description` to the radio button.
+
 
 ## Usage
 

@@ -5,6 +5,19 @@
       "path": "Getting-Started.md"
     },
     {
+      "text": "Best Practices",
+      "items": [
+        {
+          "text": "Accessibility",
+          "path": "best-practices/Accessibility.md"
+        },
+        {
+          "text": "Clickable Areas",
+          "path": "best-practices/ClickableAreas.md"
+        }
+      ]
+    },
+    {
       "text": "What's New",
       "items": [
         {

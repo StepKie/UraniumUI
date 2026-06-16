@@ -71,6 +71,19 @@ There are 6 types of dialogs in UraniumUI package. They are:
 - `View` - For displaying custom views
 - `Form` - For displaying form-based dialogs
 
+## Accessibility
+
+Dialogs interrupt the current workflow, so treat focus and semantics as part of the dialog contract:
+
+- Use descriptive titles and messages.
+- Keep accept, cancel, clear, and close actions as real buttons.
+- Make custom dialog content keyboard reachable.
+- Add semantic descriptions to icon-only actions.
+- Verify initial focus, `Escape` or back dismissal, and focus return to the opener in each dialog provider you ship.
+- For form dialogs, show field-level validation messages and a summary for multi-field failures.
+
+When displaying custom views with `DisplayViewAsync`, do not make critical actions gesture-only. Use `Button`, `ButtonView`, or `StatefulContentView` as described in [Clickable Areas](../best-practices/ClickableAreas.md).
+
 ## Usage Patterns
 
 ### Extension Methods

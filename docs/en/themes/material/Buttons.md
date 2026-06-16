@@ -54,6 +54,12 @@ All the buttons are implemented by following [Material Design Button Guidelines]
 
 ![MAUI Button Hover](../../images/buttons-hover.gif)
 
+## Accessibility
+
+Material button styles target the native MAUI `Button`, so they keep the platform button semantics, keyboard activation, and screen-reader behavior. Use a real `Button` for ordinary actions instead of placing a `TapGestureRecognizer` on a layout.
+
+When an action needs custom card content, use [ButtonView](ButtonView.md). When you build a lower-level reusable clickable primitive, use [StatefulContentView](../../infrastructure/StatefulContentView.md). Add `SemanticProperties.Description` and `SemanticProperties.Hint` for icon-only buttons or buttons whose visible text does not explain the result.
+
 
 ## Customization
 

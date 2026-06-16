@@ -215,6 +215,16 @@ TreeView provides `TreeViewHierarchicalSelectBehavior` that can be used only wit
 
 ---
 
+## Accessibility
+
+Tree views usually combine selection, expansion, and custom item templates. The built-in node row is already wrapped by UraniumUI's interactive row surface, so you do not need to wrap the whole `ItemTemplate` in another `ButtonView` or `StatefulContentView` just to make the row selectable.
+
+Keep item text available through labels, do not rely on indentation or color alone, and provide semantic descriptions for icon-only custom node actions. If your `ItemTemplate` adds extra actions inside the row, such as a delete icon or secondary menu, make those actions real focusable controls instead of passive layouts with only `TapGestureRecognizer`. If you use `TreeViewHierarchicalSelectBehavior`, keep the checkbox `Text` bound to the node label so the option can be announced.
+
+See [Clickable Areas](../../../best-practices/ClickableAreas.md) for custom row guidance.
+
+---
+
 ## Customizations
 TreeView allows you to customize its appearance in a couple of ways.
 
