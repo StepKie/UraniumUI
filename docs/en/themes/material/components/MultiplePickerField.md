@@ -83,3 +83,9 @@ Selected items are shown as chips. You can change their colors directly on `Mult
 ```
 
 If you want the same checkbox colors across the whole app, define a style for `material:CheckBox` in your app resources.
+
+## Accessibility
+
+Use `Title` as the visible label and keep selected chip text descriptive. `MultiplePickerField` opens a checkbox prompt, so the same dialog accessibility rules apply: clear title, keyboard-reachable actions, visible validation text, and explicit accept/cancel buttons.
+
+If selected chips can be removed inline, verify the chip remove action with keyboard and screen reader in your target platforms. When removal must be guaranteed accessible, also provide a clearly labeled remove action in the picker dialog or surrounding form.

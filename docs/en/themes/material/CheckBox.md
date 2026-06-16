@@ -7,6 +7,12 @@ CheckBox is a control that allows the user to choose a boolean value. Use `Urani
 
 UraniumUI's CheckBox supports Material styling and exposes common color properties such as `Color`, `BorderColor`, `TextColor`, and `IconColor`.
 
+## Accessibility
+
+Use the `Text` property for the accessible label whenever possible. On Windows, the Material checkbox is keyboard-focusable, uses the system focus visual, and toggles with `Enter` or `Space`. Disabled checkboxes should use `IsDisabled="True"` so they do not activate.
+
+If a custom template or surrounding layout hides the visible label, add `SemanticProperties.Description` so screen readers still announce the purpose of the checkbox.
+
 
 ## Usage
 

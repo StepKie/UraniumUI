@@ -88,6 +88,8 @@ Set `AllowClear` to `true` to show a clear button when a value is selected.
 
 `SelectField` forwards focus to its inner `Select`, so it supports the same keyboard behavior: `Tab` focus, `Enter`/`Space` activation, `Up`/`Down` item navigation, `Home`/`End` jumps, and `Escape` dismissal. The clear button is keyboard-focusable when visible and exposes a screen-reader description.
 
+Use `Title` as the field label and keep item text available when using `ItemTemplate`. If the template uses only icons or color chips, add a semantic description through the template content so screen readers can announce the selected item.
+
 ## Properties
 
 | Property | Description |

@@ -25,6 +25,26 @@ Then you can use it with `uranium:StatefulContentView` tag.
 
 > Hover over the view to see the `PointerOver` state. A mouse should be connected to see this state on mobile platforms.
 
+## Keyboard and Accessibility
+
+Use `StatefulContentView` when a custom surface must behave like an interactive control instead of a passive layout with `TapGestureRecognizer`. It exposes an `IsFocusable` property and UraniumUI handlers provide platform focus behavior for focusable instances. On Windows, `Enter` and `Space` trigger the pressed/tapped command path.
+
+Add screen-reader text when the visible content is not enough:
+
+```xml
+<uranium:StatefulContentView
+    TappedCommand="{Binding OpenFiltersCommand}"
+    SemanticProperties.Description="Open filters"
+    SemanticProperties.Hint="Shows filter options for the current list">
+    <Grid Padding="12" ColumnDefinitions="*,Auto">
+        <Label Text="Filters" />
+        <Label Grid.Column="1" Text=">" />
+    </Grid>
+</uranium:StatefulContentView>
+```
+
+For app-level guidance, see [Clickable Areas](../best-practices/ClickableAreas.md).
+
 ## Commands
 
 - `PressedCommand` : A command that is executed when the view is pressed.
@@ -33,6 +53,7 @@ Then you can use it with `uranium:StatefulContentView` tag.
 - `LongPressCommand` : A command that is executed when the view is long pressed.
 - `TappedCommand` : A command that is executed when the view is tapped.
 - `CommandParameter` : A parameter that is passed to the command.
+- `IsFocusable` : Controls whether the view participates in focus navigation.
 
 
 ## Customizations

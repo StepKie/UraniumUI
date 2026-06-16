@@ -79,3 +79,9 @@ private void OnButtonClicked(object sender, EventArgs e)
     backdrop.IsPresented = true;
 }
 ```
+
+## Accessibility
+
+Use a clear `Title` when the backdrop creates a toolbar item. If you use only `IconImageSource`, make sure the title still describes the action because it is used as the toolbar item hint when both are set.
+
+Backdrop content should follow the same rules as dialogs and bottom sheets: keep actions keyboard reachable, use visible labels, and add semantic descriptions for icon-only controls. If the backdrop changes page context, verify focus movement and focus return in the app shell you use.

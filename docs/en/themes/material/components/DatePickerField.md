@@ -55,6 +55,12 @@ Clearing the field sets `Date` to `null`. `Date`, `MinimumDate`, and `MaximumDat
 | --- | --- |
 | ![MAUI Material Input](../../../../images/datepickerfield-allowclear-dark-android.gif) | ![MAUI Material Input](../../../../images/datepickerfield-allowclear-light-android.gif) |
 
+## Accessibility
+
+Use `Title` as the visible field label and set `MinimumDate`/`MaximumDate` when the valid range is constrained. The date prompt uses `CalendarView`, which renders selectable days and years as MAUI buttons and provides semantic descriptions for previous/next navigation.
+
+When the date is required or constrained, include validation text that explains the accepted range. If the date picker appears inside a custom dialog or bottom sheet, verify initial focus, dismiss behavior, and focus return in the target platform.
+
 ## Validation
 DatePickerField supports validation rules such as `MinValueValidation` and `MaxValueValidation`. You can use them like this:
 

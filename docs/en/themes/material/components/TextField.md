@@ -55,6 +55,14 @@ Then you can use it like this:
 - `TextChanged` - Occurs when the text value changes
 - `Completed` - Occurs when the user completes the text input (e.g., presses return)
 
+## Accessibility
+
+Use `Title` as the visible label for the text input. The Material border, floating title, and icon switch to `AccentColor` when the inner entry receives focus. `SelectAllTextOnFocus` can help keyboard users replace existing values quickly.
+
+When `AllowClear="True"`, the clear action can receive focus unless `DisallowClearButtonFocus` is set. For custom attachments, use focusable controls and provide `SemanticProperties.Description` for icon-only actions.
+
+For password fields, label show/hide attachments clearly for screen readers. If you use `TextFieldPasswordShowHideAttachment`, consider adding semantic text around the password field until the attachment exposes dynamic descriptions itself.
+
 ## Methods
 
 - `ClearValue()` - Clears the text value of the TextField

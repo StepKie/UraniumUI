@@ -15,6 +15,7 @@ UraniumUI is available on [GitHub](https://github.com/enisn/UraniumUI)
 - Validation infrastructure for [Data Annotations](https://enisn-projects.io/docs/en/uranium/latest/validations/DataAnnotations) and [InputKit](https://enisn-projects.io/docs/en/inputkit/latest/components/controls/FormView#validations)
 - Native MAUI foundation with escape hatches for custom behavior
 - Pre-built layouts and flexible controls.
+- Accessibility best practices for keyboard navigation, visible focus states, screen-reader descriptions, validation text, and custom clickable areas.
 - Dark/light mode support.
 - All MAUI Platforms are supported.
 - Infrastructure for building custom controls and presentation patterns.
@@ -32,6 +33,9 @@ UraniumUI is available on [GitHub](https://github.com/enisn/UraniumUI)
   - [FontAwesome](https://enisn-projects.io/docs/en/uranium/latest/theming/Icons#fontawesome)
 - Theming
   - [Material Theme](https://enisn-projects.io/docs/en/uranium/latest/themes/material/Index)
+- Best Practices
+  - [Accessibility](best-practices/Accessibility.md)
+  - [Clickable Areas](best-practices/ClickableAreas.md)
 
 
 <img src="https://raw.githubusercontent.com/enisn/UraniumUI/develop/art/github-social-preview.png" alt="MAUI UraniumUI" />

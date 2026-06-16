@@ -52,6 +52,14 @@ calendarView.ClearSelection();
 
 Tap the month/year header to switch from the day grid to a year grid. This is useful for birthdate and other historical-date flows where navigating month-by-month would be too slow. The previous/next navigation buttons move between year pages while the year grid is visible. Selecting a year returns to the day grid and keeps the current month where possible.
 
+## Accessibility
+
+`CalendarView` uses MAUI `Button` controls for day and year selection, so selectable dates stay in the platform control model. Previous and next navigation buttons expose semantic descriptions such as "Previous month" and "Next month".
+
+When embedding `CalendarView` in a dialog or custom surface, provide a clear title and instructions near the calendar. If the selected date, disabled date range, or current month needs extra explanation for your users, add nearby text or semantic hints in the surrounding dialog.
+
+For keyboard-heavy flows, verify the full date-selection path in the target platform. See the accessibility follow-up report in the repository for known improvements around month/year header activation and grid-style arrow navigation.
+
 ## Styling
 
 The view exposes style classes for common parts:

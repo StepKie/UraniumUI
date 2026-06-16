@@ -32,6 +32,12 @@ TimePickerFields support setting an icon on the left side of the control. You ca
 ## AllowClear
 TimePickerFields support clearing the selected time by setting the `AllowClear` property to `true`. Default value is `true`. You can make it `false` to disable clearing.
 
+## Accessibility
+
+Use `Title` as the visible field label and provide validation text when the accepted time range is constrained. The field wraps the platform `TimePicker`, so verify focus, picker opening, clearing, and validation text in each target platform.
+
+When `AllowClear="True"`, verify the clear action with keyboard and screen reader in your target platforms.
+
 ```xml
 <material:TimePickerField 
     Title="Pick a Time (Clearable)"

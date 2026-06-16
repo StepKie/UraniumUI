@@ -1,5 +1,11 @@
 - name: Getting Started
   href: Getting-Started.md
+- name: Best Practices
+  items:
+    - name: Accessibility
+      href: best-practices/Accessibility.md
+    - name: Clickable Areas
+      href: best-practices/ClickableAreas.md
 - name: What's New
   items:
     - name: What's New in v3.0

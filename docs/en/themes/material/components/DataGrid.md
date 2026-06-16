@@ -303,6 +303,21 @@ public class MainViewModel
 
 ![MAUI DataGrid Selection Deletion](../../../../images/datagrid-selection-deletion.gif)
 
+## Accessibility
+
+Data-heavy screens need extra care because cells, row selection, and action columns can become custom templates quickly.
+
+Recommendations:
+
+- Use meaningful `Title` values for every column, especially when auto-generated columns are not enough.
+- Use real `Button`, `ButtonView`, or `StatefulContentView` controls for row actions instead of gesture-only layouts.
+- Add `SemanticProperties.Description` to icon-only action buttons in `CellItemTemplate`.
+- Keep row selection controls keyboard reachable and visually distinct from normal cells.
+- Do not communicate selection, errors, or disabled state only with color.
+- Add an `EmptyView` with real text so screen readers announce the empty state.
+
+For custom clickable row or card-like cells, see [Clickable Areas](../../../best-practices/ClickableAreas.md).
+
 ## Loading State
 You can place an activity indicator inside the DataGrid to show loading state if you make a network call to get data.
 

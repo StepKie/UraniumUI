@@ -3,6 +3,8 @@ UraniumUI is a presentation framework for .NET MAUI. It combines native-MAUI-bas
 
 It is built on top of the .NET MAUI infrastructure, so you can start with UraniumUI's ready-made presentation layer and still drop down to native MAUI APIs when a screen needs custom behavior.
 
+Accessibility should be considered from the first screen. UraniumUI provides keyboard-aware controls, Material input focus states, and focusable custom interaction primitives, but app templates and custom item templates still need good semantic descriptions, validation messages, and keyboard paths. Start with [Accessibility](best-practices/Accessibility.md) and [Clickable Areas](best-practices/ClickableAreas.md) when building custom cards, rows, tabs, dialogs, bottom sheets, data grids, and selection inputs.
+
 There are 2 ways to get started with UraniumUI:
 - Existing Projects
 - New projects

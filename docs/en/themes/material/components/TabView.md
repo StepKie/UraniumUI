@@ -71,6 +71,8 @@ Following parameters can be used in DataTemplate for binding:
 - `Title`: Title of tab.
 - `Data`: It's used to bind custom data to tab header. You can pass this while defining `TabItem`.
 
+For accessible custom headers, use a focusable control such as `Button`, `ButtonView`, `CheckBox`, or `StatefulContentView` and bind its command to `Command`. Avoid using a passive layout with only `TapGestureRecognizer` as the tab header action. Add semantic descriptions when the tab header uses icons or abbreviated text.
+
 ```xml
 <material:TabView>
     <material:TabView.TabHeaderItemTemplate>
@@ -189,6 +191,19 @@ Even you can define DataTemplate tab by tab separetely.
 | Light - Mobile | Dark - Desktop |
 | --- | --- |
 | ![MAUI TabView](../../../../images/tabview-custom-item-template-light-android.gif) | ![MAUI TabView](../../../../images/tabview-custom-item-template-dark-windows.gif)  |
+
+## Accessibility
+
+The default tab header template uses MAUI `Button` controls, so headers keep native button focus and activation behavior. Custom tab header templates are responsible for preserving that behavior.
+
+Checklist for tab headers:
+
+- Each tab can receive keyboard focus.
+- `Enter` or `Space` selects the focused tab.
+- Selected and focused states are visually distinct.
+- The header text or semantic description announces the tab purpose.
+- Icon-only tabs provide `SemanticProperties.Description`.
+- The selected state is not communicated by color alone.
 
 ### Dynamic Tabs
 TabView supports dynamic tabs. You can add/remove tabs dynamically from a source. `ItemsSource` and `Itemtemplate` properties can be used for this purpose.

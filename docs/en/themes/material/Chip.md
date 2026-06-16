@@ -21,6 +21,10 @@ xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
 - `SelfDestruct`: Removes the chip from its parent after the remove action. Default is `true`.
 - `DestroyCommand`: Runs when the remove button is tapped.
 
+## Accessibility
+
+Use clear `Text` because it is the main accessible label for the chip. When the remove action is visible, verify it with keyboard and screen reader in your target platforms. If the chip represents something important, consider adding an explicit remove button outside the chip or adding semantic text to the chip until the built-in remove affordance exposes a dynamic description.
+
 ## Example
 
 ```xml

@@ -2,7 +2,7 @@
     <img align="center" src="./art/logo.svg" width="33%">
     <h1 align="center">UraniumUI</h1>
     <p><strong>The open-source presentation framework for production .NET MAUI apps.</strong></p>
-    <p>Build app-ready MAUI screens with Material controls, dynamic forms, dialogs, data components, theming, icons, overlays, and effects without leaving XAML or MVVM.</p>
+    <p>Build app-ready MAUI screens with Material controls, dynamic forms, dialogs, data components, keyboard-aware interactions, focus states, theming, icons, overlays, and effects without leaving XAML or MVVM.</p>
 </div>
 
 <div align="center">
@@ -22,7 +22,7 @@
     <a href="https://discord.gg/nN7Yvch73v">Discord</a>
 </p>
 
-UraniumUI is a free and open-source presentation layer for .NET MAUI. It fills the UI gaps plain MAUI leaves to every team: Material-styled inputs and buttons, generated forms, validation mapping, data grids, tree views, tab views, dialogs, bottom sheets, backdrops, icons, blur effects, code views, templates, and app-ready presentation patterns.
+UraniumUI is a free and open-source presentation layer for .NET MAUI. It fills the UI gaps plain MAUI leaves to every team: Material-styled inputs and buttons, generated forms, validation mapping, keyboard-friendly selection controls, focus-aware custom surfaces, data grids, tree views, tab views, dialogs, bottom sheets, backdrops, icons, blur effects, code views, templates, and app-ready presentation patterns.
 
 You keep writing regular .NET MAUI: XAML, `ContentPage`, `Shell`, bindings, styles, resources, handlers, dependency injection, MVVM, and platform APIs. UraniumUI attaches to that model instead of replacing it.
 
@@ -34,6 +34,7 @@ It is not just a collection of styled controls and it is not only an AutoFormVie
 - Teams that want a Material presentation layer without moving away from XAML, MVVM, resources, or MAUI handlers.
 - Apps that need more than basic controls: validation-aware fields, data grids, tree views, tabs, dialogs, bottom sheets, and reusable page surfaces.
 - Developers who want incremental adoption: use one control, add one package, or start from a full template.
+- Teams that need accessible interactions: visible focus states, keyboard navigation, semantic hints, and custom clickable areas that behave like real controls.
 
 ## No Framework Tax
 
@@ -53,9 +54,18 @@ Plain MAUI in, better UI out.
 | Validate consistently | InputKit validation, DataAnnotations integration, async validators, and property-path mapping for generated or hand-written fields. |
 | Build data screens | `DataGrid`, `Paginator`, `TreeView`, `TabView`, `Select`, `Dropdown`, `CalendarView`, and Material input fields for real application workflows. |
 | Add app surfaces | `IDialogService`, modal-page dialogs, Mopups and CommunityToolkit dialog providers, form dialogs, `BottomSheetView`, and `BackdropView`. |
+| Keep interaction accessible | Focusable custom surfaces, keyboard-aware `Select`/`SelectField`, Material input focus states, semantic descriptions for supported controls, and best-practice guidance for custom clickable areas. |
 | Standardize presentation | Material color and style resources, light/dark tokens, button variants, containers, dividers, elevation, icon packs, cascading styles, and blur effects. |
 | Keep UI native and flexible | Controls and handlers built on MAUI primitives instead of a closed rendering stack or proprietary application model. |
 | Escape the defaults | Replace generated editors, customize templates, override styles, add page attachments, create themes, or use native MAUI APIs directly. |
+
+## Accessibility
+
+Accessibility is a first-class concern in UraniumUI. The library keeps MAUI primitives available while adding focus-aware Material inputs, keyboard-activated custom surfaces, generated semantic hints in selection controls, and guidance for building custom cards, rows, and icon actions without losing accessibility.
+
+Start with the accessibility docs when building these areas: popups, dialogs, bottom sheets, `TabView`, `DataGrid`, date pickers, combo/autocomplete fields, validation messages, masked or formatted inputs, and custom clickable cards.
+
+Learn more: [Accessibility best practices](https://enisn-projects.io/docs/en/uranium/latest/best-practices/Accessibility) and [Clickable areas](https://enisn-projects.io/docs/en/uranium/latest/best-practices/ClickableAreas).
 
 ## Quick Start
 
@@ -233,6 +243,7 @@ Learn more: [Bottom Sheet](https://enisn-projects.io/docs/en/uranium/latest/them
 | --- | --- | --- |
 | Forms and validation | `FormView`, `AutoFormView`, generated editors, validation summaries, busy state, async validators, `ValidationPath`, InputKit validation, DataAnnotations integration, and form dialogs. | [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/AutoFormView), [Validations](https://enisn-projects.io/docs/en/uranium/latest/validations/Index) |
 | Core infrastructure | `UraniumContentPage`, page attachments, `StatefulContentView`, `DynamicContentView`, `GridLayout`, MAUI handlers, and primitives for custom interactive controls. | [UraniumContentPage](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/UraniumContentPage), [StatefulContentView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/StatefulContentView) |
+| Accessibility and interaction | Best-practice docs for keyboard navigation, visible focus, semantic descriptions, validation text, and custom clickable areas built with `ButtonView` or `StatefulContentView` instead of bare gestures. | [Accessibility](https://enisn-projects.io/docs/en/uranium/latest/best-practices/Accessibility), [Clickable Areas](https://enisn-projects.io/docs/en/uranium/latest/best-practices/ClickableAreas) |
 | Core components | `CalendarView`, `Select`, `Dropdown`, `AutoCompleteView`, `ExpanderView`, and `SelectableLabel`. | [Core Components](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/CalendarView) |
 | Material inputs | `InputField`, `TextField`, `EditorField`, `AutoCompleteTextField`, `DropdownField`, `SelectField`, `PickerField`, `MultiplePickerField`, `DatePickerField`, `TimePickerField`, validation display, clear buttons, icons, and floating-label field styling. | [Material Inputs](https://enisn-projects.io/docs/en/uranium/latest/themes/material/components/InputField) |
 | Buttons and selection | Material button styles, `ButtonView`, `Chip`, `CheckBox`, `RadioButton`, and `RadioButtonGroupView`. | [Buttons](https://enisn-projects.io/docs/en/uranium/latest/themes/material/Buttons), [Chip](https://enisn-projects.io/docs/en/uranium/latest/themes/material/Chip) |
@@ -283,6 +294,8 @@ The repository includes a runnable MAUI demo app in [`demo/UraniumApp`](./demo/U
 ## Documentation
 
 - [Getting Started](https://enisn-projects.io/docs/en/uranium/latest/Getting-Started)
+- [Accessibility best practices](https://enisn-projects.io/docs/en/uranium/latest/best-practices/Accessibility)
+- [Clickable areas](https://enisn-projects.io/docs/en/uranium/latest/best-practices/ClickableAreas)
 - [AutoFormView](https://enisn-projects.io/docs/en/uranium/latest/infrastructure/AutoFormView)
 - [Validations](https://enisn-projects.io/docs/en/uranium/latest/validations/Index)
 - [Material Theme](https://enisn-projects.io/docs/en/uranium/latest/themes/material/Index)

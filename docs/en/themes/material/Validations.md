@@ -70,6 +70,19 @@ There are some built-in validations that can be used in your application. They a
   * `DigitsOnlyValidation` - Checks if the value contains only digits.
   * `LettersOnlyValidation` - Checks if the value contains only letters.
 
+## Accessibility
+
+Validation must be represented as text, not only by color, a border, or a warning icon. UraniumUI Material inputs render failed validation messages below the field, so keep messages short, specific, and actionable.
+
+Recommendations:
+
+- Use `Title` labels that match the field being validated.
+- Write messages that explain how to fix the input, such as "Enter a valid email address".
+- Use `uranium:FormView.ValidationPath` on manually created forms so async or server-side errors appear on the correct field.
+- Add a form-level validation summary when several fields can fail after submit.
+- For masked or formatted inputs, include the expected format in the field hint, placeholder, or nearby helper text.
+- Test validation with a screen reader in the target platform when error announcements are required by your app.
+
 ## Async Form Validation
 
 Use `uranium:FormView` when the whole form needs an async validation step, such as checking if a username already exists on the server. The form still runs local `IValidation` rules first. If they pass, it invokes the assigned validator and maps returned errors to the form or to specific fields.
