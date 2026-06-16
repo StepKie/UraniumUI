@@ -176,7 +176,8 @@ public partial class TextField
         nameof(IsReadOnly),
         typeof(bool),
         typeof(TextField),
-        false);
+        false,
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as TextField).UpdateContentSemantics());
 
     [System.ComponentModel.TypeConverter(typeof(FontSizeConverter))]
     public double FontSize { get => (double)GetValue(FontSizeProperty); set => SetValue(FontSizeProperty, value); }
@@ -233,7 +234,8 @@ public partial class TextField
         nameof(DisallowClearButtonFocus),
         typeof(bool),
         typeof(TextField),
-        false);
+        false,
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as TextField).UpdateClearIconFocusability());
 
     public bool SelectAllTextOnFocus { get => (bool)GetValue(SelectAllTextOnFocusProperty); set => SetValue(SelectAllTextOnFocusProperty, value); }
 

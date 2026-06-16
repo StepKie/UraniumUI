@@ -1,6 +1,7 @@
 using Microsoft.Maui.Controls.Shapes;
 using System.ComponentModel;
 using UraniumUI.Extensions;
+using UraniumUI.Options;
 using UraniumUI.Pages;
 using UraniumUI.Resources;
 using UraniumUI.ViewExtensions;
@@ -22,6 +23,12 @@ public partial class InputField : ContentView
     private Grid innerGridPart;
     private HorizontalStackLayout endIconsContainerPart;
     private bool isTemplateApplied;
+    private string generatedSemanticDescription;
+    private string generatedSemanticHint;
+    private string explicitSemanticHint;
+    private string validationSemanticMessage;
+    private Shadow unfocusedBorderShadow;
+    private bool isFocusVisualApplied;
 
     public virtual new View Content { get => (View)GetValue(ContentProperty); set => SetValue(ContentProperty, value); }
 
@@ -46,6 +53,7 @@ public partial class InputField : ContentView
                 inputField.RegisterForEvents();
             }
 
+            inputField.UpdateContentSemantics();
             inputField.OnPropertyChanged(nameof(Content));
         }, defaultBindingMode: BindingMode.TwoWay);
 
@@ -133,6 +141,7 @@ public partial class InputField : ContentView
         labelTitle.SetBinding(Label.FontAttributesProperty, GetRelativeBinding(nameof(FontAttributes)));
         labelTitle.SetBinding(Label.FontFamilyProperty, GetRelativeBinding(nameof(FontFamily)));
         labelTitle.SetBinding(Label.FontAutoScalingEnabledProperty, GetRelativeBinding(nameof(FontAutoScalingEnabled)));
+        AutomationProperties.SetIsInAccessibleTree(labelTitle, false);
 
         @this.Add(labelTitle);
 
@@ -430,6 +439,7 @@ public partial class InputField : ContentView
         var currentLabelTitle = labelTitle;
 
         currentBorder?.SetBinding(Border.StrokeProperty, GetRelativeBinding(nameof(BorderColor)));
+        ResetFocusVisual(currentBorder);
         currentLabelTitle?.SetBinding(Label.TextColorProperty, GetRelativeBinding(nameof(TitleColor)));
         UpdateState();
 
@@ -444,6 +454,7 @@ public partial class InputField : ContentView
         if (border is not null)
         {
             border.Stroke = AccentColor;
+            ApplyFocusVisual(border);
         }
 
         if (labelTitle is not null)
@@ -457,6 +468,192 @@ public partial class InputField : ContentView
         {
             LastFontimageColor = fontImageSource.Color?.WithAlpha(1); // To create a new instance.
             fontImageSource.Color = AccentColor;
+        }
+    }
+
+    private void ApplyFocusVisual(Border currentBorder)
+    {
+        if (!isFocusVisualApplied)
+        {
+            unfocusedBorderShadow = currentBorder.Shadow;
+            isFocusVisualApplied = true;
+        }
+
+        currentBorder.Shadow = new Shadow
+        {
+            Brush = AccentColor.ToSolidColorBrush(),
+            Opacity = 0.35f,
+            Radius = 6,
+            Offset = new Point(0, 0),
+        };
+    }
+
+    private void ResetFocusVisual(Border currentBorder)
+    {
+        if (currentBorder is null || !isFocusVisualApplied)
+        {
+            return;
+        }
+
+        currentBorder.Shadow = unfocusedBorderShadow;
+        unfocusedBorderShadow = null;
+        isFocusVisualApplied = false;
+    }
+
+    protected virtual bool IsContentReadOnly => false;
+
+    protected virtual void UpdateContentSemantics()
+    {
+        UpdateContentSemanticDescription();
+        UpdateContentSemanticHint();
+    }
+
+    protected virtual void SetValidationSemanticMessage(string message)
+    {
+        validationSemanticMessage = NormalizeSemanticText(message);
+        UpdateContentSemanticHint();
+    }
+
+    protected virtual void AnnounceValidationMessage(string message)
+    {
+        var normalizedMessage = NormalizeSemanticText(message);
+
+        if (string.IsNullOrWhiteSpace(normalizedMessage))
+        {
+            return;
+        }
+
+        try
+        {
+            SemanticScreenReader.Announce(AccessibilityOptions.FormatValidationErrorHint(normalizedMessage));
+        }
+        catch (Exception)
+        {
+            // Unit tests and headless hosts can run without native screen-reader services.
+        }
+    }
+
+    protected static void SetActionSemantics(VisualElement element, string description, string hint)
+    {
+        SemanticProperties.SetDescription(element, description);
+        SemanticProperties.SetHint(element, hint);
+    }
+
+    protected UraniumUIAccessibilityOptions AccessibilityOptions => GetAccessibilityOptions();
+
+    internal static UraniumUIAccessibilityOptions GetAccessibilityOptions() => AccessibilityOptionsProvider.Get();
+
+    private void UpdateContentSemanticDescription()
+    {
+        if (Content is null)
+        {
+            return;
+        }
+
+        var description = GetTitleSemanticText();
+        var currentDescription = SemanticProperties.GetDescription(Content);
+
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            if (currentDescription == generatedSemanticDescription)
+            {
+                SemanticProperties.SetDescription(Content, null);
+            }
+
+            generatedSemanticDescription = null;
+            return;
+        }
+
+        if (string.IsNullOrEmpty(currentDescription) || currentDescription == generatedSemanticDescription)
+        {
+            SemanticProperties.SetDescription(Content, description);
+            generatedSemanticDescription = description;
+        }
+    }
+
+    private string GetTitleSemanticText()
+    {
+        if (!string.IsNullOrWhiteSpace(Title))
+        {
+            return Title;
+        }
+
+        if (TitleFormattedText is null)
+        {
+            return null;
+        }
+
+        var text = string.Concat(TitleFormattedText.Spans.Select(span => span.Text));
+
+        return string.IsNullOrWhiteSpace(text) ? null : text;
+    }
+
+    private void UpdateContentSemanticHint()
+    {
+        if (Content is null)
+        {
+            return;
+        }
+
+        var currentHint = SemanticProperties.GetHint(Content);
+        if (!string.IsNullOrEmpty(currentHint) && currentHint != generatedSemanticHint)
+        {
+            explicitSemanticHint = currentHint;
+        }
+
+        var generatedStateHints = GetGeneratedStateHints().ToArray();
+        if (generatedStateHints.Length == 0)
+        {
+            if (currentHint == generatedSemanticHint)
+            {
+                SemanticProperties.SetHint(Content, explicitSemanticHint);
+            }
+
+            generatedSemanticHint = null;
+            return;
+        }
+
+        var hint = string.Join(" ", new[] { explicitSemanticHint }.Concat(generatedStateHints).Where(value => !string.IsNullOrWhiteSpace(value)));
+
+        if (string.IsNullOrEmpty(currentHint) || currentHint == generatedSemanticHint || !string.IsNullOrEmpty(explicitSemanticHint))
+        {
+            SemanticProperties.SetHint(Content, hint);
+            generatedSemanticHint = hint;
+        }
+    }
+
+    private IEnumerable<string> GetGeneratedStateHints()
+    {
+        if (!string.IsNullOrWhiteSpace(validationSemanticMessage))
+        {
+            yield return AccessibilityOptions.FormatValidationErrorHint(validationSemanticMessage);
+        }
+
+        if (IsContentReadOnly && !string.IsNullOrWhiteSpace(AccessibilityOptions.ReadOnlyHint))
+        {
+            yield return AccessibilityOptions.ReadOnlyHint;
+        }
+
+        if (!IsEnabled && !string.IsNullOrWhiteSpace(AccessibilityOptions.DisabledHint))
+        {
+            yield return AccessibilityOptions.DisabledHint;
+        }
+    }
+
+    private static string NormalizeSemanticText(string text)
+    {
+        return string.IsNullOrWhiteSpace(text)
+            ? null
+            : string.Join(" ", text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(part => part.Trim()));
+    }
+
+    protected override void OnPropertyChanged(string propertyName = null)
+    {
+        base.OnPropertyChanged(propertyName);
+
+        if (propertyName == IsEnabledProperty.PropertyName)
+        {
+            UpdateContentSemanticHint();
         }
     }
 
@@ -494,6 +691,7 @@ public partial class InputField : ContentView
         ResetTemplateParts();
 
         ApplyTitleFormattedText();
+        UpdateContentSemantics();
 
         if (Icon != null)
         {
@@ -606,7 +804,12 @@ public partial class InputField : ContentView
         typeof(string),
         typeof(InputField),
         string.Empty,
-        propertyChanged: (bo, ov, nv) => (bo as InputField).InitializeBorder());
+        propertyChanged: (bo, ov, nv) =>
+        {
+            var inputField = bo as InputField;
+            inputField.InitializeBorder();
+            inputField.UpdateContentSemanticDescription();
+        });
 
     public FormattedString TitleFormattedText { get => (FormattedString)GetValue(TitleFormattedTextProperty); set => SetValue(TitleFormattedTextProperty, value); }
 
@@ -620,6 +823,7 @@ public partial class InputField : ContentView
             var inputField = bo as InputField;
             inputField.ApplyTitleFormattedText();
             inputField.InitializeBorder();
+            inputField.UpdateContentSemanticDescription();
         });
 
     public Color AccentColor { get => (Color)GetValue(AccentColorProperty); set => SetValue(AccentColorProperty, value); }
@@ -743,5 +947,6 @@ public partial class InputField : ContentView
                 inputField.Content.AutomationId = newValue as string;
             }
         });
+
     #endregion
 }

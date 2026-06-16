@@ -6,6 +6,8 @@ namespace UraniumUI.Material.Controls;
 public partial class EditorField : InputField
 {
     public EditorView EditorView => Content as EditorView;
+    protected override bool IsContentReadOnly => IsReadOnly;
+
     public event EventHandler<TextChangedEventArgs> TextChanged;
     public event EventHandler Completed;
 

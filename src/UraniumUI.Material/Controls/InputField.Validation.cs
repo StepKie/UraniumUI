@@ -2,6 +2,7 @@
 using InputKit.Shared.Validations;
 using UraniumUI.Pages;
 using UraniumUI.Resources;
+using UraniumUI.ViewExtensions;
 using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace UraniumUI.Material.Controls;
@@ -24,11 +25,18 @@ public partial class InputField : IValidatable
         }
     });
 
-    protected Lazy<Label> labelValidation = new Lazy<Label>(() => new Label
+    protected Lazy<Label> labelValidation = new Lazy<Label>(() =>
     {
-        StyleClass = new[] { "InputField.ValidationLabel" },
-        HorizontalOptions = LayoutOptions.Start,
-        TextColor = ColorResource.GetColor("Error", "ErrorDark", Colors.Red),
+        var label = new Label
+        {
+            StyleClass = new[] { "InputField.ValidationLabel" },
+            HorizontalOptions = LayoutOptions.Start,
+            TextColor = ColorResource.GetColor("Error", "ErrorDark", Colors.Red),
+        };
+
+        label.SetId("ValidationLabel");
+
+        return label;
     });
 
     protected bool lastValidationState = true;
@@ -49,6 +57,8 @@ public partial class InputField : IValidatable
 
         if (isValidationPassed)
         {
+            SetValidationSemanticMessage(null);
+
             if (isStateChanged)
             {
                 endIconsContainer.Remove(iconValidation.Value);
@@ -60,12 +70,18 @@ public partial class InputField : IValidatable
         {
             var message = string.Join('\n', results.Where(x => !x.isValid).Select(s => s.message));
             labelValidation.Value.Text = message;
+            SemanticProperties.SetDescription(labelValidation.Value, message);
+            SemanticProperties.SetDescription(iconValidation.Value, AccessibilityOptions.ValidationErrorDescription);
+            SemanticProperties.SetHint(iconValidation.Value, message);
+            SetValidationSemanticMessage(message);
 
             if (isStateChanged)
             {
                 endIconsContainer.Add(iconValidation.Value);
                 this.rootGrid.Add(labelValidation.Value, row: 1);
                 OnPropertyChanged(nameof(IsValid));
+
+                AnnounceValidationMessage(message);
 			}
         }
     }
@@ -106,6 +122,7 @@ public partial class InputField : IValidatable
     {
         endIconsContainer.Remove(iconValidation.Value);
         this.rootGrid.Remove(labelValidation.Value);
+        SetValidationSemanticMessage(null);
         lastValidationState = true;
     }
 }
