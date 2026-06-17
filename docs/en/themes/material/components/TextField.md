@@ -108,6 +108,50 @@ TextFields support clearing the text by setting the `AllowClear` property to `tr
 | --- | --- |
 | ![MAUI Material Input](../../../../images/textfield-allowclear-dark-android.gif) | ![MAUI Material Input](../../../../images/textfield-allowclear-light-android.gif) |
 
+## Android Keyboard Layout
+
+On Android, trailing content such as the clear button, custom attachments, or validation icon can look misaligned while the soft keyboard is visible if the app window pans instead of resizing. This is controlled by .NET MAUI's Android window and safe-area configuration, not by the `TextField` control itself.
+
+Set the Android soft input mode to resize at the application level:
+
+```xml
+<Application
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:android="clr-namespace:Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;assembly=Microsoft.Maui.Controls"
+    android:Application.WindowSoftInputModeAdjust="Resize">
+    <!-- ... -->
+</Application>
+```
+
+You can also configure it from C#:
+
+```csharp
+using Microsoft.Maui.Controls.PlatformConfiguration.AndroidSpecific;
+
+App.Current
+    .On<Microsoft.Maui.Controls.PlatformConfiguration.Android>()
+    .UseWindowSoftInputModeAdjust(WindowSoftInputModeAdjust.Resize);
+```
+
+If your app configures the Android activity directly, call `SetSoftInputMode` after `base.OnCreate`:
+
+```csharp
+protected override void OnCreate(Bundle? savedInstanceState)
+{
+    base.OnCreate(savedInstanceState);
+    Window?.SetSoftInputMode(Android.Views.SoftInput.AdjustResize);
+}
+```
+
+For .NET 10 pages, also set `SafeAreaEdges="All"` when form content should avoid both system areas and the soft keyboard:
+
+```xml
+<ContentPage SafeAreaEdges="All">
+    <!-- ... -->
+</ContentPage>
+```
+
 ## Attachments
 Attachments are additional controls that can be placed inside the control. They are placed on the end of the control (right-side on LTR). You can add attachments by using `Attachments` property. It is a collection of `View` objects.
 
