@@ -1,4 +1,6 @@
 using Microsoft.Maui.Controls.Shapes;
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using UraniumUI.Extensions;
 using UraniumUI.Options;
@@ -22,6 +24,8 @@ public partial class InputField : ContentView
     private Grid rootGridPart;
     private Grid innerGridPart;
     private HorizontalStackLayout endIconsContainerPart;
+    private readonly List<IView> appliedAttachments = new();
+    private INotifyCollectionChanged subscribedAttachments;
     private bool isTemplateApplied;
     private string generatedSemanticDescription;
     private string generatedSemanticHint;
@@ -83,7 +87,36 @@ public partial class InputField : ContentView
 
     protected HorizontalStackLayout endIconsContainer => endIconsContainerPart ??= FindTemplatePart<HorizontalStackLayout>("EndIconsContainer");
 
-    public IList<IView> Attachments => endIconsContainer?.Children;
+    public static readonly BindableProperty AttachmentsProperty = BindableProperty.Create(
+        nameof(Attachments),
+        typeof(object),
+        typeof(InputField),
+        defaultValueCreator: _ => new ObservableCollection<IView>(),
+        validateValue: (_, value) => value is null || value is IList<IView> || value is IView || value is IEnumerable<IView>,
+        propertyChanged: (bindable, oldValue, newValue) =>
+        {
+            if (bindable is not InputField inputField)
+            {
+                return;
+            }
+
+            inputField.UnsubscribeFromAttachments(oldValue);
+            inputField.SubscribeToAttachments(newValue);
+            inputField.ApplyAttachments();
+            inputField.OnPropertyChanged(nameof(Attachments));
+        },
+        coerceValue: (_, value) => value switch
+        {
+            null => null,
+            IList<IView> => value,
+            IView attachment => new ObservableCollection<IView> { attachment },
+            IEnumerable<IView> attachments => new ObservableCollection<IView>(attachments.Where(attachment => attachment is not null)),
+            _ => value,
+        });
+
+    private IList<IView> BindableAttachments => GetValue(AttachmentsProperty) as IList<IView>;
+
+    public IList<IView> Attachments { get => endIconsContainer?.Children ?? BindableAttachments; set => SetValue(AttachmentsProperty, value); }
 
     private Color LastFontimageColor;
 
@@ -176,8 +209,71 @@ public partial class InputField : ContentView
     public InputField()
     {
         this.ControlTemplate = inputFieldControlTemplate;
+        SubscribeToAttachments(BindableAttachments);
 
         InitializeValidation();
+    }
+
+    private void SubscribeToAttachments(object attachments)
+    {
+        if (attachments is not INotifyCollectionChanged collectionChanged || ReferenceEquals(collectionChanged, subscribedAttachments))
+        {
+            return;
+        }
+
+        collectionChanged.CollectionChanged += Attachments_CollectionChanged;
+        subscribedAttachments = collectionChanged;
+    }
+
+    private void UnsubscribeFromAttachments(object attachments)
+    {
+        if (attachments is not INotifyCollectionChanged collectionChanged)
+        {
+            return;
+        }
+
+        collectionChanged.CollectionChanged -= Attachments_CollectionChanged;
+
+        if (ReferenceEquals(collectionChanged, subscribedAttachments))
+        {
+            subscribedAttachments = null;
+        }
+    }
+
+    private void Attachments_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        ApplyAttachments();
+    }
+
+    private void ApplyAttachments()
+    {
+        var currentEndIconsContainer = endIconsContainer;
+        if (currentEndIconsContainer is null)
+        {
+            return;
+        }
+
+        foreach (var attachment in appliedAttachments.ToArray())
+        {
+            currentEndIconsContainer.Remove(attachment);
+        }
+
+        appliedAttachments.Clear();
+
+        if (BindableAttachments is null)
+        {
+            return;
+        }
+
+        foreach (var attachment in BindableAttachments.Where(attachment => attachment is not null))
+        {
+            if (!currentEndIconsContainer.Contains(attachment))
+            {
+                currentEndIconsContainer.Add(attachment);
+            }
+
+            appliedAttachments.Add(attachment);
+        }
     }
 
     public virtual bool HasValue
@@ -691,6 +787,7 @@ public partial class InputField : ContentView
         ResetTemplateParts();
 
         ApplyTitleFormattedText();
+        ApplyAttachments();
         UpdateContentSemantics();
 
         if (Icon != null)

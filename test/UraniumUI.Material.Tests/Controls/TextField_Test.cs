@@ -2,6 +2,7 @@
 using InputKit.Shared.Validations;
 using NSubstitute;
 using Shouldly;
+using System.Collections.ObjectModel;
 using System.Reflection;
 using System.Windows.Input;
 using UraniumUI.Material.Controls;
@@ -149,6 +150,89 @@ public class TextField_Test
         endIconsContainer.Spacing.ShouldBe(InputField.AttachmentsSpacing);
         control.Attachments.ShouldContain(first);
         control.Attachments.ShouldContain(second);
+        endIconsContainer.Children.ShouldContain(first);
+        endIconsContainer.Children.ShouldContain(second);
+    }
+
+    [Fact]
+    public void Attachments_AddedBeforeTemplateApplied_ShouldBeRenderedAfterTemplateApplied()
+    {
+        var attachment = new ActivityIndicator { IsRunning = true };
+        var control = new TextField();
+
+        control.Attachments.Add(attachment);
+
+        AnimationReadyHandler.Prepare(control);
+
+        var endIconsContainer = control.FindByViewQueryIdInVisualTreeDescendants<HorizontalStackLayout>("EndIconsContainer");
+
+        endIconsContainer.ShouldNotBeNull();
+        endIconsContainer.Children.ShouldContain(attachment);
+    }
+
+    [Fact]
+    public void Attachments_CanBeSetViaImplicitStyle()
+    {
+        var attachment = new ActivityIndicator { IsRunning = true };
+        var style = new Style(typeof(TextField));
+        style.Setters.Add(new Setter
+        {
+            Property = InputField.AttachmentsProperty,
+            Value = attachment,
+        });
+
+        var resources = new ResourceDictionary();
+        resources.Add(style);
+
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        control.Resources = resources;
+
+        var endIconsContainer = control.FindByViewQueryIdInVisualTreeDescendants<HorizontalStackLayout>("EndIconsContainer");
+
+        endIconsContainer.ShouldNotBeNull();
+        control.Attachments.ShouldContain(attachment);
+        endIconsContainer.Children.ShouldContain(attachment);
+    }
+
+    [Fact]
+    public void Attachments_CanBeBoundToCollection()
+    {
+        var attachment = new ActivityIndicator { IsRunning = true };
+        var viewModel = new TestViewModel
+        {
+            Attachments = new ObservableCollection<IView> { attachment },
+        };
+        var control = new TextField
+        {
+            BindingContext = viewModel,
+        };
+
+        control.SetBinding(InputField.AttachmentsProperty, new Binding(nameof(TestViewModel.Attachments)));
+
+        AnimationReadyHandler.Prepare(control);
+
+        var endIconsContainer = control.FindByViewQueryIdInVisualTreeDescendants<HorizontalStackLayout>("EndIconsContainer");
+
+        endIconsContainer.ShouldNotBeNull();
+        endIconsContainer.Children.ShouldContain(attachment);
+    }
+
+    [Fact]
+    public void Attachments_ReplacedAfterTemplateApplied_ShouldPreserveBuiltInClearIcon()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField { AllowClear = true });
+        var clearIcon = control.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
+        var attachment = new ActivityIndicator { IsRunning = true };
+
+        control.Attachments = new ObservableCollection<IView> { attachment };
+
+        var endIconsContainer = control.FindByViewQueryIdInVisualTreeDescendants<HorizontalStackLayout>("EndIconsContainer");
+
+        clearIcon.ShouldNotBeNull();
+        endIconsContainer.ShouldNotBeNull();
+        endIconsContainer.Children.ShouldContain(clearIcon);
+        endIconsContainer.Children.ShouldContain(attachment);
     }
 
     [Fact]
@@ -657,6 +741,7 @@ public class TextField_Test
         private Keyboard keyboard;
         private ClearButtonVisibility clearButtonVisibility;
         private double characterSpacing;
+        private IList<IView> attachments;
         private object commandParameter = "My Command Parameter 1";
 
         public bool IsChecked { get => isChecked; set => SetProperty(ref isChecked, value); }
@@ -677,6 +762,8 @@ public class TextField_Test
         public ClearButtonVisibility ClearButtonVisibility { get => clearButtonVisibility; set => SetProperty(ref clearButtonVisibility, value); }
 
         public double CharacterSpacing { get => characterSpacing; set => SetProperty(ref characterSpacing, value); }
+
+        public IList<IView> Attachments { get => attachments; set => SetProperty(ref attachments, value); }
     }
 
     private sealed class TemplateAwareTextField : TextField
