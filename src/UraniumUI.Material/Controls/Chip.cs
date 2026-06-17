@@ -59,6 +59,8 @@ namespace UraniumUI.Material.Controls
                 }
             };
 
+            UpdateDestroyButtonSemantics();
+
             closeButton.TappedCommand = new Command(() =>
             {
                 DestroyCommand?.Execute(this);
@@ -95,6 +97,7 @@ namespace UraniumUI.Material.Controls
                 if (bindable is Chip chip)
                 {
                     chip.label.Text = (string)newValue;
+                    chip.UpdateDestroyButtonSemantics();
                 }
             });
 
@@ -109,6 +112,20 @@ namespace UraniumUI.Material.Controls
                     if (bindable is Chip chip)
                     {
                         chip.label.TextColor = (Color)newValue;
+                    }
+                });
+
+        public Color DestroyIconColor { get => (Color)GetValue(DestroyIconColorProperty); set => SetValue(DestroyIconColorProperty, value); }
+
+        public static readonly BindableProperty DestroyIconColorProperty = BindableProperty.Create(
+                nameof(DestroyIconColor),
+                typeof(Color),
+                typeof(Chip),
+                propertyChanged: (bindable, oldValue, newValue) =>
+                {
+                    if (bindable is Chip chip && newValue is Color color && chip.closeButton.Content is Path path)
+                    {
+                        path.Fill = color.ToSolidColorBrush();
                     }
                 });
 
@@ -132,7 +149,16 @@ namespace UraniumUI.Material.Controls
                     if (bindable is Chip chip)
                     {
                         chip.closeButton.IsVisible = (bool)newValue;
-                    }
-                });
+                }
+            });
+
+        private void UpdateDestroyButtonSemantics()
+        {
+            var options = AccessibilityOptionsProvider.Get();
+            var description = options.FormatRemoveChipDescription(Text ?? label.Text ?? string.Empty);
+
+            SemanticProperties.SetDescription(closeButton, description);
+            SemanticProperties.SetHint(closeButton, options.RemoveChipHint);
+        }
     }
 }

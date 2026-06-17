@@ -71,6 +71,19 @@ There are 6 types of dialogs in UraniumUI package. They are:
 - `View` - For displaying custom views
 - `Form` - For displaying form-based dialogs
 
+## Accessibility
+
+Dialogs interrupt the current workflow, so treat focus and semantics as part of the dialog contract:
+
+- Use descriptive titles and messages.
+- Keep accept, cancel, clear, and close actions as real buttons.
+- Make custom dialog content keyboard reachable.
+- Add semantic descriptions to icon-only actions.
+- Verify initial focus, `Escape` or back dismissal, and focus return to the opener in each dialog provider you ship.
+- For form dialogs, show field-level validation messages and a summary for multi-field failures.
+
+When displaying custom views with `DisplayViewAsync`, do not make critical actions gesture-only. Use `Button`, `ButtonView`, or `StatefulContentView` as described in [Clickable Areas](../best-practices/ClickableAreas.md).
+
 ## Usage Patterns
 
 ### Extension Methods
@@ -228,6 +241,10 @@ private async void Button_Clicked(object sender, EventArgs e)
 }
 ```
 
+#### Styling
+
+The shared dialog APIs do not expose per-prompt checkbox styling. Use app-level styles for the checkbox type used by your dialog implementation, or build a custom view with `DisplayViewAsync` when one dialog needs custom visuals.
+
 ---
 
 ### Text Prompt
@@ -245,6 +262,88 @@ private async void Button_Clicked(object sender, EventArgs e)
     await DisplayAlert("Result:", result, "OK");
 }
 ```
+
+---
+
+### Date Prompt
+
+Date prompt can be used to select a nullable date with the custom `CalendarView`. It supports OK, Cancel, Clear, and Today actions. Tap the month/year header to jump by year, which is useful for birthdates and other historical dates.
+
+![MAUI Date Prompt Dialog](../images/dialogs-date-prompt-dark-windows.png)
+
+```csharp
+private DateTime? selectedDate = DateTime.Today;
+
+private async void Button_Clicked(object sender, EventArgs e)
+{
+    selectedDate = await this.DisplayDatePromptAsync(
+        "Select Date",
+        selectedDate,
+        minimumDate: DateTime.Today.AddDays(-30),
+        maximumDate: DateTime.Today.AddDays(30));
+
+    await DisplayAlert("Result:", selectedDate?.ToString("d") ?? "null", "OK");
+}
+```
+
+`DisplayDatePromptAsync` returns the selected date when OK is pressed. Clear closes the dialog and returns `null`. Cancel closes the dialog and returns the original `selectedDate`, so assigning the result back to the same variable does not mutate the caller state.
+
+Manual verification steps for each dialog provider:
+
+- Open the Dialogs demo page.
+- Select each implementation from the Implementation selector.
+- Open Date Prompt and verify OK returns the selected date.
+- Select Clear and verify the result becomes `null`.
+- Change the visible selection, select Cancel, and verify the previous result is preserved.
+- Select Today and verify today is selected when it is within the min/max range.
+
+---
+
+### View
+
+View dialogs can display custom MAUI content. Use the one-button overload when the dialog is informational. Use the OK/Cancel overload when the caller needs to know whether the user accepted or discarded changes.
+
+```csharp
+private async void Button_Clicked(object sender, EventArgs e)
+{
+    var content = new VerticalStackLayout
+    {
+        Children =
+        {
+            new HorizontalStackLayout
+            {
+                Children =
+                {
+                    new CheckBox(),
+                    new Label { Text = "Yes" }
+                }
+            },
+            new HorizontalStackLayout
+            {
+                Children =
+                {
+                    new CheckBox(),
+                    new Label { Text = "No" }
+                }
+            },
+            new Button { Text = "Open Camera" }
+        }
+    };
+
+    var accepted = await DialogService.DisplayViewAsync(
+        "Custom Content",
+        content,
+        "Save",
+        "Cancel");
+
+    if (accepted)
+    {
+        // Save changes from the custom content.
+    }
+}
+```
+
+`DisplayViewAsync(title, content, okText, cancelText)` returns `true` when the OK button is pressed and `false` when the Cancel button is pressed. The button labels are explicit to avoid ambiguity with the existing one-button overload.
 
 ---
 

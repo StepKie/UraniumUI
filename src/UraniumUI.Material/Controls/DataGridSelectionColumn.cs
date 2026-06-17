@@ -9,7 +9,7 @@ public class DataGridSelectionColumn : DataGridColumn, IDataGridSelectionColumn
     {
         this.CellItemTemplate = new DataTemplate(() =>
         {
-            var checkBox = new  InputKit.Shared.Controls.CheckBox
+            var checkBox = new CheckBox
             {
                 VerticalOptions = LayoutOptions.Center,
                 HorizontalOptions = LayoutOptions.Center,

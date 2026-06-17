@@ -21,6 +21,26 @@ Then you can use it like this:
 
 ![uraniumui buttonview](../../images/buttonview-demo.png)
 
+## Keyboard and Accessibility
+
+Use `ButtonView` for custom cards, icon buttons, and visual actions that need Material styling but should still behave like controls. On Windows, `ButtonView` is tab-focusable, shows the system focus visual, and supports `Enter`/`Space` activation through its handler.
+
+Provide semantic text for icon-only or card-like actions:
+
+```xml
+<material:ButtonView
+    TappedCommand="{Binding OpenCustomerCommand}"
+    SemanticProperties.Description="Open customer details"
+    SemanticProperties.Hint="Opens the selected customer profile">
+    <Grid Padding="16" ColumnDefinitions="*,Auto">
+        <Label Text="Customer details" />
+        <Label Grid.Column="1" Text=">" />
+    </Grid>
+</material:ButtonView>
+```
+
+For broader guidance, see [Clickable Areas](../../best-practices/ClickableAreas.md).
+
 
 ## Customizations
 You can customize the `ButtonView` by using the style properties. You can use the following template to create your own style:

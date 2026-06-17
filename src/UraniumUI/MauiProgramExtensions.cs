@@ -21,6 +21,11 @@ public static class MauiProgramExtensions
             // Keep this here
         });
 
+        builder.Services.Configure<UraniumUIAccessibilityOptions>(options =>
+        {
+            // Keep this here
+        });
+
         builder.Services.AddTransient<IDialogService, DefaultDialogService>();
 
         builder.ConfigureAutoFormViewDefaults();
@@ -34,6 +39,7 @@ public static class MauiProgramExtensions
             .AddInputKitHandlers()
             .AddHandler(typeof(Button), typeof(StatefulButtonHandler))
             .AddHandler(typeof(StatefulContentView), typeof(StatefulContentViewHandler))
+            .AddHandler(typeof(Select), typeof(StatefulContentViewHandler))
             .AddHandler(typeof(AutoCompleteView), typeof(AutoCompleteViewHandler))
             .AddHandler(typeof(SelectableLabel), typeof(SelectableLabelHandler))
             .AddHandler(typeof(Dropdown), typeof(DropdownHandler))

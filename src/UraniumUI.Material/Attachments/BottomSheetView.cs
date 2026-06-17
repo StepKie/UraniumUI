@@ -1,6 +1,8 @@
 ﻿using InputKit.Shared.Helpers;
 using UraniumUI.Extensions;
+using UraniumUI.Material.Controls;
 using UraniumUI.Pages;
+using UraniumUI.Views;
 
 namespace UraniumUI.Material.Attachments;
 
@@ -15,6 +17,7 @@ public partial class BottomSheetView : Border, IPageAttachment
     public View Header { get; set; }
 
     private TapGestureRecognizer closeGestureRecognizer = new();
+    private bool isGeneratedHeader;
 
     public void OnAttached(UraniumContentPage page)
     {
@@ -29,7 +32,12 @@ public partial class BottomSheetView : Border, IPageAttachment
 
     protected virtual void Init()
     {
-        Header ??= GenerateAnchor();
+        if (Header is null)
+        {
+            Header = GenerateAnchor();
+            isGeneratedHeader = true;
+        }
+
         Padding = 0;
         this.StyleClass = new[] { "BottomSheet" };
         this.VerticalOptions = LayoutOptions.End;
@@ -50,17 +58,31 @@ public partial class BottomSheetView : Border, IPageAttachment
             Header.GestureRecognizers.Add(panGestureRecognizer);
         }
 
-        var tapGestureRecognizer = new TapGestureRecognizer();
-        tapGestureRecognizer.Tapped += (s, e) => IsPresented = !IsPresented;
-        Header.GestureRecognizers.Add(tapGestureRecognizer);
+        if (isGeneratedHeader && Header is StatefulContentView generatedHeader)
+        {
+            generatedHeader.TappedCommand = new Command(TogglePresented);
+            UpdateGeneratedHeaderSemantics();
+        }
+        else
+        {
+            var tapGestureRecognizer = new TapGestureRecognizer();
+            tapGestureRecognizer.Tapped += (s, e) => TogglePresented();
+            Header.GestureRecognizers.Add(tapGestureRecognizer);
+        }
+
         Header.BackgroundColor ??= this.BackgroundColor;
 
         closeGestureRecognizer.Tapped += (s, e) => IsPresented = false;
     }
 
+    private void TogglePresented()
+    {
+        IsPresented = !IsPresented;
+    }
+
     protected virtual View GenerateAnchor()
     {
-        var anchor = new ContentView
+        var anchor = new StatefulContentView
         {
             HorizontalOptions = LayoutOptions.Fill,
             Padding = 10,
@@ -75,6 +97,19 @@ public partial class BottomSheetView : Border, IPageAttachment
         };
 
         return anchor;
+    }
+
+    private void UpdateGeneratedHeaderSemantics()
+    {
+        if (!isGeneratedHeader || Header is null)
+        {
+            return;
+        }
+
+        var options = AccessibilityOptionsProvider.Get();
+
+        SemanticProperties.SetDescription(Header, IsPresented ? options.CollapseBottomSheetDescription : options.ExpandBottomSheetDescription);
+        SemanticProperties.SetHint(Header, options.ToggleBottomSheetHint);
     }
 
     protected virtual void OnOpened()
@@ -144,6 +179,7 @@ public partial class BottomSheetView : Border, IPageAttachment
         }
 
         UpdateDisabledStateOfPage();
+        UpdateGeneratedHeaderSemantics();
     }
 
     protected void UpdateDisabledStateOfPage()

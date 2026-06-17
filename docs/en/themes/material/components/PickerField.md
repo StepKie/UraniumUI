@@ -6,6 +6,7 @@ PickerField is included in the `UraniumUI.Material.Controls` namespace. You shou
 
 ```xml
 xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
 ```
 
 Then you can use it like this:
@@ -27,7 +28,7 @@ PickerFields support setting an icon on the left side of the control. You can se
 <material:PickerField 
     Title="Pick an option"
     ItemsSource="{Binding Items}"
-    Icon="{FontImageSource FontFamily=MaterialRegular, Glyph={x:Static m:MaterialRegular.Expand_circle_down}}"
+    Icon="{FontImageSource FontFamily=MaterialOutlined, Glyph={x:Static m:MaterialOutlined.Expand_circle_down}}"
     />
 ```
 
@@ -41,6 +42,12 @@ PickerFields support setting an icon on the left side of the control. You can se
 
 ## AllowClear
 PickerFields support clearing the selected item by setting the `AllowClear` property to `true`. Default value is `true`. You can make it `false` to disable clearing.
+
+## Accessibility
+
+Use `Title` as the visible field label and keep item text clear because picker choices are announced by platform picker UI. If you need templated item rows, generated semantic hints, and documented keyboard navigation, prefer [`SelectField`](SelectField.md).
+
+When `AllowClear="True"`, verify the clear action with keyboard and screen reader in your target platforms.
 
 ```xml
 <material:PickerField 
@@ -65,7 +72,7 @@ PickerField supports validation rules since it uses `object` as its **SelectedIt
 <material:PickerField 
     Title="Pick an option"
     ItemsSource="{Binding Items}"
-    Icon="{FontImageSource FontFamily=MaterialRegular, Glyph={x:Static m:MaterialRegular.Expand_circle_down}}">
+    Icon="{FontImageSource FontFamily=MaterialOutlined, Glyph={x:Static m:MaterialOutlined.Expand_circle_down}}">
     <validation:RequiredValidation />
 </material:PickerField>
 ```

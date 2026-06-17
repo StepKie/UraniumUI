@@ -10,7 +10,7 @@ using UraniumUI.Extensions;
 namespace UraniumUI.Handlers;
 public partial class DropdownHandler : ButtonHandler
 {
-    public DropdownHandler(IPropertyMapper mapper, CommandMapper commandMapper = null) : base(DropdownPropertyMapper, commandMapper)
+    public DropdownHandler(IPropertyMapper mapper, CommandMapper commandMapper = null) : base(DropdownPropertyMapper, DropdownCommandMapper)
     {
 
     }
@@ -214,6 +214,14 @@ public partial class DropdownHandler : ButtonHandler
     private static void SetFlyoutItemText(Dropdown dropdown, Microsoft.UI.Xaml.Controls.MenuFlyoutItem menuItem, object item)
     {
         menuItem.Text = GetTextForItem(dropdown, item);
+    }
+
+    partial void PlatformClose()
+    {
+        if (PlatformView.Flyout is Microsoft.UI.Xaml.Controls.MenuFlyout flyout)
+        {
+            flyout.Hide();
+        }
     }
 }
 #endif

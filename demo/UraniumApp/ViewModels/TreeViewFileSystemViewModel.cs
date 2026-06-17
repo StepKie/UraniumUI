@@ -1,13 +1,19 @@
-﻿using DynamicData;
-using ReactiveUI;
+﻿using ReactiveUI;
 using System.Collections.ObjectModel;
 using System.Reactive;
-using System.Windows.Input;
 using UraniumUI;
 
 namespace UraniumApp.ViewModels;
 public class TreeViewFileSystemViewModel : UraniumBindableObject
 {
+    private static readonly EnumerationOptions FileSystemEnumerationOptions = new()
+    {
+        IgnoreInaccessible = true,
+        RecurseSubdirectories = false,
+        ReturnSpecialDirectories = false,
+        AttributesToSkip = 0,
+    };
+
     public ObservableCollection<NodeItem> Nodes { get; private set; }
 
     public ReactiveCommand<NodeItem, Unit> LoadChildrenCommand { get; }
@@ -33,50 +39,58 @@ public class TreeViewFileSystemViewModel : UraniumBindableObject
 
     async Task LoadChildrenAsync(NodeItem node)
     {
-        await Task.Yield();
+        if (node is null || !node.IsDirectory || node.HasLoadedChildren)
+        {
+            return;
+        }
+
+        node.HasLoadedChildren = true;
 
         try
         {
-            node.Children.AddRange(GetContent(node.Path).ToArray());
+            var children = await Task.Run(() => GetContent(node.Path).ToArray());
 
-            if (node.Children.Count == 0)
+            await MainThread.InvokeOnMainThreadAsync(() =>
             {
-                node.IsLeaf = true;
-            }
+                node.Children = new ObservableCollection<NodeItem>(children);
+                node.IsLeaf = node.Children.Count == 0;
+            });
         }
         catch (Exception ex)
         {
-            await App.Current.MainPage.DisplayAlert("Error", ex.Message, "OK");
+            node.HasLoadedChildren = false;
+            var page = Application.Current?.Windows.FirstOrDefault()?.Page;
+            if (page is not null)
+            {
+                await page.DisplayAlertAsync("Error", ex.Message, "OK");
+            }
         }
     }
 
     IEnumerable<NodeItem> GetContent(string dir)
     {
-        var directories = Directory.GetDirectories(dir);
-        foreach (string d in directories)
+        foreach (var directory in Directory.EnumerateDirectories(dir, "*", FileSystemEnumerationOptions))
         {
             yield return new NodeItem
             {
-                Name = d.Split(Path.DirectorySeparatorChar).LastOrDefault(),
-                Path = d,
+                Name = Path.GetFileName(directory),
+                Path = directory,
                 IsDirectory = true,
                 IsLeaf = false,
                 IsExtended = false,
             };
         }
-        var files = Directory.GetFiles(dir);
 
-        foreach (string f in files)
+        foreach (var file in Directory.EnumerateFiles(dir, "*", FileSystemEnumerationOptions))
         {
-            var node = new NodeItem
+            yield return new NodeItem
             {
-                Name = f.Split(Path.DirectorySeparatorChar).LastOrDefault(),
-                Path = f,
+                Name = Path.GetFileName(file),
+                Path = file,
                 IsDirectory = false,
                 IsLeaf = true,
                 IsExtended = true,
             };
-            yield return node;
         }
     }
 
@@ -84,12 +98,15 @@ public class TreeViewFileSystemViewModel : UraniumBindableObject
     {
         private bool isLeaf;
         private bool isExtended;
+        private bool hasLoadedChildren;
+        private IList<NodeItem> children = new ObservableCollection<NodeItem>();
 
         public string Name { get; set; }
         public string Path { get; set; }
         public bool IsDirectory { get; set; }
         public virtual bool IsLeaf { get => isLeaf; set => SetProperty(ref isLeaf, value); }
         public virtual bool IsExtended { get => isExtended; set => SetProperty(ref isExtended, value); }
-        public virtual IList<NodeItem> Children { get; set; } = new ObservableCollection<NodeItem>();
+        public virtual bool HasLoadedChildren { get => hasLoadedChildren; set => SetProperty(ref hasLoadedChildren, value); }
+        public virtual IList<NodeItem> Children { get => children; set => SetProperty(ref children, value ?? new ObservableCollection<NodeItem>()); }
     }
 }

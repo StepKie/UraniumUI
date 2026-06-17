@@ -1,7 +1,7 @@
 ﻿
+using CommunityToolkit.Maui;
 using CommunityToolkit.Maui.Extensions;
 using CommunityToolkit.Maui.Views;
-using InputKit.Shared.Controls;
 using Microsoft.Extensions.Options;
 using Plainer.Maui.Controls;
 using UraniumUI.Controls;
@@ -91,7 +91,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         rootContainer.Add(GetDivider());
         rootContainer.Add(footer);
 
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return tcs.Task;
     }
@@ -156,7 +156,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         var cancelAction = new DisposableAction(async () => await popup.CloseAsync());
         tokenSource.Token.Register(cancelAction.Dispose);
 
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return Task.FromResult<IDisposable>(cancelAction);
     }
@@ -212,12 +212,14 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 
         foreach (var item in selectionSource)
         {
-            checkBoxGroup.Add(new CheckBox
+            var checkBox = new CheckBox
             {
                 Text = prop != null ? prop.GetValue(item)?.ToString() : item.ToString(),
                 CommandParameter = item,
                 IsChecked = selectedItems?.Contains(item) ?? false,
-            });
+            };
+
+            checkBoxGroup.Add(checkBox);
         }
 
         var footer = GetFooter(new Dictionary<string, Command>
@@ -250,7 +252,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         rootContainer.Add(footer);
 #endif
 
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return tcs.Task;
     }
@@ -294,7 +296,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
 #endif
         var prop = displayMember != null ? typeof(T).GetProperty(displayMember) : null;
 
-        var rbGroup = new RadioButtonGroupView()
+        var rbGroup = new InputKit.Shared.Controls.RadioButtonGroupView()
         {
             Margin = 20,
             VerticalOptions = LayoutOptions.Center,
@@ -341,7 +343,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         rootContainer.Add(GetDivider());
         rootContainer.Add(footer);
 #endif
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return tcs.Task;
     }
@@ -445,7 +447,77 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         rootContainer.Add(GetDivider());
         rootContainer.Add(footer);
 
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
+
+        return tcs.Task;
+    }
+
+    public Task<DateTime?> DisplayDatePromptAsync(
+        string title,
+        DateTime? selectedDate = null,
+        DateTime? minimumDate = null,
+        DateTime? maximumDate = null,
+        string accept = "OK",
+        string cancel = "Cancel",
+        string clear = "Clear",
+        string today = "Today")
+    {
+        var tcs = new TaskCompletionSource<DateTime?>();
+        var calculatedSize = CalculateSize(Page);
+        var popupHeight = GetDatePromptPopupHeight(Page, calculatedSize.Height);
+        var rootContainer = new VerticalStackLayout();
+        var originalSelectedDate = selectedDate;
+        var normalizedSelectedDate = selectedDate?.Date;
+
+#if IOS || MACCATALYST
+        var popup = new Popup
+        {
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = popupHeight,
+            BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
+            CanBeDismissedByTappingOutsideOfPopup = false,
+            Padding = 0,
+            Content = rootContainer,
+        };
+        rootContainer.VerticalOptions = LayoutOptions.Center;
+#else
+        var popup = new Popup()
+        {
+            WidthRequest = Page.Width,
+            HeightRequest = Page.Height,
+            BackgroundColor = Colors.Transparent,
+            CanBeDismissedByTappingOutsideOfPopup = false,
+            Content = new ContentView
+            {
+                BackgroundColor = Colors.Transparent,
+                Content = GetFrame(calculatedSize.Width, rootContainer)
+            }
+        };
+#endif
+
+        var calendarView = CreateDatePromptCalendar(normalizedSelectedDate, minimumDate, maximumDate);
+        var footer = GetFooter(CreateDatePromptFooterButtons(
+            calendarView,
+            tcs,
+            originalSelectedDate,
+            accept,
+            cancel,
+            clear,
+            today,
+            async () => await popup.CloseAsync()));
+
+        rootContainer.Add(GetHeader(title));
+        rootContainer.Add(new ScrollView
+        {
+            Content = calendarView,
+            Margin = new Thickness(12, 16, 12, 0),
+            VerticalOptions = LayoutOptions.Start,
+            MaximumHeightRequest = popupHeight - 120,
+        });
+        rootContainer.Add(GetDivider());
+        rootContainer.Add(footer);
+
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return tcs.Task;
     }
@@ -506,7 +578,73 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         rootContainer.Add(GetDivider());
         rootContainer.Add(footer);
 
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
+
+        return tcs.Task;
+    }
+
+    public Task<bool> DisplayViewAsync(string title, View content, string okText, string cancelText)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+        var calculatedSize = CalculateSize(Page);
+        var rootContainer = new VerticalStackLayout();
+
+#if IOS || MACCATALYST
+        var popup = new Popup
+        {
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = 230,
+            BackgroundColor = ColorResource.GetColor("Surface", "SurfaceDark", Colors.Transparent),
+            CanBeDismissedByTappingOutsideOfPopup = false,
+            Padding = 0,
+            Content = rootContainer,
+        };
+        rootContainer.VerticalOptions = LayoutOptions.Center;
+#else
+        var popup = new Popup()
+        {
+            WidthRequest = calculatedSize.Width,
+            HeightRequest = calculatedSize.Height,
+            BackgroundColor = Colors.Transparent,
+            Padding = 0,
+            CanBeDismissedByTappingOutsideOfPopup = false,
+            Content = new ContentView
+            {
+                BackgroundColor = Colors.Transparent,
+                Content = GetFrame(calculatedSize.Width, rootContainer)
+            }
+        };
+#endif
+
+        var footer = GetFooter(new Dictionary<string, Command>
+        {
+            { okText, new Command(async () =>
+            {
+                tcs.TrySetResult(true);
+                await popup.CloseAsync();
+            }) },
+            { cancelText, new Command(async () =>
+            {
+                tcs.TrySetResult(false);
+                await popup.CloseAsync();
+            }) }
+        });
+
+        rootContainer.Add(GetHeader(title));
+        rootContainer.Add(new ScrollView
+        {
+            Content = content,
+            VerticalOptions = LayoutOptions.Start,
+#if IOS || MACCATALYST
+            //MaximumHeightRequest = calculatedSize.Height
+#else
+            MaximumHeightRequest = calculatedSize.Height
+#endif
+        });
+        rootContainer.Add(GetDivider());
+        rootContainer.Add(footer);
+
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return tcs.Task;
     }
@@ -523,7 +661,7 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
             ShowResetButton = false,
             ShowSubmitButton = false,
             ShowMissingProperties = false,
-            Source = viewModel,
+            Source = viewModel ?? UraniumServiceProvider.Current.GetRequiredService<TViewModel>(),
         };
 
 #if IOS || MACCATALYST
@@ -557,8 +695,11 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         {
             { submit, new Command(async () =>
             {
-                tcs.TrySetResult(viewModel);
-                await popup.CloseAsync();
+                if (await formView.SubmitAsync())
+                {
+                    tcs.TrySetResult((TViewModel)formView.Source);
+                    await popup.CloseAsync();
+                }
             }) },
             { cancel, new Command(async () =>
             {
@@ -581,8 +722,89 @@ public class CommunityToolkitDialogService : CommunityToolkitDialogServiceBase, 
         rootContainer.Add(GetDivider());
         rootContainer.Add(footer);
 
-        Page.ShowPopup(popup);
+        Page.ShowPopup(popup, new PopupOptions { Shape = null });
 
         return tcs.Task;
+    }
+
+    private static CalendarView CreateDatePromptCalendar(DateTime? selectedDate, DateTime? minimumDate, DateTime? maximumDate)
+    {
+        var displayDate = selectedDate ?? GetFallbackDisplayDate(minimumDate, maximumDate);
+
+        return new CalendarView
+        {
+            SelectedDate = selectedDate,
+            DisplayDate = displayDate,
+            MinimumDate = minimumDate,
+            MaximumDate = maximumDate,
+            HorizontalOptions = LayoutOptions.Fill,
+        };
+    }
+
+    private static DateTime GetFallbackDisplayDate(DateTime? minimumDate, DateTime? maximumDate)
+    {
+        var today = DateTime.Today;
+
+        if ((!minimumDate.HasValue || today >= minimumDate.Value.Date)
+            && (!maximumDate.HasValue || today <= maximumDate.Value.Date))
+        {
+            return today;
+        }
+
+        return minimumDate?.Date ?? maximumDate?.Date ?? today;
+    }
+
+    private static double GetDatePromptPopupHeight(Page page, double fallbackHeight)
+    {
+        var desiredHeight = fallbackHeight + 160;
+
+        return page.Height > 0
+            ? Math.Min(page.Height * .9, desiredHeight)
+            : desiredHeight;
+    }
+
+    private static Dictionary<string, Command> CreateDatePromptFooterButtons(
+        CalendarView calendarView,
+        TaskCompletionSource<DateTime?> tcs,
+        DateTime? selectedDate,
+        string accept,
+        string cancel,
+        string clear,
+        string today,
+        Func<Task> close)
+    {
+        var footerButtons = new Dictionary<string, Command>
+        {
+            {
+                accept, new Command(async () =>
+                {
+                    tcs.TrySetResult(calendarView.SelectedDate);
+                    await close();
+                })
+            },
+            {
+                cancel, new Command(async () =>
+                {
+                    tcs.TrySetResult(selectedDate);
+                    await close();
+                })
+            }
+        };
+
+        if (!string.IsNullOrEmpty(today))
+        {
+            footerButtons.Add(today, new Command(() => calendarView.TrySelectDate(DateTime.Today)));
+        }
+
+        if (!string.IsNullOrEmpty(clear))
+        {
+            footerButtons.Add(clear, new Command(async () =>
+            {
+                tcs.TrySetResult(null);
+                await close();
+            }));
+        }
+
+        return footerButtons;
     }
 }

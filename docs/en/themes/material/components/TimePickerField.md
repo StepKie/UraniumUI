@@ -9,6 +9,7 @@ TimePickerField is included in the `UraniumUI.Material.Controls` namespace. You 
 
 ```xml
 xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
 ```
 
 Then you can use it like this:
@@ -31,6 +32,12 @@ TimePickerFields support setting an icon on the left side of the control. You ca
 ## AllowClear
 TimePickerFields support clearing the selected time by setting the `AllowClear` property to `true`. Default value is `true`. You can make it `false` to disable clearing.
 
+## Accessibility
+
+Use `Title` as the visible field label and provide validation text when the accepted time range is constrained. The field wraps the platform `TimePicker`, so verify focus, picker opening, clearing, and validation text in each target platform.
+
+When `AllowClear="True"`, verify the clear action with keyboard and screen reader in your target platforms.
+
 ```xml
 <material:TimePickerField 
     Title="Pick a Time (Clearable)"
@@ -49,7 +56,7 @@ TimePickerFields support clearing the selected time by setting the `AllowClear` 
 TimePickerField supports validation rules such as `MinValueValidation` and `MaxValueValidation`. You can use them like this:
 
 ```xml
-<material:TimePickerField Title="Pick a time" Icon="{FontImageSource FontFamily=MaterialRegular, Glyph={x:Static m:MaterialRegular.Alarm}}">
+<material:TimePickerField Title="Pick a time" Icon="{FontImageSource FontFamily=MaterialOutlined, Glyph={x:Static m:MaterialOutlined.Alarm}}">
     <validation:MinValueValidation MinValue="09:00" />
     <validation:MaxValueValidation MaxValue="12:00" />
 </material:TimePickerField>
@@ -65,7 +72,7 @@ TimePickerField is fully compatible with [FormView](https://enisn-projects.io/do
 
 ```xml
  <input:FormView Spacing="20">
-    <material:TimePickerField Title="Pick a time" Icon="{FontImageSource FontFamily=MaterialRegular, Glyph={x:Static m:MaterialRegular.Alarm}}">
+    <material:TimePickerField Title="Pick a time" Icon="{FontImageSource FontFamily=MaterialOutlined, Glyph={x:Static m:MaterialOutlined.Alarm}}">
         <validation:MinValueValidation MinValue="09:00" />
         <validation:MaxValueValidation MaxValue="12:00" />
     </material:TimePickerField>

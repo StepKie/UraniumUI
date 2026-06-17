@@ -1,6 +1,8 @@
 # Material Theme
 This is an implementation of the Material Theme for the Uranium UI. Visit [Material Design Guideline](https://m3.material.io/) for more information.
 
+Material controls include focus-aware input fields, button states, selection controls, and custom surfaces that can be used in keyboard-heavy apps. When building custom cards, tab headers, data-grid cells, or overlay actions, follow the [Accessibility](../../best-practices/Accessibility.md) and [Clickable Areas](../../best-practices/ClickableAreas.md) best practices.
+
 
 ## Installation
 

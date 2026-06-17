@@ -12,6 +12,8 @@ using static Microsoft.Maui.Controls.VisualStateManager;
 namespace UraniumUI.Handlers;
 public partial class StatefulContentViewHandler
 {
+    private bool suppressActionKeyUp;
+
     protected override ContentPanel CreatePlatformView()
     {
         var platformView = base.CreatePlatformView();
@@ -84,6 +86,15 @@ public partial class StatefulContentViewHandler
 
     private void PlatformView_KeyDown(object sender, KeyRoutedEventArgs e)
     {
+        var key = ToStatefulKey(e.Key);
+
+        if (key is not null && StatefulView.SendKeyDown(key.Value))
+        {
+            e.Handled = true;
+            suppressActionKeyUp = IsActionKey(e.Key);
+            return;
+        }
+
         if (IsActionKey(e.Key))
         {
             GoToState(StatefulView, "Pressed");
@@ -96,10 +107,32 @@ public partial class StatefulContentViewHandler
     {
         if (IsActionKey(e.Key))
         {
+            if (suppressActionKeyUp)
+            {
+                suppressActionKeyUp = false;
+                e.Handled = true;
+                return;
+            }
+
             GoToState(StatefulView, CommonStates.Normal);
             StatefulView.InvokeTapped();
             ExecuteCommandIfCan(StatefulView.TappedCommand);
         }
+    }
+
+    private static StatefulContentViewKey? ToStatefulKey(Windows.System.VirtualKey key)
+    {
+        return key switch
+        {
+            Windows.System.VirtualKey.Enter => StatefulContentViewKey.Enter,
+            Windows.System.VirtualKey.Space => StatefulContentViewKey.Space,
+            Windows.System.VirtualKey.Escape => StatefulContentViewKey.Escape,
+            Windows.System.VirtualKey.Down => StatefulContentViewKey.ArrowDown,
+            Windows.System.VirtualKey.Up => StatefulContentViewKey.ArrowUp,
+            Windows.System.VirtualKey.Home => StatefulContentViewKey.Home,
+            Windows.System.VirtualKey.End => StatefulContentViewKey.End,
+            _ => null,
+        };
     }
 
     private bool IsActionKey(Windows.System.VirtualKey key)

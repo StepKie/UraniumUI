@@ -17,6 +17,8 @@ public partial class TextField : InputField
 {
     public EntryView EntryView => this.FindByViewQueryIdInVisualTreeDescendants<EntryView>("EntryView");
 
+    protected override bool IsContentReadOnly => IsReadOnly;
+
     public override View Content { get; set; } = new EntryView
     {
 #if WINDOWS
@@ -60,6 +62,12 @@ public partial class TextField : InputField
     }
 
     partial void AfterConstructor();
+
+    protected override void OnApplyTemplate()
+    {
+        base.OnApplyTemplate();
+        UpdateClearIconState();
+    }
 
     protected override void OnHandlerChanged()
     {
@@ -156,10 +164,22 @@ public partial class TextField : InputField
                 var iconClear = CreateIconClear();
                 endIconsContainer.Add(iconClear);
             }
+
+            UpdateClearIconFocusability();
         }
         else
         {
             endIconsContainer?.Remove(existing);
+        }
+    }
+
+    protected virtual void UpdateClearIconFocusability()
+    {
+        var clearIcon = endIconsContainer?.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
+
+        if (clearIcon is not null)
+        {
+            clearIcon.IsFocusable = !DisallowClearButtonFocus;
         }
     }
 
@@ -176,20 +196,15 @@ public partial class TextField : InputField
             VerticalOptions = LayoutOptions.Center,
             HorizontalOptions = LayoutOptions.End,
             IsVisible = true, // this is important; having initial state of false will have SetBinding have no effect, since it will not receive input events
-            Padding = new Thickness(5, 0),
-            Margin = new Thickness(0, 0, 5, 0),
+            Padding = new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0),
+            IsFocusable = !DisallowClearButtonFocus,
             TappedCommand = new Command(OnClearTapped),
-            Content = new Path
-            {
-                StyleClass = new[] { "TextField.ClearIcon" },
-                Data = UraniumShapes.X,
-                Fill = ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.DarkGray).WithAlpha(.5f),
-            }
+            Content = CreateClearIconPath("TextField.ClearIcon"),
         };
 
         contentView.SetId("ClearIcon");
-        contentView.SetBinding(StatefulContentView.IsFocusableProperty, new Binding(nameof(DisallowClearButtonFocus), source: this));
         contentView.SetBinding(IsVisibleProperty, new Binding(nameof(Text), converter: UraniumConverters.StringIsNotNullOrEmptyConverter, source: this));
+        SetActionSemantics(contentView, AccessibilityOptions.ClearTextDescription, AccessibilityOptions.ClearTextHint);
 
         return contentView;
     }

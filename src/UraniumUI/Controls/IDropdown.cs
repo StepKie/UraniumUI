@@ -14,4 +14,6 @@ public interface IDropdown : IView
     IList ItemsSource { get; set; }
 
     BindingBase ItemDisplayBinding { get; set; }
+
+    void Close();
 }

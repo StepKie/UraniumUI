@@ -1,8 +1,10 @@
 ﻿using FluentAssertions;
+using InputKit.Shared.Validations;
 using NSubstitute;
 using Shouldly;
 using System.Windows.Input;
 using UraniumUI.Material.Controls;
+using UraniumUI.Options;
 using UraniumUI.Tests.Core;
 using UraniumUI.ViewExtensions;
 using UraniumUI.Views;
@@ -94,6 +96,215 @@ public class TextField_Test
     }
 
     [Fact]
+    public void TitleFormattedText_ShouldBind_ToTitleLabel()
+    {
+        var formattedTitle = new FormattedString();
+        formattedTitle.Spans.Add(new Span { Text = "Name", FontAttributes = FontAttributes.Bold });
+        formattedTitle.Spans.Add(new Span { Text = " *", TextColor = Colors.Red });
+
+        var control = AnimationReadyHandler.Prepare(new TextField { TitleFormattedText = formattedTitle });
+
+        var titleLabel = control.FindByViewQueryIdInVisualTreeDescendants<Label>("TitleLabel");
+
+        titleLabel.ShouldNotBeNull();
+        titleLabel.FormattedText.ShouldBeSameAs(formattedTitle);
+        titleLabel.Text.ShouldBeNull();
+
+        control.Title = "Updated plain title";
+
+        titleLabel.FormattedText.ShouldBeSameAs(formattedTitle);
+        titleLabel.Text.ShouldBeNull();
+
+        control.TitleFormattedText = null;
+
+        titleLabel.FormattedText.ShouldBeNull();
+        titleLabel.Text.ShouldBe(control.Title);
+
+        control.Title = "Restored plain title";
+
+        titleLabel.Text.ShouldBe(control.Title);
+    }
+
+    [Fact]
+    public void Attachments_Container_HasDefaultSpacingFromBorderAndBetweenChildren()
+    {
+        // The Attachments container provides a default gap to the field border and
+        // between sibling attachments. Container defaults stay independent of children.
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        var endIconsContainer = control.FindByViewQueryIdInVisualTreeDescendants<HorizontalStackLayout>("EndIconsContainer");
+
+        endIconsContainer.ShouldNotBeNull();
+        endIconsContainer.Margin.ShouldBe(new Thickness(0, 0, InputField.EdgePadding, 0));
+        endIconsContainer.Spacing.ShouldBe(InputField.AttachmentsSpacing);
+
+        var first = new ActivityIndicator { IsRunning = true };
+        var second = new ActivityIndicator { IsRunning = true };
+        control.Attachments.Add(first);
+        control.Attachments.Add(second);
+
+        endIconsContainer.Margin.ShouldBe(new Thickness(0, 0, InputField.EdgePadding, 0));
+        endIconsContainer.Spacing.ShouldBe(InputField.AttachmentsSpacing);
+        control.Attachments.ShouldContain(first);
+        control.Attachments.ShouldContain(second);
+    }
+
+    [Fact]
+    public void ClearIcon_HasAsymmetricLeftHitPadding()
+    {
+        // Clear X uses asymmetric Padding: right edge flush with the container margin
+        // (matching a user-supplied attachment), left side extended for a wider tap target.
+        var control = AnimationReadyHandler.Prepare(new TextField { AllowClear = true });
+        var clearIcon = control.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
+
+        clearIcon.ShouldNotBeNull();
+        clearIcon.Margin.ShouldBe(default(Thickness));
+        clearIcon.Padding.ShouldBe(new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0));
+    }
+
+    [Fact]
+    public void Title_ShouldGenerateInputSemanticDescription_AndHideFloatingLabelFromAccessibleTree()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        control.Title = "Email";
+
+        var titleLabel = control.FindByViewQueryIdInVisualTreeDescendants<Label>("TitleLabel");
+
+        SemanticProperties.GetDescription(control.EntryView).ShouldBe("Email");
+        AutomationProperties.GetIsInAccessibleTree(titleLabel).ShouldBe(false);
+    }
+
+    [Fact]
+    public void Title_ShouldNotOverwriteExplicitInputSemanticDescription()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        SemanticProperties.SetDescription(control.Content, "Custom email field");
+        control.Title = "Email";
+
+        SemanticProperties.GetDescription(control.EntryView).ShouldBe("Custom email field");
+    }
+
+    [Fact]
+    public void DisplayValidation_ShouldExposeValidationMessage_OnInputAndValidationLabel()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        control.Title = "Email";
+
+        control.Validations.Add(new FailingValidation("Email is required."));
+        control.DisplayValidation();
+
+        var validationLabel = control.FindByViewQueryIdInVisualTreeDescendants<Label>("ValidationLabel");
+        SemanticProperties.GetHint(control.EntryView).ShouldBe("Error: Email is required.");
+        SemanticProperties.GetDescription(validationLabel).ShouldBe("Email is required.");
+    }
+
+    [Fact]
+    public void ReadOnlyAndDisabledStates_ShouldBeIncludedInInputSemanticHint()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        control.IsReadOnly = true;
+
+        SemanticProperties.GetHint(control.EntryView).ShouldContain("Read only.");
+
+        control.IsEnabled = false;
+
+        SemanticProperties.GetHint(control.EntryView).ShouldContain("Disabled.");
+    }
+
+    [Fact]
+    public void ClearIcon_ShouldExposeSemanticText_AndRespectDisallowFocus()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField { AllowClear = true });
+        var clearIcon = control.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
+
+        SemanticProperties.GetDescription(clearIcon).ShouldBe("Clear text");
+        SemanticProperties.GetHint(clearIcon).ShouldBe("Clears the current value.");
+        clearIcon.IsFocusable.ShouldBeTrue();
+
+        control.DisallowClearButtonFocus = true;
+
+        clearIcon.IsFocusable.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void AccessibilityOptions_ShouldLocalizeGeneratedSemantics()
+    {
+        ApplicationExtensions.CreateAndSetMockApplication(builder =>
+        {
+            builder.ConfigureUraniumUIAccessibility(options =>
+            {
+                options.ClearTextDescription = "Metni temizle";
+                options.ClearTextHint = "Geçerli değeri temizler.";
+                options.ValidationErrorHintFormat = "Hata: {0}";
+            });
+        });
+
+        var control = AnimationReadyHandler.Prepare(new TextField { AllowClear = true });
+        var clearIcon = control.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
+
+        control.Validations.Add(new FailingValidation("E-posta gerekli."));
+        control.DisplayValidation();
+
+        SemanticProperties.GetDescription(clearIcon).ShouldBe("Metni temizle");
+        SemanticProperties.GetHint(clearIcon).ShouldBe("Geçerli değeri temizler.");
+        SemanticProperties.GetHint(control.EntryView).ShouldBe("Hata: E-posta gerekli.");
+    }
+
+    [Fact]
+    public void PasswordShowHideAttachment_ShouldExposeDynamicSemanticText()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField { IsPassword = true });
+        var attachment = new TextFieldPasswordShowHideAttachment();
+
+        control.Attachments.Add(attachment);
+
+        SemanticProperties.GetDescription(attachment).ShouldBe("Show password");
+        SemanticProperties.GetHint(attachment).ShouldBe("Toggles password visibility.");
+
+        control.IsPassword = false;
+
+        SemanticProperties.GetDescription(attachment).ShouldBe("Hide password");
+    }
+  
+    [Fact]
+    public void Icon_ClearedToNull_CollapsesLeadingIconSlot()
+    {
+        // Repro for #1002 AND assertion of the InputField invariant maintained by OnIconChanged:
+        //   imageIcon is materialized, in the grid, and visible iff Icon != null (i.e. iff HasIcon).
+        // Also: Content.Margin must match a TextField that never had an icon when Icon is null,
+        // so the cleared field is layout-identical to a never-iconed field.
+        var iconA = new FontImageSource { FontFamily = "MaterialSharp", Glyph = "A" };
+
+        var reference = AnimationReadyHandler.Prepare(new TextField());
+        var referenceMargin = reference.Content.Margin;
+
+        var control = AnimationReadyHandler.Prepare(new TextField { Icon = iconA });
+        var imageIcon = control.FindByViewQueryIdInVisualTreeDescendants<Image>("IconImage");
+
+        imageIcon.ShouldNotBeNull();
+        imageIcon.IsVisible.ShouldBeTrue();
+        imageIcon.Source.ShouldBe(iconA);
+
+        // Clear the Icon (e.g. the binding now resolves to null).
+        control.Icon = null;
+
+        // The same Image instance is still in the visual tree but collapsed.
+        imageIcon.IsVisible.ShouldBeFalse();
+        imageIcon.Source.ShouldBeNull();
+        // And Content.Margin must match a TextField that never had an icon.
+        control.Content.Margin.ShouldBe(referenceMargin);
+
+        // Restoring a non-null Icon must un-collapse it.
+        control.Icon = iconA;
+        imageIcon.IsVisible.ShouldBeTrue();
+        imageIcon.Source.ShouldBe(iconA);
+    }
+
+    [Fact]
     public void TextChanges_ShouldShouldCorrectlyUpdateClearButtonVisibility()
     {
         var control = AnimationReadyHandler.Prepare(new TextField() { AllowClear = true });
@@ -108,6 +319,17 @@ public class TextField_Test
         clearIcon.IsVisible.ShouldBeTrue();
         control.Text = "";
         clearIcon.IsVisible.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void OnApplyTemplate_ShouldReevaluateClearIconState_WhenAllowClearIsInitialized()
+    {
+        var control = new TemplateAwareTextField { AllowClear = true };
+        var updatesBeforeTemplate = control.UpdateClearIconStateCallCount;
+
+        control.ApplyTemplateForTest();
+
+        control.UpdateClearIconStateCallCount.ShouldBe(updatesBeforeTemplate + 1);
     }
 
     [Fact]
@@ -194,6 +416,37 @@ public class TextField_Test
         // Assert
         control.IsPassword.ShouldBeTrue();
         control.EntryView.IsPassword.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void IsSpellCheckEnabled_ShouldBeSet_FromViewModel()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+        var viewModel = new TestViewModel { IsSpellCheckEnabled = false };
+        control.BindingContext = viewModel;
+
+        // Act
+        control.SetBinding(TextField.IsSpellCheckEnabledProperty, new Binding(nameof(TestViewModel.IsSpellCheckEnabled)));
+
+        // Assert
+        control.IsSpellCheckEnabled.ShouldBeFalse();
+        control.EntryView.IsSpellCheckEnabled.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void IsSpellCheckEnabled_ShouldBeUpdated_FromViewModel()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+        var viewModel = new TestViewModel { IsSpellCheckEnabled = true };
+        control.BindingContext = viewModel;
+        control.SetBinding(TextField.IsSpellCheckEnabledProperty, new Binding(nameof(TestViewModel.IsSpellCheckEnabled)));
+
+        // Act
+        viewModel.IsSpellCheckEnabled = false;
+
+        // Assert
+        control.IsSpellCheckEnabled.ShouldBeFalse();
+        control.EntryView.IsSpellCheckEnabled.ShouldBeFalse();
     }
 
     [Fact]
@@ -369,6 +622,7 @@ public class TextField_Test
         private ICommand command;
         private int selectionLength;
         private bool isPassword;
+        private bool isSpellCheckEnabled;
         private Keyboard keyboard;
         private ClearButtonVisibility clearButtonVisibility;
         private double characterSpacing;
@@ -385,10 +639,37 @@ public class TextField_Test
 
         public bool IsPassword { get => isPassword; set => SetProperty(ref isPassword, value); }
 
+        public bool IsSpellCheckEnabled { get => isSpellCheckEnabled; set => SetProperty(ref isSpellCheckEnabled, value); }
+
         public Keyboard Keyboard { get => keyboard; set => SetProperty(ref keyboard, value); }
 
         public ClearButtonVisibility ClearButtonVisibility { get => clearButtonVisibility; set => SetProperty(ref clearButtonVisibility, value); }
 
         public double CharacterSpacing { get => characterSpacing; set => SetProperty(ref characterSpacing, value); }
+    }
+
+    private sealed class TemplateAwareTextField : TextField
+    {
+        public int UpdateClearIconStateCallCount { get; private set; }
+
+        public void ApplyTemplateForTest() => base.OnApplyTemplate();
+
+        protected override void UpdateClearIconState()
+        {
+            UpdateClearIconStateCallCount++;
+            base.UpdateClearIconState();
+        }
+    }
+
+    private sealed class FailingValidation : IValidation
+    {
+        public FailingValidation(string message)
+        {
+            Message = message;
+        }
+
+        public string Message { get; }
+
+        public bool Validate(object value) => false;
     }
 }

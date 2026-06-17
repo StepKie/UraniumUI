@@ -1,6 +1,4 @@
-﻿using InputKit.Shared.Controls;
-
-namespace UraniumUI.Dialogs;
+﻿namespace UraniumUI.Dialogs;
 
 public interface IDialogService
 {
@@ -8,6 +6,15 @@ public interface IDialogService
         string title,
         View content,
         string okText = "OK");
+
+    Task<bool> DisplayViewAsync(
+        string title,
+        View content,
+        string okText,
+        string cancelText)
+    {
+        throw new NotSupportedException("The active dialog service does not support cancellable custom view dialogs.");
+    }
 
     Task<IDisposable> DisplayProgressAsync(
         string title,
@@ -50,6 +57,16 @@ public interface IDialogService
         Keyboard keyboard = null,
         string initialValue = "",
         bool isPassword = false);
+
+    Task<DateTime?> DisplayDatePromptAsync(
+        string title,
+        DateTime? selectedDate = null,
+        DateTime? minimumDate = null,
+        DateTime? maximumDate = null,
+        string accept = "OK",
+        string cancel = "Cancel",
+        string clear = "Clear",
+        string today = "Today");
 
     Task<TViewModel> DisplayFormViewAsync<TViewModel>(
         string title,

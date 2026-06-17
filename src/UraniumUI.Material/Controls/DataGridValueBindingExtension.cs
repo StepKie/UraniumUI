@@ -3,6 +3,7 @@
 public class DataGridValueBindingExtension : IMarkupExtension, IMarkupExtension<BindingBase>
 {
     public BindingMode Mode { get; set; }
+
     public object ProvideValue(IServiceProvider serviceProvider)
     {
         var targetObject = serviceProvider.GetRequiredService<IProvideValueTarget>()
@@ -25,6 +26,7 @@ public class DataGridValueBindingExtension : IMarkupExtension, IMarkupExtension<
 
     BindingBase IMarkupExtension<BindingBase>.ProvideValue(IServiceProvider serviceProvider)
     {
-        return (this as IMarkupExtension<BindingBase>).ProvideValue(serviceProvider);
+        ProvideValue(serviceProvider);
+        return default;
     }
 }

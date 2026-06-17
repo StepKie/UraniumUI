@@ -1,6 +1,8 @@
 using Microsoft.Maui.Controls.Shapes;
 using System.ComponentModel;
 using UraniumUI.Extensions;
+using UraniumUI.Options;
+using UraniumUI.Pages;
 using UraniumUI.Resources;
 using UraniumUI.ViewExtensions;
 
@@ -11,6 +13,23 @@ public partial class InputField : ContentView
 {
     internal const double FirstDash = 6;
     internal const double MaxCornerRadius = 24;
+    internal const double EdgePadding = 10;                  // gap to the field border (leading Icon margin / trailing Attachments margin)
+    internal const double AttachmentsSpacing = 8;            // gap between sibling attachments
+    internal const double BuiltInAttachmentLeftPadding = 5;  // left tap-area extension on built-in attachments toward the text content
+
+    private Label titleLabelPart;
+    private Border borderPart;
+    private Grid rootGridPart;
+    private Grid innerGridPart;
+    private HorizontalStackLayout endIconsContainerPart;
+    private bool isTemplateApplied;
+    private string generatedSemanticDescription;
+    private string generatedSemanticHint;
+    private string explicitSemanticHint;
+    private string validationSemanticMessage;
+    private Shadow unfocusedBorderShadow;
+    private bool isFocusVisualApplied;
+
     public virtual new View Content { get => (View)GetValue(ContentProperty); set => SetValue(ContentProperty, value); }
 
     public static readonly new BindableProperty ContentProperty = BindableProperty.Create(
@@ -34,37 +53,46 @@ public partial class InputField : ContentView
                 inputField.RegisterForEvents();
             }
 
+            inputField.UpdateContentSemantics();
             inputField.OnPropertyChanged(nameof(Content));
         }, defaultBindingMode: BindingMode.TwoWay);
 
-    protected Label labelTitle => this.FindByViewQueryIdInVisualTreeDescendants<Label>("TitleLabel");
+    protected Label labelTitle => titleLabelPart ??= FindTemplatePart<Label>("TitleLabel");
 
-    protected Border border => this.FindByViewQueryIdInVisualTreeDescendants<Border>("Border");
+    protected Border border => borderPart ??= FindTemplatePart<Border>("Border");
 
-    protected Grid rootGrid => this.FindByViewQueryIdInVisualTreeDescendants<Grid>("RootGrid");
+    protected Grid rootGrid => rootGridPart ??= FindTemplatePart<Grid>("RootGrid");
 
-    protected Grid innerGrid => this.FindByViewQueryIdInVisualTreeDescendants<Grid>("InnerGrid");
+    protected Grid innerGrid => innerGridPart ??= FindTemplatePart<Grid>("InnerGrid");
 
     protected Lazy<Image> imageIcon = new Lazy<Image>(() =>
     {
-        return new Image
+        var image = new Image
         {
             StyleClass = new[] { "InputField.Icon" },
             HorizontalOptions = LayoutOptions.Start,
             VerticalOptions = LayoutOptions.Center,
             WidthRequest = 20,
             HeightRequest = 20,
-            Margin = new Thickness(10, 0, 0, 0),
+            Margin = new Thickness(EdgePadding, 0, 0, 0),
         };
+        image.SetId("IconImage");
+
+        return image;
     });
 
-    protected HorizontalStackLayout endIconsContainer => this.FindByViewQueryIdInVisualTreeDescendants<HorizontalStackLayout>("EndIconsContainer");
+    protected HorizontalStackLayout endIconsContainer => endIconsContainerPart ??= FindTemplatePart<HorizontalStackLayout>("EndIconsContainer");
 
     public IList<IView> Attachments => endIconsContainer?.Children;
 
     private Color LastFontimageColor;
 
+    private Thickness? originalContentMargin;
+
     private bool hasValue;
+
+    // Leading-icon predicate. Invariant: imageIcon is materialized, in the grid, and visible iff this is true.
+    protected bool HasIcon => Icon != null;
 
     private static Binding GetRelativeBinding(string path, BindingMode mode = BindingMode.Default) => new Binding(path, mode: mode, source: new RelativeBindingSource(RelativeBindingSourceMode.TemplatedParent));
 
@@ -113,6 +141,7 @@ public partial class InputField : ContentView
         labelTitle.SetBinding(Label.FontAttributesProperty, GetRelativeBinding(nameof(FontAttributes)));
         labelTitle.SetBinding(Label.FontFamilyProperty, GetRelativeBinding(nameof(FontFamily)));
         labelTitle.SetBinding(Label.FontAutoScalingEnabledProperty, GetRelativeBinding(nameof(FontAutoScalingEnabled)));
+        AutomationProperties.SetIsInAccessibleTree(labelTitle, false);
 
         @this.Add(labelTitle);
 
@@ -133,6 +162,8 @@ public partial class InputField : ContentView
         var endIconsContainer = new HorizontalStackLayout
         {
             StyleClass = new[] { "InputField.Attachments" },
+            Margin = new Thickness(0, 0, EdgePadding, 0),
+            Spacing = AttachmentsSpacing,
         };
 
         endIconsContainer.SetId("EndIconsContainer");
@@ -159,12 +190,34 @@ public partial class InputField : ContentView
         }
     }
 
+    private T FindTemplatePart<T>(string id)
+        where T : VisualElement
+    {
+        if (!isTemplateApplied && Handler is null)
+        {
+            return null;
+        }
+
+        return this.FindByViewQueryIdInVisualTreeDescendants<T>(id);
+    }
+
+    private void ResetTemplateParts()
+    {
+        titleLabelPart = null;
+        borderPart = null;
+        rootGridPart = null;
+        innerGridPart = null;
+        endIconsContainerPart = null;
+    }
+
     protected override void OnHandlerChanging(HandlerChangingEventArgs args)
     {
         base.OnHandlerChanging(args);
 
         if (args.NewHandler is null)
         {
+            isTemplateApplied = false;
+            ResetTemplateParts();
             ReleaseEvents();
         }
     }
@@ -213,7 +266,10 @@ public partial class InputField : ContentView
 
     protected virtual void OnFocusChanged(object sender, FocusEventArgs args)
     {
-        (this.rootGrid as IGridLayout).IsFocused = args.IsFocused;
+        if (rootGrid is IGridLayout gridLayout)
+        {
+            gridLayout.IsFocused = args.IsFocused;
+        }
     }
 #endif
 
@@ -253,7 +309,10 @@ public partial class InputField : ContentView
 
     private void InitializeBorder()
     {
-        if (labelTitle is null)
+        var currentLabelTitle = labelTitle;
+        var currentBorder = border;
+
+        if (currentLabelTitle is null || currentBorder is null)
         {
             return;
         }
@@ -261,36 +320,39 @@ public partial class InputField : ContentView
         var perimeter = (this.Width + this.Height) * 2;
         var calculatedFirstDash = FirstDash + CornerRadius.Clamp(FirstDash, double.MaxValue);
 
-        var space = (labelTitle.Width + calculatedFirstDash) * .8;
-        if (labelTitle.Width <= 0)
+        var space = (currentLabelTitle.Width + calculatedFirstDash) * .8;
+        if (currentLabelTitle.Width <= 0)
             space = 0;
 
 #if ANDROID
         if (this.IsRtl())
         {
-            calculatedFirstDash += this.Width - labelTitle.Width;
+            calculatedFirstDash += this.Width - currentLabelTitle.Width;
         }
 #endif
 
-        border.StrokeDashArray = new DoubleCollection { calculatedFirstDash * 0.9 / BorderThickness, space / BorderThickness, perimeter, 0 };
+        currentBorder.StrokeDashArray = new DoubleCollection { calculatedFirstDash * 0.9 / BorderThickness, space / BorderThickness, perimeter, 0 };
 
         UpdateState();
     }
 
     protected virtual void UpdateState()
     {
+        var currentBorder = border;
+        var currentLabelTitle = labelTitle;
+
         if (Content is null)
         {
             return;
         }
 
-        if (border.StrokeDashArray == null || border.StrokeDashArray.Count == 0 || labelTitle.Width <= 0)
+        if (currentBorder?.StrokeDashArray == null || currentBorder.StrokeDashArray.Count == 0 || currentLabelTitle is null || currentLabelTitle.Width <= 0)
         {
             return;
         }
 
-        using (border.Batch())
-        using (labelTitle.Batch())
+        using (currentBorder.Batch())
+        using (currentLabelTitle.Batch())
         {
             if (HasValue || Content.IsFocused)
             {
@@ -298,54 +360,57 @@ public partial class InputField : ContentView
 
                 UpdateOffset(0.01);
 
-                labelTitle.AnchorX = 0;
+                currentLabelTitle.AnchorX = 0;
 
-                labelTitle.CancelAnimations();
+                currentLabelTitle.CancelAnimations();
                 if (HasValue)
                 {
-                    labelTitle.TranslationX = x;
-                    labelTitle.TranslationY = -25;
-                    labelTitle.Scale = .8;
+                    currentLabelTitle.TranslationX = x;
+                    currentLabelTitle.TranslationY = -25;
+                    currentLabelTitle.Scale = .8;
                 }
                 else
                 {
-                    labelTitle.TranslateToSafely(x, -25, 90, Easing.BounceOut);
-                    labelTitle.ScaleToSafely(.8, 90);
+                    currentLabelTitle.TranslateToSafely(x, -25, 90, Easing.BounceOut);
+                    currentLabelTitle.ScaleToSafely(.8, 90);
                 }
 
 #if ANDROID
                 if (this.IsRtl())
                 {
-                    labelTitle.AnchorX = .5;
+                    currentLabelTitle.AnchorX = .5;
                 }
 #endif
             }
             else
             {
-                var offsetToGo = border.StrokeDashArray[0] + border.StrokeDashArray[1] + FirstDash;
+                var offsetToGo = currentBorder.StrokeDashArray[0] + currentBorder.StrokeDashArray[1] + FirstDash;
                 UpdateOffset(offsetToGo);
 
-                labelTitle.CancelAnimations();
+                currentLabelTitle.CancelAnimations();
 
-                var x = imageIcon.IsValueCreated ? imageIcon.Value.Width : 0;
+                var x = HasIcon ? imageIcon.Value.Width : 0;
 
 #if ANDROID
                 if (this.IsRtl())
                 {
-                    x = imageIcon.IsValueCreated ? -imageIcon.Value.Width : 0;
+                    x = HasIcon ? -imageIcon.Value.Width : 0;
                 }
 #endif
 
-                labelTitle.AnchorX = 0;
-                labelTitle.TranslateToSafely(x, 0, 90, Easing.BounceOut);
-                labelTitle.ScaleToSafely(1, 90);
+                currentLabelTitle.AnchorX = 0;
+                currentLabelTitle.TranslateToSafely(x, 0, 90, Easing.BounceOut);
+                currentLabelTitle.ScaleToSafely(1, 90);
             }
         }
     }
 
     protected virtual void UpdateOffset(double value)
     {
-        border.StrokeDashOffset = value;
+        if (border is not null)
+        {
+            border.StrokeDashOffset = value;
+        }
     }
 
     protected virtual void RegisterForEvents()
@@ -370,8 +435,12 @@ public partial class InputField : ContentView
 
     private void Content_Unfocused(object sender, FocusEventArgs e)
     {
-        border.SetBinding(Border.StrokeProperty, GetRelativeBinding(nameof(BorderColor)));
-        labelTitle.SetBinding(Label.TextColorProperty, GetRelativeBinding(nameof(TitleColor)));
+        var currentBorder = border;
+        var currentLabelTitle = labelTitle;
+
+        currentBorder?.SetBinding(Border.StrokeProperty, GetRelativeBinding(nameof(BorderColor)));
+        ResetFocusVisual(currentBorder);
+        currentLabelTitle?.SetBinding(Label.TextColorProperty, GetRelativeBinding(nameof(TitleColor)));
         UpdateState();
 
         if (Icon is FontImageSource fontImageSource)
@@ -382,8 +451,17 @@ public partial class InputField : ContentView
 
     private void Content_Focused(object sender, FocusEventArgs e)
     {
-        border.Stroke = AccentColor;
-        labelTitle.TextColor = AccentColor;
+        if (border is not null)
+        {
+            border.Stroke = AccentColor;
+            ApplyFocusVisual(border);
+        }
+
+        if (labelTitle is not null)
+        {
+            labelTitle.TextColor = AccentColor;
+        }
+
         UpdateState();
 
         if (Icon is FontImageSource fontImageSource && fontImageSource.Color != AccentColor)
@@ -393,43 +471,286 @@ public partial class InputField : ContentView
         }
     }
 
+    private void ApplyFocusVisual(Border currentBorder)
+    {
+        if (!isFocusVisualApplied)
+        {
+            unfocusedBorderShadow = currentBorder.Shadow;
+            isFocusVisualApplied = true;
+        }
+
+        currentBorder.Shadow = new Shadow
+        {
+            Brush = AccentColor.ToSolidColorBrush(),
+            Opacity = 0.35f,
+            Radius = 6,
+            Offset = new Point(0, 0),
+        };
+    }
+
+    private void ResetFocusVisual(Border currentBorder)
+    {
+        if (currentBorder is null || !isFocusVisualApplied)
+        {
+            return;
+        }
+
+        currentBorder.Shadow = unfocusedBorderShadow;
+        unfocusedBorderShadow = null;
+        isFocusVisualApplied = false;
+    }
+
+    protected virtual bool IsContentReadOnly => false;
+
+    protected virtual void UpdateContentSemantics()
+    {
+        UpdateContentSemanticDescription();
+        UpdateContentSemanticHint();
+    }
+
+    protected virtual void SetValidationSemanticMessage(string message)
+    {
+        validationSemanticMessage = NormalizeSemanticText(message);
+        UpdateContentSemanticHint();
+    }
+
+    protected virtual void AnnounceValidationMessage(string message)
+    {
+        var normalizedMessage = NormalizeSemanticText(message);
+
+        if (string.IsNullOrWhiteSpace(normalizedMessage))
+        {
+            return;
+        }
+
+        try
+        {
+            SemanticScreenReader.Announce(AccessibilityOptions.FormatValidationErrorHint(normalizedMessage));
+        }
+        catch (Exception)
+        {
+            // Unit tests and headless hosts can run without native screen-reader services.
+        }
+    }
+
+    protected static void SetActionSemantics(VisualElement element, string description, string hint)
+    {
+        SemanticProperties.SetDescription(element, description);
+        SemanticProperties.SetHint(element, hint);
+    }
+
+    protected UraniumUIAccessibilityOptions AccessibilityOptions => GetAccessibilityOptions();
+
+    internal static UraniumUIAccessibilityOptions GetAccessibilityOptions() => AccessibilityOptionsProvider.Get();
+
+    private void UpdateContentSemanticDescription()
+    {
+        if (Content is null)
+        {
+            return;
+        }
+
+        var description = GetTitleSemanticText();
+        var currentDescription = SemanticProperties.GetDescription(Content);
+
+        if (string.IsNullOrWhiteSpace(description))
+        {
+            if (currentDescription == generatedSemanticDescription)
+            {
+                SemanticProperties.SetDescription(Content, null);
+            }
+
+            generatedSemanticDescription = null;
+            return;
+        }
+
+        if (string.IsNullOrEmpty(currentDescription) || currentDescription == generatedSemanticDescription)
+        {
+            SemanticProperties.SetDescription(Content, description);
+            generatedSemanticDescription = description;
+        }
+    }
+
+    private string GetTitleSemanticText()
+    {
+        if (!string.IsNullOrWhiteSpace(Title))
+        {
+            return Title;
+        }
+
+        if (TitleFormattedText is null)
+        {
+            return null;
+        }
+
+        var text = string.Concat(TitleFormattedText.Spans.Select(span => span.Text));
+
+        return string.IsNullOrWhiteSpace(text) ? null : text;
+    }
+
+    private void UpdateContentSemanticHint()
+    {
+        if (Content is null)
+        {
+            return;
+        }
+
+        var currentHint = SemanticProperties.GetHint(Content);
+        if (!string.IsNullOrEmpty(currentHint) && currentHint != generatedSemanticHint)
+        {
+            explicitSemanticHint = currentHint;
+        }
+
+        var generatedStateHints = GetGeneratedStateHints().ToArray();
+        if (generatedStateHints.Length == 0)
+        {
+            if (currentHint == generatedSemanticHint)
+            {
+                SemanticProperties.SetHint(Content, explicitSemanticHint);
+            }
+
+            generatedSemanticHint = null;
+            return;
+        }
+
+        var hint = string.Join(" ", new[] { explicitSemanticHint }.Concat(generatedStateHints).Where(value => !string.IsNullOrWhiteSpace(value)));
+
+        if (string.IsNullOrEmpty(currentHint) || currentHint == generatedSemanticHint || !string.IsNullOrEmpty(explicitSemanticHint))
+        {
+            SemanticProperties.SetHint(Content, hint);
+            generatedSemanticHint = hint;
+        }
+    }
+
+    private IEnumerable<string> GetGeneratedStateHints()
+    {
+        if (!string.IsNullOrWhiteSpace(validationSemanticMessage))
+        {
+            yield return AccessibilityOptions.FormatValidationErrorHint(validationSemanticMessage);
+        }
+
+        if (IsContentReadOnly && !string.IsNullOrWhiteSpace(AccessibilityOptions.ReadOnlyHint))
+        {
+            yield return AccessibilityOptions.ReadOnlyHint;
+        }
+
+        if (!IsEnabled && !string.IsNullOrWhiteSpace(AccessibilityOptions.DisabledHint))
+        {
+            yield return AccessibilityOptions.DisabledHint;
+        }
+    }
+
+    private static string NormalizeSemanticText(string text)
+    {
+        return string.IsNullOrWhiteSpace(text)
+            ? null
+            : string.Join(" ", text.Split(new[] { '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(part => part.Trim()));
+    }
+
+    protected override void OnPropertyChanged(string propertyName = null)
+    {
+        base.OnPropertyChanged(propertyName);
+
+        if (propertyName == IsEnabledProperty.PropertyName)
+        {
+            UpdateContentSemanticHint();
+        }
+    }
+
     private void InputField_SizeChanged(object sender, EventArgs e)
     {
         InitializeBorder();
     }
 
+    private void ApplyTitleFormattedText()
+    {
+        var currentLabelTitle = labelTitle;
+        if (currentLabelTitle is null)
+        {
+            return;
+        }
+
+        if (TitleFormattedText is null)
+        {
+            currentLabelTitle.FormattedText = null;
+            currentLabelTitle.SetBinding(Label.TextProperty, GetRelativeBinding(nameof(Title)));
+            return;
+        }
+
+        currentLabelTitle.RemoveBinding(Label.TextProperty);
+        currentLabelTitle.Text = null;
+        currentLabelTitle.FormattedText = TitleFormattedText;
+    }
+
     protected override void OnApplyTemplate()
     {
         base.OnApplyTemplate();
+
+        isTemplateApplied = true;
+
+        ResetTemplateParts();
+
+        ApplyTitleFormattedText();
+        UpdateContentSemantics();
+
         if (Icon != null)
         {
-            if (innerGrid != null && !innerGrid.Contains(imageIcon.Value))
-            {
-                innerGrid.Add(imageIcon.Value, column: 0);
-            }
+            OnIconChanged();
+        }
+
+        OnCornerRadiusChanged();
+
+        if (!string.IsNullOrEmpty(ContentAutomationId) && Content != null)
+        {
+            Content.AutomationId = ContentAutomationId;
         }
     }
 
     protected virtual void OnIconChanged()
     {
-        imageIcon.Value.Source = Icon;
-
-        if (Icon is FontImageSource font && font.Color.IsNullOrTransparent())
+        if (this.Content != null && originalContentMargin == null)
         {
-            // TODO: Add IconColor bindable property.??? What if it's not FontImage?
-            font.SetAppThemeColor(
-                FontImageSource.ColorProperty,
-                ColorResource.GetColor("OnBackground", Colors.Gray),
-                ColorResource.GetColor("OnBackgroundDark", Colors.Gray));
+            originalContentMargin = this.Content.Margin;
         }
 
-        if (innerGrid != null && !innerGrid.Contains(imageIcon.Value))
+        if (HasIcon)
         {
-            innerGrid.Add(imageIcon.Value, column: 0);
+            imageIcon.Value.Source = Icon;
+            imageIcon.Value.IsVisible = true;
+
+            if (Icon is FontImageSource font && font.Color.IsNullOrTransparent())
+            {
+                // TODO: Add IconColor bindable property.??? What if it's not FontImage?
+                font.SetAppThemeColor(
+                    FontImageSource.ColorProperty,
+                    ColorResource.GetColor("OnBackground", Colors.Gray),
+                    ColorResource.GetColor("OnBackgroundDark", Colors.Gray));
+            }
+
+            if (innerGrid != null && !innerGrid.Contains(imageIcon.Value))
+            {
+                innerGrid.Add(imageIcon.Value, column: 0);
+            }
+
+            this.Content.Margin = new Thickness(5, 0, 0, 0);
+        }
+        else
+        {
+            if (imageIcon.IsValueCreated)
+            {
+                // Collapse the leading Auto column when Icon is cleared (e.g. binding goes back to null).
+                imageIcon.Value.Source = null;
+                imageIcon.Value.IsVisible = false;
+            }
+
+            if (this.Content != null && originalContentMargin.HasValue)
+            {
+                this.Content.Margin = originalContentMargin.Value;
+            }
         }
 
-        var leftMargin = Icon != null ? 5 : 10;
-        this.Content.Margin = new Thickness(leftMargin, 0, 0, 0);
+        // Re-run the title-position logic so the floating Label tracks the icon's new presence/absence.
+        UpdateState();
     }
 
     protected virtual void OnCornerRadiusChanged()
@@ -440,13 +761,39 @@ public partial class InputField : ContentView
             return;
         }
 
-        if (border.StrokeShape is RoundRectangle roundRectangle)
+        if (border?.StrokeShape is RoundRectangle roundRectangle)
         {
             roundRectangle.CornerRadius = CornerRadius;
 #if WINDOWS
             InitializeBorder();
 #endif
         }
+    }
+
+    /// <summary>
+    /// Creates the X-shaped clear icon Path used by the built-in clear attachments.
+    /// The fill is wired through an AppTheme binding so it follows runtime light/dark
+    /// theme switches instead of being captured once at creation time. Shape.Fill is a
+    /// Brush-typed property, so SolidColorBrush instances are provided per theme.
+    /// </summary>
+    protected static Microsoft.Maui.Controls.Shapes.Path CreateClearIconPath(string styleClass)
+    {
+        var path = new Microsoft.Maui.Controls.Shapes.Path
+        {
+            Data = UraniumShapes.X,
+        };
+
+        if (!string.IsNullOrEmpty(styleClass))
+        {
+            path.StyleClass = new[] { styleClass };
+        }
+
+        path.SetAppTheme(
+            Microsoft.Maui.Controls.Shapes.Path.FillProperty,
+            new SolidColorBrush(ColorResource.GetColor("OnBackground", Colors.DarkGray).WithAlpha(.5f)),
+            new SolidColorBrush(ColorResource.GetColor("OnBackgroundDark", Colors.DarkGray).WithAlpha(.5f)));
+
+        return path;
     }
 
     #region BindableProperties
@@ -457,7 +804,27 @@ public partial class InputField : ContentView
         typeof(string),
         typeof(InputField),
         string.Empty,
-        propertyChanged: (bo, ov, nv) => (bo as InputField).InitializeBorder());
+        propertyChanged: (bo, ov, nv) =>
+        {
+            var inputField = bo as InputField;
+            inputField.InitializeBorder();
+            inputField.UpdateContentSemanticDescription();
+        });
+
+    public FormattedString TitleFormattedText { get => (FormattedString)GetValue(TitleFormattedTextProperty); set => SetValue(TitleFormattedTextProperty, value); }
+
+    public static readonly BindableProperty TitleFormattedTextProperty = BindableProperty.Create(
+        nameof(TitleFormattedText),
+        typeof(FormattedString),
+        typeof(InputField),
+        default(FormattedString),
+        propertyChanged: (bo, ov, nv) =>
+        {
+            var inputField = bo as InputField;
+            inputField.ApplyTitleFormattedText();
+            inputField.InitializeBorder();
+            inputField.UpdateContentSemanticDescription();
+        });
 
     public Color AccentColor { get => (Color)GetValue(AccentColorProperty); set => SetValue(AccentColorProperty, value); }
 
@@ -559,10 +926,10 @@ public partial class InputField : ContentView
         nameof(FontAutoScalingEnabled), typeof(bool), typeof(InputField), Picker.FontAutoScalingEnabledProperty.DefaultValue,
         propertyChanged: (bindable, oldValue, newValue) =>
         {
-            var inputField = bindable as InputField;
-            if (inputField?.labelTitle != null)
+            var titleLabel = (bindable as InputField)?.labelTitle;
+            if (titleLabel != null)
             {
-                inputField.labelTitle.FontAutoScalingEnabled = (bool)newValue;
+                titleLabel.FontAutoScalingEnabled = (bool)newValue;
             }
         });
 
@@ -580,5 +947,6 @@ public partial class InputField : ContentView
                 inputField.Content.AutomationId = newValue as string;
             }
         });
+
     #endregion
 }

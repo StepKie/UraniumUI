@@ -9,12 +9,15 @@ using System.Threading.Tasks;
 using System.Windows.Input;
 using UraniumUI;
 using UraniumUI.Resources;
+using UraniumUI.Validations;
 
 namespace UraniumApp.ViewModels;
-public class ValidationsPageViewModel : UraniumBindableObject
+public class ValidationsPageViewModel : UraniumBindableObject, IFormValidator
 {
     private string email = string.Empty;
     private string fullName = string.Empty;
+    private string asyncUserName = string.Empty;
+    private string asyncValidationResult = string.Empty;
     private Gender? gender;
     private DateTime? birthDate;
     private TimeSpan? meetingTime;
@@ -46,6 +49,8 @@ public class ValidationsPageViewModel : UraniumBindableObject
             MeetingTime = default;
             NumberOfSeats = default;
             IsTermsAndConditionsAccepted = default;
+            AsyncUserName = string.Empty;
+            AsyncValidationResult = string.Empty;
         });
 
         FillCommand = new Command(() =>
@@ -58,6 +63,11 @@ public class ValidationsPageViewModel : UraniumBindableObject
             NumberOfSeats = 2;
             IsTermsAndConditionsAccepted = true;
         });
+
+        AsyncSubmitCommand = new Command(() =>
+        {
+            AsyncValidationResult = $"Username '{AsyncUserName}' is available.";
+        });
     }
 
     public ICommand SubmitCommand { get; set; }
@@ -65,6 +75,8 @@ public class ValidationsPageViewModel : UraniumBindableObject
     public ICommand ClearCommand { get; set; }
 
     public ICommand FillCommand { get; set; }
+
+    public ICommand AsyncSubmitCommand { get; set; }
 
     [EmailAddress]
     [Required]
@@ -74,11 +86,39 @@ public class ValidationsPageViewModel : UraniumBindableObject
     [Required]
     [MinLength(3)]
     public string FullName { get => fullName; set => SetProperty(ref fullName, value); }
+    public string AsyncUserName
+    {
+        get => asyncUserName;
+        set
+        {
+            SetProperty(ref asyncUserName, value);
+            AsyncValidationResult = string.Empty;
+        }
+    }
+
+    public string AsyncValidationResult { get => asyncValidationResult; set => SetProperty(ref asyncValidationResult, value); }
+
     public Gender? Gender { get => gender; set => SetProperty(ref gender, value); }
     public DateTime? BirthDate { get => birthDate; set => SetProperty(ref birthDate, value); }
     public TimeSpan? MeetingTime { get => meetingTime; set => SetProperty(ref meetingTime, value); }
     public int? NumberOfSeats { get => numberOfSeats; set => SetProperty(ref numberOfSeats, value); }
     public bool IsTermsAndConditionsAccepted { get => isTermsAndConditionsAccepted; set => SetProperty(ref isTermsAndConditionsAccepted, value); }
+
+    public async Task<FormValidationResult> ValidateAsync(FormValidationContext context)
+    {
+        AsyncValidationResult = string.Empty;
+        await Task.Delay(2500, context.CancellationToken);
+
+        var reservedNames = new[] { "admin", "root", "taken" };
+        if (reservedNames.Contains(AsyncUserName?.Trim(), StringComparer.OrdinalIgnoreCase))
+        {
+            return FormValidationResult.PropertyError(
+                nameof(AsyncUserName),
+                "This username is already taken. Try 'uranium'.");
+        }
+
+        return FormValidationResult.Success();
+    }
 }
 public enum Gender
 {

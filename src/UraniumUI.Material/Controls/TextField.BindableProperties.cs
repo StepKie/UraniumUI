@@ -139,6 +139,18 @@ public partial class TextField
             (bindable as TextField).EntryView.IsTextPredictionEnabled = (bool)newValue;
         });
 
+    public bool IsSpellCheckEnabled { get => (bool)GetValue(IsSpellCheckEnabledProperty); set => SetValue(IsSpellCheckEnabledProperty, value); }
+
+    public static readonly BindableProperty IsSpellCheckEnabledProperty = BindableProperty.Create(
+        nameof(IsSpellCheckEnabled),
+        typeof(bool),
+        typeof(TextField),
+        Entry.IsSpellCheckEnabledProperty.DefaultValue,
+        propertyChanged: (bindable, oldValue, newValue) =>
+        {
+            (bindable as TextField).EntryView.IsSpellCheckEnabled = (bool)newValue;
+        });
+
     public int MaxLength { get => (int)GetValue(MaxLengthProperty); set => SetValue(MaxLengthProperty, value); }
 
     public static readonly BindableProperty MaxLengthProperty = BindableProperty.Create(
@@ -164,7 +176,8 @@ public partial class TextField
         nameof(IsReadOnly),
         typeof(bool),
         typeof(TextField),
-        false);
+        false,
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as TextField).UpdateContentSemantics());
 
     [System.ComponentModel.TypeConverter(typeof(FontSizeConverter))]
     public double FontSize { get => (double)GetValue(FontSizeProperty); set => SetValue(FontSizeProperty, value); }
@@ -221,7 +234,8 @@ public partial class TextField
         nameof(DisallowClearButtonFocus),
         typeof(bool),
         typeof(TextField),
-        false);
+        false,
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as TextField).UpdateClearIconFocusability());
 
     public bool SelectAllTextOnFocus { get => (bool)GetValue(SelectAllTextOnFocusProperty); set => SetValue(SelectAllTextOnFocusProperty, value); }
 

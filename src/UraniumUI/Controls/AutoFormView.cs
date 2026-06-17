@@ -5,6 +5,7 @@ using UraniumUI.Resources;
 using UraniumUI.Options;
 using Microsoft.Extensions.Options;
 using InputKit.Shared.Abstraction;
+using InputCheckBox = InputKit.Shared.Controls.CheckBox;
 
 namespace UraniumUI.Controls;
 public class AutoFormView : FormView
@@ -109,6 +110,8 @@ public class AutoFormView : FormView
 
     protected void OnSourceChanged()
     {
+        ValidationModel = Source;
+
         var flags = BindingFlags.Public | BindingFlags.Instance;
         if (Hierarchical)
         {
@@ -140,6 +143,7 @@ public class AutoFormView : FormView
                 if (createEditor != null)
                 {
                     var editor = createEditor(property, Options.PropertyNameFactory, Source);
+                    SetEditorValidationPath(editor, property.Name);
 
                     foreach (var action in Options.PostEditorActions)
                     {
@@ -185,6 +189,7 @@ public class AutoFormView : FormView
                     StyleClass = new[] { "FilledButton" },
                     Command = buttonSubmitCommand,
                 };
+                SetIsSubmitButton(submitButton, true);
                 _footerLayout.Children.Insert(0, submitButton);
             }
         }
@@ -211,6 +216,7 @@ public class AutoFormView : FormView
                     StyleClass = new[] { "OutlinedButton" },
                     Command = buttonResetCommand,
                 };
+                SetIsResetButton(resetButton, true);
                 _footerLayout.Children.Add(resetButton);
             }
         }
@@ -237,6 +243,45 @@ public class AutoFormView : FormView
         if (resetButton != null)
         {
             resetButton.Text = ResetButtonText;
+        }
+    }
+
+    private static void SetEditorValidationPath(Element editor, string validationPath)
+    {
+        if (editor is BindableObject bindableObject)
+        {
+            SetValidationPath(bindableObject, validationPath);
+        }
+
+        foreach (var child in GetEditorChildren(editor))
+        {
+            SetEditorValidationPath(child, validationPath);
+        }
+    }
+
+    private static IEnumerable<Element> GetEditorChildren(Element editor)
+    {
+        if (editor is Layout layout)
+        {
+            foreach (var child in layout.Children.OfType<Element>())
+            {
+                yield return child;
+            }
+        }
+
+        if (editor is ContentView contentView && contentView.Content is Element content)
+        {
+            yield return content;
+        }
+
+        if (editor is ScrollView scrollView && scrollView.Content is Element scrollContent)
+        {
+            yield return scrollContent;
+        }
+
+        if (editor is Border border && border.Content is Element borderContent)
+        {
+            yield return borderContent;
         }
     }
 
@@ -267,8 +312,8 @@ public class AutoFormView : FormView
 
     public static View EditorForBoolean(PropertyInfo property, Func<PropertyInfo, string> propertyNameFactory, object source)
     {
-        var editor = new InputKit.Shared.Controls.CheckBox();
-        editor.SetBinding(InputKit.Shared.Controls.CheckBox.IsCheckedProperty, new Binding(property.Name, source: source));
+        var editor = new InputCheckBox();
+        editor.SetBinding(InputCheckBox.IsCheckedProperty, new Binding(property.Name, source: source));
         editor.Text = propertyNameFactory(property);
 
         return editor;
