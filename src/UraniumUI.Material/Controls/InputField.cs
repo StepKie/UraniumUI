@@ -390,6 +390,11 @@ public partial class InputField : ContentView
     }
 #endif
 
+    public new bool Focus()
+    {
+        return Content?.Focus() ?? base.Focus();
+    }
+
     // TODO: Remove this member hiding after android unfocus fixed.
     public new void Unfocus()
     {
