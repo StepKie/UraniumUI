@@ -190,6 +190,8 @@ public class TimePickerField_Test
 
         clearIcon.Margin.ShouldBe(default(Thickness));
         clearIcon.Padding.ShouldBe(new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0));
+        SemanticProperties.GetDescription(clearIcon).ShouldBe("Clear time");
+        SemanticProperties.GetHint(clearIcon).ShouldBe("Clears the selected time.");
     }
 
     public class TestViewModel : UraniumBindableObject

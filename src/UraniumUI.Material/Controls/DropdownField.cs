@@ -41,6 +41,7 @@ public class DropdownField : InputField
         base.RegisterForEvents();
 
         iconClear.TappedCommand = new Command(OnClearTapped);
+        SetActionSemantics(iconClear, AccessibilityOptions.ClearSelectionDescription, AccessibilityOptions.ClearSelectionHint);
         UpdateClearIconState();
 
         DropdownView.SetBinding(Dropdown.SelectedItemProperty, new Binding(nameof(SelectedItem), BindingMode.TwoWay, source: this));

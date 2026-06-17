@@ -12,6 +12,10 @@
           "path": "best-practices/Accessibility.md"
         },
         {
+          "text": "Localized Semantic Text",
+          "path": "best-practices/LocalizedSemanticText.md"
+        },
+        {
           "text": "Clickable Areas",
           "path": "best-practices/ClickableAreas.md"
         }

@@ -43,6 +43,7 @@ public class TimePickerField : InputField
     {
         base.RegisterForEvents();
         iconClear.TappedCommand = new Command(OnClearTapped);
+        SetActionSemantics(iconClear, AccessibilityOptions.ClearTimeDescription, AccessibilityOptions.ClearTimeHint);
 
         UpdateClearIconState();
 

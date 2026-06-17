@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Windows.Input;
 using Microsoft.Maui.Controls.Shapes;
 using UraniumUI.Extensions;
+using UraniumUI.Options;
 using UraniumUI.Pages;
 using UraniumUI.Resources;
 using UraniumUI.Views;
@@ -32,9 +33,11 @@ public class CalendarView : ContentView
         StyleClass = new[] { "CalendarView.MonthLabel" }
     };
 
-    private readonly StatefulContentView previousMonthButton = CreateNavigationButton(UraniumShapes.ChevronLeft, "CalendarView.PreviousMonthButton", "Previous month");
+    private readonly StatefulContentView monthButton;
 
-    private readonly StatefulContentView nextMonthButton = CreateNavigationButton(UraniumShapes.ChevronRight, "CalendarView.NextMonthButton", "Next month");
+    private readonly StatefulContentView previousMonthButton = CreateNavigationButton(UraniumShapes.ChevronLeft, "CalendarView.PreviousMonthButton");
+
+    private readonly StatefulContentView nextMonthButton = CreateNavigationButton(UraniumShapes.ChevronRight, "CalendarView.NextMonthButton");
 
     private readonly Grid weekdayGrid = new()
     {
@@ -74,10 +77,18 @@ public class CalendarView : ContentView
         PreviousMonthCommand = new Command(NavigatePrevious, CanNavigatePrevious);
         NextMonthCommand = new Command(NavigateNext, CanNavigateNext);
 
+        monthButton = new StatefulContentView
+        {
+            Content = monthLabel,
+            HorizontalOptions = LayoutOptions.Fill,
+            VerticalOptions = LayoutOptions.Center,
+            TappedCommand = new Command(ToggleYearSelection),
+        };
+
         previousMonthButton.TappedCommand = PreviousMonthCommand;
         nextMonthButton.TappedCommand = NextMonthCommand;
-        monthLabel.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(ToggleYearSelection) });
-        SemanticProperties.SetDescription(monthLabel, "Change year");
+        AutomationProperties.SetIsInAccessibleTree(monthLabel, false);
+        UpdateSemanticProperties();
 
         BuildLayout();
         UpdateCalendar();
@@ -199,7 +210,7 @@ public class CalendarView : ContentView
         };
 
         headerGrid.Add(previousMonthButton, column: 0);
-        headerGrid.Add(monthLabel, column: 1);
+        headerGrid.Add(monthButton, column: 1);
         headerGrid.Add(nextMonthButton, column: 2);
 
         for (var column = 0; column < DaysInWeek; column++)
@@ -619,7 +630,17 @@ public class CalendarView : ContentView
         return date;
     }
 
-    private static StatefulContentView CreateNavigationButton(Geometry pathData, string styleClass, string description)
+    private void UpdateSemanticProperties()
+    {
+        var options = AccessibilityOptionsProvider.Get();
+
+        SemanticProperties.SetDescription(previousMonthButton, options.PreviousMonthDescription);
+        SemanticProperties.SetDescription(nextMonthButton, options.NextMonthDescription);
+        SemanticProperties.SetDescription(monthButton, options.ChangeCalendarYearDescription);
+        SemanticProperties.SetHint(monthButton, options.ChangeCalendarYearHint);
+    }
+
+    private static StatefulContentView CreateNavigationButton(Geometry pathData, string styleClass)
     {
         var button = new StatefulContentView
         {
@@ -641,8 +662,6 @@ public class CalendarView : ContentView
                 VerticalOptions = LayoutOptions.Center,
             }
         };
-
-        SemanticProperties.SetDescription(button, description);
 
         return button;
     }
