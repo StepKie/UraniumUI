@@ -24,10 +24,16 @@ public partial class BottomSheetView : Border, IPageAttachment
         Init();
 
         AttachedPage = page;
+        Header.SizeChanged += BottomSheetContent_SizeChanged;
         if (Body != null)
         {
-            Body.SizeChanged += (s, e) => AlignBottomSheet(false);
+            Body.SizeChanged += BottomSheetContent_SizeChanged;
         }
+    }
+
+    private void BottomSheetContent_SizeChanged(object sender, EventArgs e)
+    {
+        AlignBottomSheet(false);
     }
 
     protected virtual void Init()
