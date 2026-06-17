@@ -55,6 +55,7 @@ Then you can use it in a page like this:
 - `SelectedText` (string): The text value when an item is selected from suggestions
 - `ItemsSource` (IList<string>): The collection of items to show as suggestions
 - `Threshold` (int): Minimum number of characters to type before showing suggestions (default: 2)
+- `Keyboard` (Keyboard): The soft keyboard type to use for text input (for example, `Numeric`)
 - `TextColor` (Color): The color of the input text
 - `AllowClear` (bool): Whether to show a clear button when text is entered (default: false)
 

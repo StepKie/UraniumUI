@@ -140,6 +140,12 @@ public partial class AutoCompleteViewHandler : ViewHandler<IAutoCompleteView, Ap
             handler.PlatformView.Threshold = view.Threshold;
         }
     }
+
+    public static void MapKeyboard(AutoCompleteViewHandler handler, AutoCompleteView view)
+    {
+        handler.PlatformView.InputType = view.Keyboard.ToInputType();
+        handler.PlatformView.SetSingleLine(true);
+    }
 }
 
 internal class BoxArrayAdapter : ArrayAdapter

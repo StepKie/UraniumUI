@@ -1,6 +1,9 @@
 ﻿#if WINDOWS
 using Microsoft.Maui.Handlers;
+using Microsoft.Maui.Platform;
+using Microsoft.UI.Xaml;
 using Microsoft.UI.Xaml.Controls;
+using Microsoft.UI.Xaml.Media;
 using UraniumUI.Controls;
 
 namespace UraniumUI.Handlers;
@@ -27,6 +30,9 @@ public partial class AutoCompleteViewHandler : ViewHandler<IAutoCompleteView, Au
         platformView.GotFocus += PlatformView_GotFocus;
         platformView.KeyDown += TextBox_KeyDown;
         platformView.SuggestionChosen += PlatformView_SuggestionChosen;
+        platformView.Loaded += PlatformView_Loaded;
+
+        UpdateInputScope();
     }
 
     protected override void DisconnectHandler(AutoSuggestBox platformView)
@@ -35,6 +41,12 @@ public partial class AutoCompleteViewHandler : ViewHandler<IAutoCompleteView, Au
         platformView.GotFocus -= PlatformView_GotFocus;
         platformView.KeyDown -= TextBox_KeyDown;
         platformView.SuggestionChosen -= PlatformView_SuggestionChosen;
+        platformView.Loaded -= PlatformView_Loaded;
+    }
+
+    private void PlatformView_Loaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e)
+    {
+        UpdateInputScope();
     }
 
     private void PlatformView_TextChanged(AutoSuggestBox sender, AutoSuggestBoxTextChangedEventArgs args)
@@ -87,6 +99,42 @@ public partial class AutoCompleteViewHandler : ViewHandler<IAutoCompleteView, Au
     public static void MapThreshold(AutoCompleteViewHandler handler, AutoCompleteView view)
     {
         // Not supported, handled manually
+    }
+
+    public static void MapKeyboard(AutoCompleteViewHandler handler, AutoCompleteView view)
+    {
+        handler.UpdateInputScope();
+    }
+
+    private void UpdateInputScope()
+    {
+        // AutoSuggestBox exposes the editable TextBox only through its template.
+        if (PlatformView is null || VirtualView is null || FindTextBox(PlatformView) is not TextBox textBox)
+        {
+            return;
+        }
+
+        textBox.InputScope = VirtualView.Keyboard.ToInputScope();
+    }
+
+    private static TextBox FindTextBox(DependencyObject parent)
+    {
+        for (var i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+        {
+            var child = VisualTreeHelper.GetChild(parent, i);
+
+            if (child is TextBox textBox)
+            {
+                return textBox;
+            }
+
+            if (FindTextBox(child) is TextBox descendantTextBox)
+            {
+                return descendantTextBox;
+            }
+        }
+
+        return null;
     }
 }
 #endif

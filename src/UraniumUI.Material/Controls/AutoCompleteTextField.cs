@@ -1,4 +1,6 @@
 ﻿using Plainer.Maui.Controls;
+using Microsoft.Maui.Converters;
+using System.ComponentModel;
 using UraniumUI.Controls;
 using UraniumUI.Pages;
 using UraniumUI.Resources;
@@ -49,6 +51,7 @@ public class AutoCompleteTextField : InputField
         autoCompleteView.SetBinding(AutoCompleteView.ItemsSourceProperty, new Binding(nameof(ItemsSource), source: this));
         autoCompleteView.SetBinding(AutoCompleteView.TextColorProperty, new Binding(nameof(TextColor), source: this));
         autoCompleteView.SetBinding(AutoCompleteView.ThresholdProperty, new Binding(nameof(Threshold), source: this));
+        autoCompleteView.SetBinding(AutoCompleteView.KeyboardProperty, new Binding(nameof(Keyboard), source: this));
     }
 
     public override bool HasValue => !string.IsNullOrEmpty(Text);
@@ -178,4 +181,14 @@ public class AutoCompleteTextField : InputField
         typeof(AutoCompleteTextField),
         AutoCompleteView.ThresholdProperty.DefaultValue,
         propertyChanged: (bindable, oldValue, newValue) => (bindable as AutoCompleteTextField).AutoCompleteView.Threshold = (int)newValue);
+
+    [TypeConverter(typeof(KeyboardTypeConverter))]
+    public Keyboard Keyboard { get => (Keyboard)GetValue(KeyboardProperty); set => SetValue(KeyboardProperty, value); }
+
+    public static BindableProperty KeyboardProperty = BindableProperty.Create(
+        nameof(Keyboard),
+        typeof(Keyboard),
+        typeof(AutoCompleteTextField),
+        AutoCompleteView.KeyboardProperty.DefaultValue,
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as AutoCompleteTextField).AutoCompleteView.Keyboard = (Keyboard)newValue);
 }
