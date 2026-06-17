@@ -28,7 +28,9 @@ public class TabItem : UraniumBindableObject
     public View Header { get; set; }
     public object Data { get; set; }
     public TabView TabView { get; internal set; }
-    public bool IsSelected { get => TabView.SelectedTab == this || (TabView.CurrentItem != null && TabView.CurrentItem == Data); }
+    internal bool IsGeneratedFromItemsSource { get; set; }
+    public bool IsSelected => TabView.SelectedTab == this
+        || (TabView.SelectedTab is null && TabView.CurrentItem != null && TabView.CurrentItem == Data);
 
     public bool IsVisible { get => (bool)GetValue(IsVisibleProperty); set => SetValue(IsVisibleProperty, value); }
 

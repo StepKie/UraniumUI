@@ -153,6 +153,8 @@
       href: migration-guides/Migrating-To-2.11.md
     - name: Migration to v3.0
       href: migration-guides/Migrating-To-3.0.md
+    - name: Migration to v3.1
+      href: migration-guides/Migrating-To-3.1.md
 - name: Support
   href: Support.md
   items:

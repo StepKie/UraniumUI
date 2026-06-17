@@ -23,7 +23,17 @@ public partial class TabView
     public static readonly BindableProperty TabHeaderItemTemplateProperty =
         BindableProperty.Create(nameof(TabHeaderItemTemplate), typeof(DataTemplate), typeof(TabView),
             defaultValueCreator: (bindable) => TabView.DefaultTabHeaderItemTemplate,
-            propertyChanged: (bo, ov, nv) => (bo as TabView).RenderHeaders());
+            propertyChanged: (bo, ov, nv) => (bo as TabView).OnTabHeaderItemTemplateChanged());
+
+    public static readonly BindableProperty IsHeaderSelectedProperty = BindableProperty.CreateAttached(
+        "IsHeaderSelected",
+        typeof(bool),
+        typeof(TabView),
+        false);
+
+    public static bool GetIsHeaderSelected(BindableObject bindable) => (bool)bindable.GetValue(IsHeaderSelectedProperty);
+
+    public static void SetIsHeaderSelected(BindableObject bindable, bool value) => bindable.SetValue(IsHeaderSelectedProperty, value);
 
     [TypeConverter(typeof(GridLengthTypeConverter))]
     public GridLength TabHeaderItemColumnWidth { get => (GridLength)GetValue(TabHeaderItemColumnWidthProperty); set => SetValue(TabHeaderItemColumnWidthProperty, value); }
