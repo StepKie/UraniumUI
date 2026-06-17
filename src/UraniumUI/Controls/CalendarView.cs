@@ -23,7 +23,10 @@ public class CalendarView : ContentView
     private const double MaxDayButtonSize = 40;
     private const uint TransitionOutLength = 80;
     private const uint TransitionInLength = 120;
+    private const uint SelectionAnimationLength = 140;
     private const double TransitionOffset = 18;
+    private const double SelectionStartScale = .92;
+    private const string DayButtonSelectionColorAnimationName = "CalendarView.DayButton.SelectionColor";
 
     private readonly Label monthLabel = new()
     {
@@ -465,14 +468,32 @@ public class CalendarView : ContentView
 
     private void UpdateDayButton(Button button, CalendarDay day)
     {
+        var previousDay = button.CommandParameter as CalendarDay;
+        var shouldAnimateSelection = previousDay?.Date == day.Date
+            && previousDay.IsSelected != day.IsSelected
+            && button.IsLoaded;
+        var selectedBackgroundColor = ColorResource.GetColor("Primary", "PrimaryDark", Colors.DodgerBlue);
+        var selectedTextColor = ColorResource.GetColor("OnPrimary", "OnPrimaryDark", Colors.White);
+        var defaultTextColor = ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.Black);
+        var targetBackgroundColor = day.IsSelected ? selectedBackgroundColor : Colors.Transparent;
+        var targetTextColor = day.IsSelected ? selectedTextColor : defaultTextColor;
+
         button.Text = day.Date.Day.ToString(CultureInfo.CurrentCulture);
         button.CommandParameter = day;
         button.IsEnabled = day.IsEnabled;
         button.Opacity = day.IsEnabled ? day.IsCurrentMonth ? 1 : .45 : .25;
-        button.BackgroundColor = day.IsSelected ? ColorResource.GetColor("Primary", "PrimaryDark", Colors.DodgerBlue) : Colors.Transparent;
-        button.TextColor = day.IsSelected
-            ? ColorResource.GetColor("OnPrimary", "OnPrimaryDark", Colors.White)
-            : ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.Black);
+
+        if (shouldAnimateSelection)
+        {
+            AnimateDayButtonSelection(button, targetBackgroundColor, targetTextColor, day.IsSelected);
+        }
+        else
+        {
+            button.AbortAnimation(DayButtonSelectionColorAnimationName);
+            button.BackgroundColor = targetBackgroundColor;
+            button.TextColor = targetTextColor;
+            button.Scale = 1;
+        }
 
         var styleClasses = new List<string> { "CalendarView.DayButton" };
 
@@ -512,6 +533,50 @@ public class CalendarView : ContentView
         }
 
         button.StyleClass = styleClasses.ToArray();
+    }
+
+    private void AnimateDayButtonSelection(Button button, Color targetBackgroundColor, Color targetTextColor, bool isSelected)
+    {
+        var startBackgroundColor = button.BackgroundColor ?? Colors.Transparent;
+        var startTextColor = button.TextColor;
+        var startScale = isSelected ? SelectionStartScale : button.Scale;
+
+        button.AbortAnimation(DayButtonSelectionColorAnimationName);
+
+        if (isSelected)
+        {
+            button.Scale = SelectionStartScale;
+        }
+
+        var animation = new Animation(progress =>
+        {
+            button.BackgroundColor = InterpolateColor(startBackgroundColor, targetBackgroundColor, progress);
+            button.TextColor = InterpolateColor(startTextColor, targetTextColor, progress);
+            button.Scale = startScale + ((1 - startScale) * progress);
+        });
+
+        animation.Commit(
+            button,
+            DayButtonSelectionColorAnimationName,
+            length: SelectionAnimationLength,
+            easing: Easing.CubicOut,
+            finished: (_, _) =>
+            {
+                button.BackgroundColor = targetBackgroundColor;
+                button.TextColor = targetTextColor;
+                button.Scale = 1;
+            });
+    }
+
+    private static Color InterpolateColor(Color start, Color end, double progress)
+    {
+        var amount = (float)progress;
+
+        return new Color(
+            start.Red + ((end.Red - start.Red) * amount),
+            start.Green + ((end.Green - start.Green) * amount),
+            start.Blue + ((end.Blue - start.Blue) * amount),
+            start.Alpha + ((end.Alpha - start.Alpha) * amount));
     }
 
     private void OnSelectedDatesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
