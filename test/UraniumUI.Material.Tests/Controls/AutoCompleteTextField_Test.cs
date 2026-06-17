@@ -1,6 +1,7 @@
 ﻿using Shouldly;
 using UraniumUI.Material.Controls;
 using UraniumUI.Tests.Core;
+using UraniumUI.Views;
 
 namespace UraniumUI.Material.Tests.Controls;
 public class AutoCompleteTextField_Test
@@ -59,10 +60,12 @@ public class AutoCompleteTextField_Test
 
         control.AllowClear = true;
 
-        var clearIcon = control.Attachments.OfType<ContentView>().Single();
+        var clearIcon = control.Attachments.OfType<StatefulContentView>().Single();
 
         clearIcon.Margin.ShouldBe(default(Thickness));
         clearIcon.Padding.ShouldBe(new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0));
+        SemanticProperties.GetDescription(clearIcon).ShouldBe("Clear text");
+        SemanticProperties.GetHint(clearIcon).ShouldBe("Clears the current autocomplete value.");
     }
 
     internal class AutoCompleteTextFieldTestViewModel : UraniumBindableObject

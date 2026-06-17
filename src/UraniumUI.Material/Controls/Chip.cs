@@ -59,6 +59,8 @@ namespace UraniumUI.Material.Controls
                 }
             };
 
+            UpdateDestroyButtonSemantics();
+
             closeButton.TappedCommand = new Command(() =>
             {
                 DestroyCommand?.Execute(this);
@@ -95,6 +97,7 @@ namespace UraniumUI.Material.Controls
                 if (bindable is Chip chip)
                 {
                     chip.label.Text = (string)newValue;
+                    chip.UpdateDestroyButtonSemantics();
                 }
             });
 
@@ -146,7 +149,16 @@ namespace UraniumUI.Material.Controls
                     if (bindable is Chip chip)
                     {
                         chip.closeButton.IsVisible = (bool)newValue;
-                    }
-                });
+                }
+            });
+
+        private void UpdateDestroyButtonSemantics()
+        {
+            var options = AccessibilityOptionsProvider.Get();
+            var description = options.FormatRemoveChipDescription(Text ?? label.Text ?? string.Empty);
+
+            SemanticProperties.SetDescription(closeButton, description);
+            SemanticProperties.SetHint(closeButton, options.RemoveChipHint);
+        }
     }
 }

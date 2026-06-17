@@ -1,5 +1,7 @@
 using UraniumUI.Controls;
+using UraniumUI.Extensions;
 using UraniumUI.Tests.Core;
+using UraniumUI.Views;
 
 namespace UraniumUI.Tests.Controls;
 
@@ -157,5 +159,19 @@ public class CalendarView_Test
         Assert.True(calendarView.VisibleDates.Single(day => day.Date == new DateTime(2026, 5, 10)).IsEnabled);
         Assert.True(calendarView.VisibleDates.Single(day => day.Date == new DateTime(2026, 5, 20)).IsEnabled);
         Assert.False(calendarView.VisibleDates.Single(day => day.Date == new DateTime(2026, 5, 21)).IsEnabled);
+    }
+
+    [Fact]
+    public void MonthYearToggle_ShouldBeFocusableAndExposeSemanticText()
+    {
+        var calendarView = new CalendarView();
+
+        var monthButton = calendarView.FindManyInChildrenHierarchy<StatefulContentView>()
+            .Distinct()
+            .Single(button => SemanticProperties.GetDescription(button) == "Change year");
+
+        Assert.True(monthButton.IsFocusable);
+        Assert.NotNull(monthButton.TappedCommand);
+        Assert.Equal("Shows year selection.", SemanticProperties.GetHint(monthButton));
     }
 }

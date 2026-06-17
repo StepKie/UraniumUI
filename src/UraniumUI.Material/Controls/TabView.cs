@@ -5,6 +5,7 @@ using System.Windows.Input;
 using UraniumUI.Extensions;
 using UraniumUI.Resources;
 using UraniumUI.Triggers;
+using UraniumUI.Views;
 
 namespace UraniumUI.Material.Controls;
 
@@ -368,14 +369,17 @@ public partial class TabView : Grid
     protected virtual void AddHeaderFor(TabItem tabItem)
     {
         tabItem.TabView = this;
-        tabItem.Header =
+        var headerContent =
             tabItem.HeaderTemplate?.CreateContent() as View
             ?? TabHeaderItemTemplate?.CreateContent() as View
             //?? DefaultTabHeaderItemTemplate.CreateContent() as View
             ?? throw new InvalidOperationException("TabView requires a HeaderTemplate or TabHeaderItemTemplate to be set.");
 
-        tabItem.Header.BindingContext = tabItem;
-        tabItem.Header.GestureRecognizers.Add(new TapGestureRecognizer { Command = new Command(() => SelectedTab = tabItem) });
+        headerContent.BindingContext = tabItem;
+
+        tabItem.Header = CreateAccessibleHeader(tabItem, headerContent);
+
+        UpdateHeaderSemantics(tabItem);
 
         if (!_headerContainer.Children.Any())
         {
@@ -393,6 +397,60 @@ public partial class TabView : Grid
             Grid.SetColumn(tabItem.Header, _headerContainer.Children.Count);
         }
         _headerContainer.Add(tabItem.Header);
+    }
+
+    private View CreateAccessibleHeader(TabItem tabItem, View headerContent)
+    {
+        var selectCommand = new Command(() => SelectedTab = tabItem);
+
+        if (HasKeyboardReachableElement(headerContent))
+        {
+            headerContent.GestureRecognizers.Add(new TapGestureRecognizer { Command = selectCommand });
+            return headerContent;
+        }
+
+        return new StatefulContentView
+        {
+            Content = headerContent,
+            TappedCommand = selectCommand,
+            BindingContext = tabItem,
+        };
+    }
+
+    private static bool HasKeyboardReachableElement(View view)
+    {
+        return view is Button
+            || view is StatefulContentView { IsFocusable: true }
+            || view.FindInChildrenHierarchy<Button>() is not null
+            || view.FindInChildrenHierarchy<StatefulContentView>(child => child.IsFocusable) is not null;
+    }
+
+    private static void UpdateHeaderSemantics(TabItem tabItem)
+    {
+        if (tabItem.Header is null)
+        {
+            return;
+        }
+
+        var options = AccessibilityOptionsProvider.Get();
+        var title = tabItem.Title ?? tabItem.Data?.ToString() ?? nameof(TabItem);
+        var description = tabItem.IsSelected ? options.FormatSelectedTabDescription(title) : title;
+        var semanticTarget = GetHeaderSemanticTarget(tabItem.Header);
+
+        SemanticProperties.SetDescription(semanticTarget, description);
+        SemanticProperties.SetHint(semanticTarget, options.SelectTabHint);
+    }
+
+    private static VisualElement GetHeaderSemanticTarget(View header)
+    {
+        if (header is Button || header is StatefulContentView)
+        {
+            return header;
+        }
+
+        return header.FindInChildrenHierarchy<Button>()
+            ?? (VisualElement)header.FindInChildrenHierarchy<StatefulContentView>(child => child.IsFocusable)
+            ?? header;
     }
 
     protected virtual void AddHeaderForItem(object item)
@@ -464,6 +522,7 @@ public partial class TabView : Grid
         foreach (var item in Tabs)
         {
             item.NotifyIsSelectedChanged();
+            UpdateHeaderSemantics(item);
         }
 
         if (CachingStrategy == TabViewCachingStrategy.RecreateAlways && oldValue is not null)
