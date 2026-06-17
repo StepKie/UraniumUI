@@ -2,6 +2,7 @@
 <ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
              xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
              x:Class="UraniumApp.Pages.MemoryLeakTestPrePage"
+             xmlns:sys="clr-namespace:System;assembly=netstandard"
              xmlns:uranium="http://schemas.enisn-projects.io/dotnet/maui/uraniumui"
              xmlns:vm="clr-namespace:UraniumApp.ViewModels"
              BindingContext="{uranium:Inject Type={Type vm:MemoryLeakTestPrePageViewModel}}"
@@ -13,7 +14,7 @@
         <Grid RowDefinitions="*,Auto">
             <CollectionView ItemsSource="{Binding ControlTypes}" SelectedItem="{Binding SelectedControlType}" SelectionMode="Single">
                 <CollectionView.ItemTemplate>
-                    <DataTemplate x:DataType="x:String">
+                    <DataTemplate x:DataType="sys:Type">
                         <Label Padding="4" Text="{Binding .}" />
                     </DataTemplate>
                 </CollectionView.ItemTemplate>

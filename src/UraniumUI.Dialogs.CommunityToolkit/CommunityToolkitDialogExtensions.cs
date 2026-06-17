@@ -1,10 +1,8 @@
 ﻿using CommunityToolkit.Maui.Views;
-using InputKit.Shared.Controls;
 using Plainer.Maui.Controls;
 using UraniumUI.Controls;
 using UraniumUI.Infrastructure;
 using UraniumUI.Resources;
-using CheckBox = InputKit.Shared.Controls.CheckBox;
 
 namespace UraniumUI.Dialogs.CommunityToolkit;
 public static class CommunityToolkitDialogExtensions
@@ -73,10 +71,31 @@ public static class CommunityToolkitDialogExtensions
             .DisplayTextPromptAsync(title, message, accept, cancel, placeholder, maxLength, keyboard, initialValue, isPassword);
     }
 
+    public static Task<DateTime?> DisplayDatePromptAsync(
+        this Page page,
+        string title,
+        DateTime? selectedDate = null,
+        DateTime? minimumDate = null,
+        DateTime? maximumDate = null,
+        string accept = "OK",
+        string cancel = "Cancel",
+        string clear = "Clear",
+        string today = "Today")
+    {
+        return GetService().WithPage(page)
+            .DisplayDatePromptAsync(title, selectedDate, minimumDate, maximumDate, accept, cancel, clear, today);
+    }
+
     public static Task DisplayViewAsync(this Page page, string title, View content, string okText = "OK")
     {
         return GetService().WithPage(page)
             .DisplayViewAsync(title, content, okText);
+    }
+
+    public static Task<bool> DisplayViewAsync(this Page page, string title, View content, string okText, string cancelText)
+    {
+        return GetService().WithPage(page)
+            .DisplayViewAsync(title, content, okText, cancelText);
     }
 
     public static Task<TViewModel> DisplayFormViewAsync<TViewModel>(this Page page, string title, TViewModel viewModel = null, string submit = "OK", string cancel = "Cancel") where TViewModel : class

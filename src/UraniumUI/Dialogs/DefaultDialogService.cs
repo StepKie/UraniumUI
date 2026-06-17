@@ -1,5 +1,4 @@
-﻿using InputKit.Shared.Controls;
-using Microsoft.Extensions.Options;
+﻿using Microsoft.Extensions.Options;
 using Plainer.Maui.Controls;
 using UraniumUI.Controls;
 using UraniumUI.Infrastructure;
@@ -46,12 +45,45 @@ public class DefaultDialogService : IDialogService
                         {
                             okText, new Command(async () =>
                             {
-                                tcs.SetResult(true);
+                                await ClosePopupAndSetResult(tcs, true);
+                            })
+                        }
+                    })
+                }
+            })
+        };
 
-                                if (Page.Navigation.ModalStack.LastOrDefault() is DefaultDialogAnimatedContentPage _popupPage)
-                                {
-                                   await _popupPage.CloseAsync();
-                                }
+        Page.Navigation.PushModalAsync(ConfigurePopupPage(popupPage), animated: false);
+
+        return tcs.Task;
+    }
+
+    public Task<bool> DisplayViewAsync(string title, View content, string okText, string cancelText)
+    {
+        var tcs = new TaskCompletionSource<bool>();
+
+        var popupPage = new DefaultDialogAnimatedContentPage
+        {
+            BackgroundColor = GetBackdropColor(),
+            Content = GetFrame(Page.Width, new VerticalStackLayout
+            {
+                Children =
+                {
+                    GetHeader(title),
+                    content,
+                    GetDivider(),
+                    GetFooter(new Dictionary<string, Command>
+                    {
+                        {
+                            okText, new Command(async () =>
+                            {
+                                await ClosePopupAndSetResult(tcs, true);
+                            })
+                        },
+                        {
+                            cancelText, new Command(async () =>
+                            {
+                                await ClosePopupAndSetResult(tcs, false);
                             })
                         }
                     })
@@ -154,15 +186,13 @@ public class DefaultDialogService : IDialogService
                         {
                             okText, new Command(async () =>
                             {
-                                tcs.SetResult(true);
-                                await ClosePopup();
+                                await ClosePopupAndSetResult(tcs, true);
                             })
                         },
                         {
                             cancelText, new Command(async() =>
                             {
-                                tcs.SetResult(false);
-                                await ClosePopup();
+                                await ClosePopupAndSetResult(tcs, false);
                             })
                         }
                     })
@@ -182,6 +212,18 @@ public class DefaultDialogService : IDialogService
             await popupPage.CloseAsync();
         }
     }
+
+private async Task ClosePopupAndSetResult<T>(TaskCompletionSource<T> tcs, T result)
+{
+    try
+    {
+        await ClosePopup();
+    }
+    finally
+    {
+        tcs.TrySetResult(result);
+    }
+}
 
     public virtual Task<IEnumerable<T>> DisplayCheckBoxPromptAsync<T>(
         string message,
@@ -205,12 +247,14 @@ public class DefaultDialogService : IDialogService
 
         foreach (var item in selectionSource)
         {
-            checkBoxGroup.Add(new CheckBox
+            var checkBox = new CheckBox
             {
                 Text = prop != null ? prop.GetValue(item)?.ToString() : item.ToString(),
                 CommandParameter = item,
                 IsChecked = selectedItems?.Contains(item) ?? false,
-            });
+            };
+
+            checkBoxGroup.Add(checkBox);
         }
 
         var rootGrid = new Grid
@@ -232,15 +276,19 @@ public class DefaultDialogService : IDialogService
             {
                 accept, new Command(async() =>
                 {
-                    tcs.TrySetResult(checkBoxGroup.Children.Where(x => x is CheckBox checkbox && checkbox.IsChecked).Select(s => (T)(s as CheckBox).CommandParameter));
-                    await ClosePopup();
+var selected = checkBoxGroup.Children
+    .OfType<CheckBox>()
+    .Where(cb => cb.IsChecked)
+    .Select(cb => (T)cb.CommandParameter)
+    .ToList();
+
+await ClosePopupAndSetResult(tcs, selected);
                 })
             },
             {
                 cancel, new Command(async() =>
                 {
-                    tcs.TrySetResult(null);
-                    await ClosePopup();
+                    await ClosePopupAndSetResult<IEnumerable<T>>(tcs, null);
                 })
             }
         }
@@ -268,7 +316,7 @@ public class DefaultDialogService : IDialogService
 
         var prop = displayMember != null ? typeof(T).GetProperty(displayMember) : null;
 
-        var rbGroup = new RadioButtonGroupView()
+        var rbGroup = new InputKit.Shared.Controls.RadioButtonGroupView()
         {
             Margin = 20,
             VerticalOptions = LayoutOptions.Center,
@@ -305,15 +353,13 @@ public class DefaultDialogService : IDialogService
             {
                 accept, new Command(async () =>
                 {
-                    tcs.TrySetResult((T)rbGroup.SelectedItem);
-                    await ClosePopup();
+                    await ClosePopupAndSetResult(tcs, (T)rbGroup.SelectedItem);
                 })
             },
             {
                 cancel, new Command(async () =>
                 {
-                    tcs.TrySetResult(default);
-                    await ClosePopup();
+                    await ClosePopupAndSetResult(tcs, default);
                 })
             }
         }), row: 3);
@@ -387,18 +433,65 @@ public class DefaultDialogService : IDialogService
                         {
                             accept, new Command(async() =>
                             {
-                                tcs.TrySetResult(entry.Text);
-                                await ClosePopup();
+                                await ClosePopupAndSetResult(tcs, entry.Text);
                             })
                         },
                         {
                             cancel, new Command(async() =>
                             {
-                                tcs.TrySetResult(initialValue);
-                                await ClosePopup();
+                                await ClosePopupAndSetResult(tcs, initialValue);
                             })
                         }
                     })
+                }
+            })
+        };
+
+        Page.Navigation.PushModalAsync(ConfigurePopupPage(popupPage), animated: false);
+
+        return tcs.Task;
+    }
+
+    public virtual Task<DateTime?> DisplayDatePromptAsync(
+        string title,
+        DateTime? selectedDate = null,
+        DateTime? minimumDate = null,
+        DateTime? maximumDate = null,
+        string accept = "OK",
+        string cancel = "Cancel",
+        string clear = "Clear",
+        string today = "Today")
+    {
+        var tcs = new TaskCompletionSource<DateTime?>();
+        var originalSelectedDate = selectedDate;
+        var normalizedSelectedDate = selectedDate?.Date;
+
+        var calendarView = CreateDatePromptCalendar(normalizedSelectedDate, minimumDate, maximumDate);
+        var footerButtons = CreateDatePromptFooterButtons(
+            calendarView,
+            originalSelectedDate,
+            accept,
+            cancel,
+            clear,
+            today,
+            result => ClosePopupAndSetResult(tcs, result));
+
+        var popupPage = new DefaultDialogAnimatedContentPage
+        {
+            BackgroundColor = GetBackdropColor(),
+            Content = GetFrame(Page.Width, new VerticalStackLayout
+            {
+                Children =
+                {
+                    GetHeader(title),
+                    new ScrollView
+                    {
+                        Content = calendarView,
+                        Margin = new Thickness(12, 16, 12, 0),
+                        MaximumHeightRequest = Page.Height * .75,
+                    },
+                    GetDivider(),
+                    GetFooter(footerButtons)
                 }
             })
         };
@@ -436,19 +529,16 @@ public class DefaultDialogService : IDialogService
                         {
                             submit, new Command(async () =>
                             {
-                                formView.Submit();
-                                if (formView.IsValidated)
+                                if (await formView.SubmitAsync())
                                 {
-                                    await ClosePopup();
-                                    tcs.SetResult(viewModel);
+                                    await ClosePopupAndSetResult(tcs, (TViewModel)formView.Source);
                                 }
                             })
                         },
                         {
                             cancel, new Command(async() =>
                             {
-                                await ClosePopup();
-                                tcs.SetResult(null);
+                                await ClosePopupAndSetResult<TViewModel>(tcs, null);
                             })
                         }
                     })
@@ -459,6 +549,74 @@ public class DefaultDialogService : IDialogService
         Page.Navigation.PushModalAsync(ConfigurePopupPage(popupPage), animated: false);
 
         return tcs.Task;
+    }
+
+    private static CalendarView CreateDatePromptCalendar(DateTime? selectedDate, DateTime? minimumDate, DateTime? maximumDate)
+    {
+        var displayDate = selectedDate ?? GetFallbackDisplayDate(minimumDate, maximumDate);
+
+        return new CalendarView
+        {
+            SelectedDate = selectedDate,
+            DisplayDate = displayDate,
+            MinimumDate = minimumDate,
+            MaximumDate = maximumDate,
+            HorizontalOptions = LayoutOptions.Fill,
+        };
+    }
+
+    private static DateTime GetFallbackDisplayDate(DateTime? minimumDate, DateTime? maximumDate)
+    {
+        var today = DateTime.Today;
+
+        if ((!minimumDate.HasValue || today >= minimumDate.Value.Date)
+            && (!maximumDate.HasValue || today <= maximumDate.Value.Date))
+        {
+            return today;
+        }
+
+        return minimumDate?.Date ?? maximumDate?.Date ?? today;
+    }
+
+    private static Dictionary<string, Command> CreateDatePromptFooterButtons(
+        CalendarView calendarView,
+        DateTime? selectedDate,
+        string accept,
+        string cancel,
+        string clear,
+        string today,
+        Func<DateTime?, Task> closeWithResult)
+    {
+        var footerButtons = new Dictionary<string, Command>
+        {
+            {
+                accept, new Command(async () =>
+                {
+                    await closeWithResult(calendarView.SelectedDate);
+                })
+            },
+            {
+                cancel, new Command(async () =>
+                {
+                    await closeWithResult(selectedDate);
+                })
+            }
+        };
+
+        if (!string.IsNullOrEmpty(today))
+        {
+            footerButtons.Add(today, new Command(() => calendarView.TrySelectDate(DateTime.Today)));
+        }
+
+        if (!string.IsNullOrEmpty(clear))
+        {
+            footerButtons.Add(clear, new Command(async () =>
+            {
+                await closeWithResult(null);
+            }));
+        }
+
+        return footerButtons;
     }
 
     protected virtual Color GetBackdropColor()
@@ -541,6 +699,8 @@ public class DefaultDialogService : IDialogService
         var layout = new FlexLayout
         {
             JustifyContent = Microsoft.Maui.Layouts.FlexJustify.End,
+            AlignItems = Microsoft.Maui.Layouts.FlexAlignItems.Center,
+            Wrap = Microsoft.Maui.Layouts.FlexWrap.Wrap,
             Margin = new Thickness(10),
         };
 
@@ -551,13 +711,16 @@ public class DefaultDialogService : IDialogService
 
         foreach (var item in footerButtons.Reverse())
         {
-            layout.Children.Add(new Button
+            var button = new Button
             {
                 Text = item.Key,
                 // Can be styled with StyleClass `Dialog.Button0`, `Dialog.Button1`, etc
                 StyleClass = new[] { "TextButton", "Dialog.Button" + layout.Children.Count },
                 Command = item.Value
-            });
+            };
+
+            FlexLayout.SetShrink(button, 0);
+            layout.Children.Add(button);
         }
 
         return layout;

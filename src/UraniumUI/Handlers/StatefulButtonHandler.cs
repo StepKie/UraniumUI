@@ -17,7 +17,49 @@ using Microsoft.UI.Xaml.Input;
 namespace UraniumUI.Handlers;
 public class StatefulButtonHandler : ButtonHandler
 {
+    // Navigation can interrupt a press before the native release event arrives.
+    private void ResetState()
+    {
+        if (VirtualView is Microsoft.Maui.Controls.View element)
+        {
+            GoToState(element, CommonStates.Normal);
+        }
+    }
+
+    private void ConnectVirtualViewEvents()
+    {
+        if (VirtualView is Button button)
+        {
+            button.Unloaded -= VirtualView_Unloaded;
+            button.Unloaded += VirtualView_Unloaded;
+        }
+    }
+
+    private void DisconnectVirtualViewEvents()
+    {
+        if (VirtualView is Button button)
+        {
+            button.Unloaded -= VirtualView_Unloaded;
+        }
+    }
+
+    private void VirtualView_Unloaded(object sender, EventArgs e) => ResetState();
+
 #if ANDROID
+    protected override void ConnectHandler(MaterialButton platformView)
+    {
+        base.ConnectHandler(platformView);
+        ConnectVirtualViewEvents();
+    }
+
+    protected override void DisconnectHandler(MaterialButton platformView)
+    {
+        platformView.Touch -= OnTouch;
+        DisconnectVirtualViewEvents();
+        ResetState();
+        base.DisconnectHandler(platformView);
+    }
+
     protected override MaterialButton CreatePlatformView()
     {
         var button = base.CreatePlatformView();
@@ -45,13 +87,22 @@ public class StatefulButtonHandler : ButtonHandler
 #if MACCATALYST || IOS
     protected override void ConnectHandler(UIButton platformView)
     {
+        base.ConnectHandler(platformView);
+        ConnectVirtualViewEvents();
+
         // TODO: Find a better way to do this
         if (OperatingSystem.IsIOSVersionAtLeast(13))
         {
             PlatformView.AddGestureRecognizer(new UIHoverGestureRecognizer(OnHover));
         }
         //PlatformView.AddGestureRecognizer(new UIContinousGestureRecognizer(Tapped));
-        base.ConnectHandler(platformView);
+    }
+
+    protected override void DisconnectHandler(UIButton platformView)
+    {
+        DisconnectVirtualViewEvents();
+        ResetState();
+        base.DisconnectHandler(platformView);
     }
 
     private void Tapped(UIGestureRecognizer recognizer)
@@ -125,6 +176,27 @@ public class StatefulButtonHandler : ButtonHandler
 #endif
 
 #if WINDOWS
+    protected override void ConnectHandler(Microsoft.UI.Xaml.Controls.Button platformView)
+    {
+        base.ConnectHandler(platformView);
+        ConnectVirtualViewEvents();
+
+        platformView.PointerCanceled += NativeView_PointerCanceled;
+        platformView.PointerCaptureLost += NativeView_PointerCaptureLost;
+        platformView.Unloaded += NativeView_Unloaded;
+    }
+
+    protected override void DisconnectHandler(Microsoft.UI.Xaml.Controls.Button platformView)
+    {
+        platformView.PointerCanceled -= NativeView_PointerCanceled;
+        platformView.PointerCaptureLost -= NativeView_PointerCaptureLost;
+        platformView.Unloaded -= NativeView_Unloaded;
+
+        DisconnectVirtualViewEvents();
+        ResetState();
+        base.DisconnectHandler(platformView);
+    }
+
     protected override Microsoft.UI.Xaml.Controls.Button CreatePlatformView()
     {
         var nativeView = base.CreatePlatformView();
@@ -157,5 +229,11 @@ public class StatefulButtonHandler : ButtonHandler
 
         VisualStateManager.GoToState(element, "Normal");
     }
+
+    private void NativeView_PointerCanceled(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e) => ResetState();
+
+    private void NativeView_PointerCaptureLost(object sender, Microsoft.UI.Xaml.Input.PointerRoutedEventArgs e) => ResetState();
+
+    private void NativeView_Unloaded(object sender, Microsoft.UI.Xaml.RoutedEventArgs e) => ResetState();
 #endif
 }

@@ -1,6 +1,8 @@
 ﻿namespace UraniumUI.Dialogs;
 public class DefaultDialogAnimatedContentPage : ContentPage
 {
+	private Task closeTask;
+
 	public DefaultDialogAnimatedContentPage()
 	{
         Loaded += OnLoaded;
@@ -22,21 +24,27 @@ public class DefaultDialogAnimatedContentPage : ContentPage
         Content.ScaleTo(1, 250, Easing.CubicInOut);
     }
 
-    public async Task CloseAsync()
+    public Task CloseAsync()
     {
-        if (Content is null)
+        return closeTask ??= CloseCoreAsync();
+    }
+
+    private async Task CloseCoreAsync()
+    {
+        if (Content is not null)
         {
-            return;
+            var tasks = new Task[]
+            {
+                Content.FadeTo(0, 250, Easing.CubicInOut),
+                Content.ScaleTo(0.8, 250, Easing.CubicInOut)
+            };
+
+            await Task.WhenAll(tasks);
         }
 
-        var tasks = new Task[]
+        if (Navigation.ModalStack.LastOrDefault() == this)
         {
-            Content.FadeTo(0, 250, Easing.CubicInOut),
-            Content.ScaleTo(0.8, 250, Easing.CubicInOut)
-        };
-
-        await Task.WhenAll(tasks);
-
-        await Navigation.PopModalAsync(animated: false);
+            await Navigation.PopModalAsync(animated: false);
+        }
     }
 }

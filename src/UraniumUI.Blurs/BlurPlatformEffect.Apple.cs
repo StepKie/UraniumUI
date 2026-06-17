@@ -10,6 +10,8 @@ public class BlurPlatformEffect : PlatformEffect
     public BlurEffect VirtualEffect { get; private set; }
 
     protected UIVisualEffectView blurView;
+    private UIColor originalBackgroundColor;
+    private Command updateEffectCommand;
 
     protected override void OnAttached()
     {
@@ -18,9 +20,11 @@ public class BlurPlatformEffect : PlatformEffect
         if (Element.Effects.FirstOrDefault(x => x.ResolveId == this.ResolveId) is BlurEffect _effect)
         {
             VirtualEffect = _effect;
-            _effect.UpdateEffectCommand = new Command(UpdateEffect);
+            updateEffectCommand = new Command(UpdateEffect);
+            _effect.UpdateEffectCommand = updateEffectCommand;
         }
 
+        originalBackgroundColor = Control.BackgroundColor;
         Control.BackgroundColor = UIColor.Clear;
 
         blurView = new UIVisualEffectView();
@@ -40,26 +44,46 @@ public class BlurPlatformEffect : PlatformEffect
 
     protected override void OnDetached()
     {
-        Control.Subviews.FirstOrDefault(x => x is UIVisualEffectView)?.RemoveFromSuperview();
+        if (VirtualEffect?.UpdateEffectCommand == updateEffectCommand)
+        {
+            VirtualEffect.UpdateEffectCommand = null;
+        }
+
+        blurView?.RemoveFromSuperview();
+        blurView?.Dispose();
+        blurView = null;
+
+        Control.BackgroundColor = originalBackgroundColor;
+        originalBackgroundColor = null;
+        updateEffectCommand = null;
+        VirtualEffect = null;
     }
 
     protected override void OnElementPropertyChanged(PropertyChangedEventArgs args)
     {
         base.OnElementPropertyChanged(args);
-        if (args.PropertyName == nameof(View.BackgroundColorProperty.PropertyName))
+        if (args.PropertyName == View.BackgroundColorProperty.PropertyName && this.Element is View view)
         {
-            Control.BackgroundColor = (this.Element as View).BackgroundColor.WithAlpha(.2f).ToPlatform();
+            Control.BackgroundColor = view.BackgroundColor?.WithAlpha(VirtualEffect?.EffectiveAccentOpacity ?? .2f).ToPlatform() ?? UIColor.Clear;
         }
     }
 
     protected void UpdateEffect()
     {
+        if (blurView == null)
+        {
+            return;
+        }
+
+        var accentOpacity = VirtualEffect?.EffectiveAccentOpacity ?? .2f;
+
         if (VirtualEffect?.AccentColor != null && VirtualEffect.AccentColor.IsNotDefault())
         {
-            if (this.Element is View view)
-            {
-                Control.BackgroundColor = VirtualEffect.AccentColor.WithAlpha(VirtualEffect.AccentOpacity).ToPlatform();
-            }
+            Control.BackgroundColor = VirtualEffect.AccentColor.WithAlpha(accentOpacity).ToPlatform();
+        }
+        else
+        {
+            Control.BackgroundColor = UIColor.Clear;
         }
 
         blurView.Effect = VirtualEffect?.Mode == BlurMode.Dark ?

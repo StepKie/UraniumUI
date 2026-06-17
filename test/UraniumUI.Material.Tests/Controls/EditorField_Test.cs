@@ -58,11 +58,53 @@ public class EditorField_Test
         viewModel.Text.ShouldBe(control.Text);
     }
 
+    [Fact]
+    public void TextColor_ShouldBeSet_FromViewModel()
+    {
+        var control = AnimationReadyHandler.Prepare(new EditorField());
+        var viewModel = new EditorFieldTestViewModel { TextColor = Colors.Blue };
+        control.BindingContext = viewModel;
+
+        // Act
+        control.SetBinding(EditorField.TextColorProperty, new Binding(nameof(EditorFieldTestViewModel.TextColor)));
+
+        // Assert
+        control.EditorView.TextColor.ShouldBe(viewModel.TextColor);
+    }
+
+    [Fact]
+    public void TextColor_ShouldOverride_ExistingThemeBinding_WhenValueMatchesLightTheme()
+    {
+        var originalTheme = Application.Current.UserAppTheme;
+
+        try
+        {
+            Application.Current.UserAppTheme = AppTheme.Light;
+
+            var control = AnimationReadyHandler.Prepare(new EditorField());
+            control.EditorView.SetAppThemeColor(Editor.TextColorProperty, Colors.Black, Colors.White);
+
+            // Act
+            control.TextColor = Colors.Black;
+            Application.Current.UserAppTheme = AppTheme.Dark;
+
+            // Assert
+            control.EditorView.TextColor.ShouldBe(Colors.Black);
+        }
+        finally
+        {
+            Application.Current.UserAppTheme = originalTheme;
+        }
+    }
+
     internal class EditorFieldTestViewModel : UraniumBindableObject
     {
         private string text;
+        private Color textColor;
 
         public string Text { get => text; set => SetProperty(ref text, value); }
+
+        public Color TextColor { get => textColor; set => SetProperty(ref textColor, value); }
     }
 
     [Fact]

@@ -28,12 +28,8 @@ public class DropdownField : InputField
         VerticalOptions = LayoutOptions.Center,
         HorizontalOptions = LayoutOptions.End,
         IsVisible = false,
-        Padding = 10,
-        Content = new Path
-        {
-            Data = UraniumShapes.X,
-            Fill = ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.DarkGray).WithAlpha(.5f),
-        }
+        Padding = new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0),
+        Content = CreateClearIconPath(null),
     };
 
     public override bool HasValue => SelectedItem != null;
@@ -45,6 +41,7 @@ public class DropdownField : InputField
         base.RegisterForEvents();
 
         iconClear.TappedCommand = new Command(OnClearTapped);
+        SetActionSemantics(iconClear, AccessibilityOptions.ClearSelectionDescription, AccessibilityOptions.ClearSelectionHint);
         UpdateClearIconState();
 
         DropdownView.SetBinding(Dropdown.SelectedItemProperty, new Binding(nameof(SelectedItem), BindingMode.TwoWay, source: this));
@@ -110,6 +107,11 @@ public class DropdownField : InputField
         UpdateClearIconState();
     }
 
+    public void Close()
+    {
+        DropdownView?.Close();
+    }
+
     #region BindableProperties
 
     public BindingBase ItemDisplayBinding { get => DropdownView?.ItemDisplayBinding; set => DropdownView.ItemDisplayBinding = value; }
@@ -128,6 +130,7 @@ public class DropdownField : InputField
         nameof(SelectedItem),
         typeof(object),
         typeof(DropdownField),
+        defaultBindingMode: BindingMode.TwoWay,
         propertyChanged: (bindable, oldValue, newValue) => (bindable as DropdownField).OnSelectedItemChanged());
 
     public bool AllowClear { get => (bool)GetValue(AllowClearProperty); set => SetValue(AllowClearProperty, value); }

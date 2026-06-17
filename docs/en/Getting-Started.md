@@ -1,13 +1,17 @@
 # Getting Started
-Uranium UI is a UI framework for .NET MAUI. It is built on top of the .NET MAUI infrastructure and provides a set of controls and layouts to build modern UIs. It also provides infrastructure for building custom controls and themes on it.
+UraniumUI is a presentation framework for .NET MAUI. It combines native-MAUI-based controls, theming, dialogs, dynamic forms, validation infrastructure, and extension points for building production-ready app interfaces.
 
-There are 2 ways to get started with Uranium UI:
+It is built on top of the .NET MAUI infrastructure, so you can start with UraniumUI's ready-made presentation layer and still drop down to native MAUI APIs when a screen needs custom behavior.
+
+Accessibility should be considered from the first screen. UraniumUI provides keyboard-aware controls, Material input focus states, and focusable custom interaction primitives, but app templates and custom item templates still need good semantic descriptions, validation messages, and keyboard paths. Start with [Accessibility](best-practices/Accessibility.md) and [Clickable Areas](best-practices/ClickableAreas.md) when building custom cards, rows, tabs, dialogs, bottom sheets, data grids, and selection inputs.
+
+There are 2 ways to get started with UraniumUI:
 - Existing Projects
 - New projects
 
 ## New Projects
 
-Uranium UI provides a project template to start a new project with Uranium UI. You can customize the startup project with parameters like icon library, theme, and more.
+UraniumUI provides a project template to start a new project with UraniumUI. You can customize the startup project with parameters like icon library, theme, and more.
 
 - Install latest templates from NuGet: 
     ```bash
@@ -19,6 +23,11 @@ Uranium UI provides a project template to start a new project with Uranium UI. Y
   dotnet new uraniumui-app -n MyProject
   ```
 
+- Or create the blank starter:
+  ```bash
+  dotnet new uraniumui-blank-app -n MyProject
+  ```
+
 ### Visual Studio
 Also, templates has `ide.host.json` implementation that allows to create a new project from Visual Studio.
 
@@ -26,9 +35,17 @@ Also, templates has `ide.host.json` implementation that allows to create a new p
 
 ### Parameters
 
-- `icons`: Defines icon library to use. Default is `MaterialIcons`. Available values are `FontAwesome`, `MaterialIcons`, and `None`.
+- `Icons`: Defines the icon package configured by the template. Default is `MaterialSymbols` (Material Symbols). Available values are `FontAwesome`, `MaterialSymbols`, `FluentIcons`, and `None`.
 
-    Example: `dotnet new uraniumui -n MyProject -icons FontAwesome`
+    Example: `dotnet new uraniumui-app -n MyProject --Icons FluentIcons`
+
+- `Dialogs`: Configures dialog integration. Available values are `Mopups`, `CommunityToolkit`, and `None`.
+
+    Example: `dotnet new uraniumui-app -n MyProject --Dialogs CommunityToolkit`
+
+- `Blurs`: Adds `UraniumUI.Blurs` setup to the starter project.
+
+    Example: `dotnet new uraniumui-app -n MyProject --Blurs true`
 
 ## Existing Projects
 - Install the [UraniumUI.Material](https://www.nuget.org/packages/UraniumUI.Material/) NuGet package to your MAUI application.
@@ -36,7 +53,7 @@ Also, templates has `ide.host.json` implementation that allows to create a new p
     dotnet add package UraniumUI.Material
     ```
 
-    > Uranium UI doesn't include any theme by default. Pick one of the themes and install it. Since there is only one theme for now, you can install [UraniumUI.Material](https://www.nuget.org/packages/UraniumUI.Material/) directly instead of installing both **UraniumUI** and **UraniumUI.Material**.
+    > UraniumUI doesn't include any theme by default. Pick one of the themes and install it. Since there is only one theme for now, you can install [UraniumUI.Material](https://www.nuget.org/packages/UraniumUI.Material/) directly instead of installing both **UraniumUI** and **UraniumUI.Material**.
 
 
 
@@ -71,10 +88,10 @@ Also, templates has `ide.host.json` implementation that allows to create a new p
         > ```
 
 
-- (Optional) Installing a font icon library is recommended. Choose one of the icons and install it.
+- (Optional) Installing a font icon library is recommended. Material Symbols is the current recommended path.
+  -  [Material Symbols](theming/Icons.md#material-symbols)
+  -  [Segoe Fluent Icons](theming/Icons.md#segoe-fluent-icons)
   -  [FontAwesome](theming/Icons.md#fontawesome)
-  -  [Material](theming/Icons.md#material-icons)
-  -  [Segoe](theming/Icons.md#segoe-fluent-icons)
 
 ## Themes available
  - [Material Theme](themes/material/Index.md)

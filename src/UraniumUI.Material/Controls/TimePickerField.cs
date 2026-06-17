@@ -33,12 +33,8 @@ public class TimePickerField : InputField
         VerticalOptions = LayoutOptions.Center,
         HorizontalOptions = LayoutOptions.End,
         IsVisible = false,
-        Padding = 10,
-        Content = new Path
-        {
-            Data = UraniumShapes.X,
-            Fill = ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.DarkGray).WithAlpha(.5f),
-        }
+        Padding = new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0),
+        Content = CreateClearIconPath(null),
     };
 
     public override bool HasValue => Time != null;
@@ -47,6 +43,7 @@ public class TimePickerField : InputField
     {
         base.RegisterForEvents();
         iconClear.TappedCommand = new Command(OnClearTapped);
+        SetActionSemantics(iconClear, AccessibilityOptions.ClearTimeDescription, AccessibilityOptions.ClearTimeHint);
 
         UpdateClearIconState();
 

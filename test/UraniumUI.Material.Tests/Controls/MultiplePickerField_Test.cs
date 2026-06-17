@@ -1,5 +1,6 @@
 ﻿using Shouldly;
 using System.Collections.ObjectModel;
+using System.Linq;
 using UraniumUI.Dialogs;
 using UraniumUI.Material.Controls;
 using UraniumUI.Material.Tests.Mocks;
@@ -59,9 +60,73 @@ public class MultiplePickerField_Test
         control.RefreshChipLayoutCallCount.ShouldBe(2);
     }
 
+    [Fact]
+    public void IsChipRemoveVisible_ShouldUpdateGeneratedChipVisibility()
+    {
+        var control = AnimationReadyHandler.Prepare(new TestMultiplePickerField());
+        control.SelectedItems = new ObservableCollection<object> { "Option 1" };
+
+        var chip = control.GetSingleChip();
+        chip.IsDestroyVisible.ShouldBeTrue();
+
+        control.IsChipRemoveVisible = false;
+        chip.IsDestroyVisible.ShouldBeFalse();
+
+        control.IsChipRemoveVisible = true;
+        chip.IsDestroyVisible.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void ChipStyleProperties_ShouldUpdateGeneratedChip()
+    {
+        var control = AnimationReadyHandler.Prepare(new TestMultiplePickerField());
+        control.SelectedItems = new ObservableCollection<object> { "Option 1" };
+
+        control.ChipBackgroundColor = Colors.Red;
+        control.ChipTextColor = Colors.White;
+        control.ChipDestroyIconColor = Colors.Yellow;
+
+        var chip = control.GetSingleChip();
+        chip.BackgroundColor.ShouldBe(Colors.Red);
+        chip.TextColor.ShouldBe(Colors.White);
+        chip.DestroyIconColor.ShouldBe(Colors.Yellow);
+    }
+
+    [Fact]
+    public void CheckBoxStyleProperties_ShouldUpdateGeneratedPromptCheckBox()
+    {
+        var control = AnimationReadyHandler.Prepare(new TestMultiplePickerField
+        {
+            CheckBoxColor = Colors.Red,
+            CheckBoxBorderColor = Colors.Blue,
+            CheckBoxTextColor = Colors.Green,
+            CheckBoxIconColor = Colors.Yellow,
+        });
+
+        var checkBox = control.CreateCheckBoxPromptCheckBoxForTest("Option 1", true);
+
+        checkBox.Text.ShouldBe("Option 1");
+        checkBox.CommandParameter.ShouldBe("Option 1");
+        checkBox.IsChecked.ShouldBeTrue();
+        checkBox.Color.ShouldBe(Colors.Red);
+        checkBox.BorderColor.ShouldBe(Colors.Blue);
+        checkBox.TextColor.ShouldBe(Colors.Green);
+        checkBox.IconColor.ShouldBe(Colors.Yellow);
+    }
+
     private sealed class TestMultiplePickerField : MultiplePickerField
     {
         public int RefreshChipLayoutCallCount { get; private set; }
+
+        public Chip GetSingleChip()
+        {
+            return chipsHolderLayout.Children.OfType<Chip>().Single();
+        }
+
+        public UraniumUI.Material.Controls.CheckBox CreateCheckBoxPromptCheckBoxForTest(object item, bool isChecked)
+        {
+            return CreateCheckBoxPromptCheckBox(item, isChecked);
+        }
 
         protected override void RefreshChipLayout()
         {

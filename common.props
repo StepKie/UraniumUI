@@ -1,12 +1,12 @@
 <Project>
     <PropertyGroup>
-        <Version>2.15.0</Version>
+        <Version>3.0.0</Version>
         <PackageIcon>logo_128.png</PackageIcon>
         <NeutralLanguage>en</NeutralLanguage>
         <RepositoryUrl>https://github.com/enisn/UraniumUI</RepositoryUrl>
         <PackageProjectUrl>https://github.com/enisn/UraniumUI</PackageProjectUrl>
         <Authors>enisn</Authors>
-        <Description>Uranium is a Free &amp; Open-Source UI Kit for MAUI.</Description>
+        <Description>UraniumUI is a Free &amp; Open-Source presentation framework for .NET MAUI.</Description>
         <PackageReleaseNotes>Check GitHub releases for changelog.</PackageReleaseNotes>
         <PackageReadmeFile>README.md</PackageReadmeFile>
         
@@ -30,6 +30,6 @@
     </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="8.0.0" PrivateAssets="All"/>
+    <PackageReference Include="Microsoft.SourceLink.GitHub" Version="10.0.300" PrivateAssets="All"/>
   </ItemGroup>
 </Project>

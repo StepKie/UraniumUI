@@ -1,20 +1,28 @@
 ﻿using Android.Content;
 using Android.Graphics;
+using Paint = Android.Graphics.Paint;
 
 namespace UraniumUI.Blurs;
 
 public class RenderEffectBlur : IBlurAlgorithm
 {
     private readonly RenderNode node = new RenderNode("BlurViewNode");
+    private readonly Paint paint = new Paint(PaintFlags.FilterBitmap);
 
     private int height, width;
     private float lastBlurRadius = 1f;
+    private bool destroyed;
 
     public IBlurAlgorithm fallbackAlgorithm;
     private Context context;
 
     public Bitmap Blur(Bitmap bitmap, float blurRadius)
     {
+        if (destroyed)
+        {
+            return bitmap;
+        }
+
         lastBlurRadius = blurRadius;
 
         if (bitmap.Height != height || bitmap.Width != width)
@@ -33,10 +41,17 @@ public class RenderEffectBlur : IBlurAlgorithm
 
     public void Destroy()
     {
+        if (destroyed)
+        {
+            return;
+        }
+
+        destroyed = true;
         node.DiscardDisplayList();
         if (fallbackAlgorithm != null)
         {
             fallbackAlgorithm.Destroy();
+            fallbackAlgorithm = null;
         }
     }
 
@@ -48,12 +63,24 @@ public class RenderEffectBlur : IBlurAlgorithm
 
     public void Render(Canvas canvas, Bitmap bitmap)
     {
+        if (destroyed)
+        {
+            canvas.DrawBitmap(bitmap, 0f, 0f, paint);
+            return;
+        }
+
         if (canvas.IsHardwareAccelerated)
         {
             canvas.DrawRenderNode(node);
         }
         else
         {
+            if (context == null)
+            {
+                canvas.DrawBitmap(bitmap, 0f, 0f, paint);
+                return;
+            }
+
             if (fallbackAlgorithm == null)
             {
                 fallbackAlgorithm = new RenderScriptBlur(context);

@@ -6,6 +6,7 @@ TreeView is included in the `UraniumUI.Material.Controls` namespace. You should 
 
 ```xml
 xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
 ```
 
 Then you can use it like this:
@@ -15,6 +16,8 @@ Then you can use it like this:
 ```
 
 TreeView doesn't have any visual appearance without data. You should bind some data to see the control.
+
+> For large data sets, let `TreeView` own the scrolling surface. Do not wrap it in a `ScrollView`; place it in a constrained layout such as a `Grid` row with `*` height so the internal virtualized list can recycle rows correctly.
 
 ### Data Binding
 
@@ -98,7 +101,7 @@ You can customize nodes with `ItemTemplate`. It's just like a `ListView` or `Col
     <material:TreeView.ItemTemplate>
         <DataTemplate>
             <HorizontalStackLayout Spacing="5">
-                <Image Source="{FontImageSource FontFamily=MaterialRegular, Glyph={x:Static m:MaterialRegular.Folder}, Color={StaticResource Primary}}" />
+                <Image Source="{FontImageSource FontFamily=MaterialOutlined, Glyph={x:Static m:MaterialOutlined.Folder}, Color={StaticResource Primary}}" />
                 <Label Text="{Binding Name}" FontAttributes="Bold" />
                 <Label Text="{Binding Children.Count, StringFormat='({0})'}" />
             </HorizontalStackLayout>
@@ -151,11 +154,20 @@ If the node object contain its children in a different property, you can set `Ch
 ## Selection
 TreeView supports single selection and multiple selection. You can set `SelectionMode` property of the TreeView to `Single` or `Multiple` to enable selection. Default value is `None`. You can bind `SelectedItem` or `SelectedItems` property of the TreeView to a property in your ViewModel to get the selected item or items.
 
+If you prefer event or command-based handling instead of binding to a reactive property, `TreeView` also provides `SelectedItemChanged` / `SelectedItemChangedCommand` for single selection and `SelectedItemsChanged` / `SelectedItemsChangedCommand` for multiple selection.
+
 <iframe width="560" height="315" src="https://www.youtube.com/embed/OUPiPGqotMc?si=c47cssoVKtnXdXtL" title="YouTube video player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
 
 ### Single Selection
 ```xml
 <material:TreeView ItemsSource="{Binding Nodes}" SelectionMode="Single" SelectedItem="{Binding SelectedNode}" />
+```
+
+```xml
+<material:TreeView
+    ItemsSource="{Binding Nodes}"
+    SelectionMode="Single"
+    SelectedItemChangedCommand="{Binding NodeSelectedCommand}" />
 ```
 
 | Light | Dark |
@@ -166,6 +178,13 @@ TreeView supports single selection and multiple selection. You can set `Selectio
 
 ```xml
 <material:TreeView ItemsSource="{Binding Nodes}" SelectionMode="Multiple" SelectedItems="{Binding SelectedNodes}" />
+```
+
+```xml
+<material:TreeView
+    ItemsSource="{Binding Nodes}"
+    SelectionMode="Multiple"
+    SelectedItemsChangedCommand="{Binding SelectedNodesChangedCommand}" />
 ```
 
 | Light | Dark |
@@ -193,6 +212,16 @@ TreeView provides `TreeViewHierarchicalSelectBehavior` that can be used only wit
     </material:TreeView.ItemTemplate>
 </material:TreeView>
 ```
+
+---
+
+## Accessibility
+
+Tree views usually combine selection, expansion, and custom item templates. The built-in node row is already wrapped by UraniumUI's interactive row surface, so you do not need to wrap the whole `ItemTemplate` in another `ButtonView` or `StatefulContentView` just to make the row selectable.
+
+Keep item text available through labels, do not rely on indentation or color alone, and provide semantic descriptions for icon-only custom node actions. If your `ItemTemplate` adds extra actions inside the row, such as a delete icon or secondary menu, make those actions real focusable controls instead of passive layouts with only `TapGestureRecognizer`. If you use `TreeViewHierarchicalSelectBehavior`, keep the checkbox `Text` bound to the node label so the option can be announced.
+
+See [Clickable Areas](../../../best-practices/ClickableAreas.md) for custom row guidance.
 
 ---
 
@@ -267,7 +296,7 @@ You can use following binding properties in the `ExpanderTemplate`:
 ![Treeview Expander](../../../../images/treeview-expander-dark-android.gif)
 
 ### UseAnimation
-Determines whether to use animations when expanding and collapsing nodes. Default value is `true`. You may want to disable animations if you want to improve performance while working with huge amount of tree nodes.
+Determines whether to use animations when expanding and collapsing nodes. Default value is `true`. You may want to disable animations if you want to improve performance while working with huge amount of tree nodes. On Windows, setting this property to `false` also disables the native `CollectionView` item transition animations used by the virtualized TreeView surface.
 
 ```xml
 <material:TreeView ItemsSource="{Binding Nodes}" UseAnimation="False"/>
@@ -292,25 +321,35 @@ A file system is a good example of lazy-loading. When you open a folder, you don
 ```csharp
 public class TreeViewFileSystemViewModel : UraniumBindableObject
 {
+    private static readonly EnumerationOptions EnumerationOptions = new()
+    {
+        IgnoreInaccessible = true,
+        RecurseSubdirectories = false,
+        ReturnSpecialDirectories = false,
+        AttributesToSkip = 0,
+    };
+
     public ObservableCollection<NodeItem> Nodes { get; private set; }
 
-    public ICommand LoadChildrenCommand { get; set; }
+    public ICommand LoadChildrenCommand { get; }
 
     public TreeViewFileSystemViewModel()
     {
         InitializeNodes();
-        LoadChildrenCommand = new Command<NodeItem>((node) =>
-        {
-            foreach (var item in GetContent(node.Path))
-            {
-                node.Children.Add(item);
-            }
+        LoadChildrenCommand = new Command<NodeItem>(async node => await LoadChildrenAsync(node));
+    }
 
-            if (node.Children.Count == 0)
-            {
-                node.IsLeaf = true;
-            }
-        });
+    async Task LoadChildrenAsync(NodeItem node)
+    {
+        if (node is null || !node.IsDirectory || node.HasLoadedChildren)
+        {
+            return;
+        }
+
+        node.HasLoadedChildren = true;
+        var children = await Task.Run(() => GetContent(node.Path).ToArray());
+        node.Children = new ObservableCollection<NodeItem>(children);
+        node.IsLeaf = node.Children.Count == 0;
     }
 
     void InitializeNodes()
@@ -328,41 +367,41 @@ public class TreeViewFileSystemViewModel : UraniumBindableObject
 
     IEnumerable<NodeItem> GetContent(string dir)
     {
-        var directories = Directory.GetDirectories(dir);
-        foreach (string d in directories)
+        foreach (var directory in Directory.EnumerateDirectories(dir, "*", EnumerationOptions))
         {
             yield return new NodeItem
             {
-                Name = d.Split(Path.DirectorySeparatorChar).LastOrDefault(),
-                Path = d,
+                Name = Path.GetFileName(directory),
+                Path = directory,
                 IsDirectory = true,
                 IsLeaf = false,
             };
         }
-        var files = Directory.GetFiles(dir);
 
-        foreach (string f in files)
+        foreach (var file in Directory.EnumerateFiles(dir, "*", EnumerationOptions))
         {
-            var node = new NodeItem
+            yield return new NodeItem
             {
-                Name = f.Split(Path.DirectorySeparatorChar).LastOrDefault(),
-                Path = f,
+                Name = Path.GetFileName(file),
+                Path = file,
                 IsDirectory = false,
                 IsLeaf = true,
             };
-            yield return node;
         }
     }
 
     public class NodeItem : UraniumBindableObject
     {
         private bool isLeaf;
+        private bool hasLoadedChildren;
+        private IList<NodeItem> children = new ObservableCollection<NodeItem>();
 
         public string Name { get; set; }
         public string Path { get; set; }
         public bool IsDirectory { get; set; }
         public bool IsLeaf { get => isLeaf; set => SetProperty(ref isLeaf, value); }
-        public ObservableCollection<NodeItem> Children { get; } = new();
+        public bool HasLoadedChildren { get => hasLoadedChildren; set => SetProperty(ref hasLoadedChildren, value); }
+        public IList<NodeItem> Children { get => children; set => SetProperty(ref children, value); }
     }
 }
 ```
@@ -370,6 +409,7 @@ public class TreeViewFileSystemViewModel : UraniumBindableObject
 ```xml
 <material:TreeView 
         ItemsSource="{Binding Nodes}" 
+        IsLeafPropertyName="IsLeaf"
         LoadChildrenCommand="{Binding LoadChildrenCommand}">
     <material:TreeView.ItemTemplate>
         <DataTemplate>
@@ -377,10 +417,10 @@ public class TreeViewFileSystemViewModel : UraniumBindableObject
                 <Image>
                     <Image.Triggers>
                         <DataTrigger TargetType="Image" Binding="{Binding IsDirectory}" Value="True">
-                            <Setter Property="Source" Value="{FontImageSource FontFamily=MaterialRegular, Glyph={x:Static m:MaterialRegular.Folder}, Color={AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}}" />
+                            <Setter Property="Source" Value="{FontImageSource FontFamily=MaterialOutlined, Glyph={x:Static m:MaterialOutlined.Folder}, Color={AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}}" />
                         </DataTrigger>
                         <DataTrigger TargetType="Image" Binding="{Binding IsDirectory}" Value="False">
-                            <Setter Property="Source" Value="{FontImageSource FontFamily=MaterialRegular, Glyph={x:Static m:MaterialRegular.Insert_drive_file}, Color={AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}}" />
+                            <Setter Property="Source" Value="{FontImageSource FontFamily=MaterialOutlined, Glyph={x:Static m:MaterialOutlined.File_present}, Color={AppThemeBinding Light={StaticResource Primary}, Dark={StaticResource PrimaryDark}}}" />
                         </DataTrigger>
                     </Image.Triggers>
                 </Image>

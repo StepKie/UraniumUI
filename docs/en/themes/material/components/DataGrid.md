@@ -8,6 +8,7 @@ You can use the material namespace of UraniumUI in XAML files like the following
 
 ```
 xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
 ```
 
 DataGrid can't be used standalone without csharp code. You need to bind some data to `ItemsSource` property.
@@ -70,11 +71,14 @@ You can customize the cell item template by using `CellItemTemplate` property. I
 ### Columns
 
 #### Auto Columns
-Columns are automatically detected by **DataGrid** when `UseAutoColumns` property is set as `True`. It uses reflection to get properties of the data source. You can use DataAnnosations attributes to define Title of column in auto mode. Adding `[DisplayName]` attribute to the property will define the title of the column.
+Columns are automatically detected by **DataGrid** when `UseAutoColumns` property is set as `True`. It uses reflection to get properties of the data source. You can use DataAnnosations attributes to define Title of column in auto mode. Adding `[DisplayName]` attribute to the property will define the title of the column. Properties marked with `[DataGridIgnore]` are skipped during auto-generation.
 
 ```csharp
 [DisplayName("Identity Number")]
 public int Id { get; set; }
+
+[DataGridIgnore]
+public string InternalCode { get; set; }
 ```
 
 ![MAUI Datagrid header](../../../../images/datagrid-displayname.png)
@@ -175,19 +179,19 @@ You can define a custom view for the header of the column by using `TitleView` p
 	<material:DataGrid.Columns>
 		<material:DataGridColumn ValueBinding="{Binding Id}">
 			<material:DataGridColumn.TitleView>
-				<Image Source="{FontImageSource FontFamily=MaterialRegular, Glyph={x:Static m:MaterialRegular.Fingerprint}, Color={StaticResource Primary}}" />
+				<Image Source="{FontImageSource FontFamily=MaterialOutlined, Glyph={x:Static m:MaterialOutlined.Fingerprint}, Color={StaticResource Primary}}" />
 			</material:DataGridColumn.TitleView>
 		</material:DataGridColumn>
 
 		<material:DataGridColumn ValueBinding="{Binding Name}">
 			<material:DataGridColumn.TitleView>
-				<Image Source="{FontImageSource FontFamily=MaterialRegular, Glyph={x:Static m:MaterialRegular.Badge}, Color={StaticResource Primary}}" />
+				<Image Source="{FontImageSource FontFamily=MaterialOutlined, Glyph={x:Static m:MaterialOutlined.Badge}, Color={StaticResource Primary}}" />
 			</material:DataGridColumn.TitleView>
 		</material:DataGridColumn>
 
 		<material:DataGridColumn ValueBinding="{Binding Age}">
 			<material:DataGridColumn.TitleView>
-				<Image Source="{FontImageSource FontFamily=MaterialRegular, Glyph={x:Static m:MaterialRegular.Calendar_today}, Color={StaticResource Primary}}" />
+				<Image Source="{FontImageSource FontFamily=MaterialOutlined, Glyph={x:Static m:MaterialOutlined.Calendar_today}, Color={StaticResource Primary}}" />
 			</material:DataGridColumn.TitleView>
 		</material:DataGridColumn>
 	</material:DataGrid.Columns>
@@ -298,6 +302,21 @@ public class MainViewModel
 ```
 
 ![MAUI DataGrid Selection Deletion](../../../../images/datagrid-selection-deletion.gif)
+
+## Accessibility
+
+Data-heavy screens need extra care because cells, row selection, and action columns can become custom templates quickly.
+
+Recommendations:
+
+- Use meaningful `Title` values for every column, especially when auto-generated columns are not enough.
+- Use real `Button`, `ButtonView`, or `StatefulContentView` controls for row actions instead of gesture-only layouts.
+- Add `SemanticProperties.Description` to icon-only action buttons in `CellItemTemplate`.
+- Keep row selection controls keyboard reachable and visually distinct from normal cells.
+- Do not communicate selection, errors, or disabled state only with color.
+- Add an `EmptyView` with real text so screen readers announce the empty state.
+
+For custom clickable row or card-like cells, see [Clickable Areas](../../../best-practices/ClickableAreas.md).
 
 ## Loading State
 You can place an activity indicator inside the DataGrid to show loading state if you make a network call to get data.

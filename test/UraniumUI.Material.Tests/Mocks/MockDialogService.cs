@@ -4,6 +4,20 @@ using UraniumUI.Infrastructure;
 namespace UraniumUI.Material.Tests.Mocks;
 internal class MockDialogService : IDialogService
 {
+    public bool UseDatePromptResult { get; set; }
+
+    public DateTime? DatePromptResult { get; set; }
+
+    public int DatePromptCallCount { get; private set; }
+
+    public string DatePromptTitle { get; private set; }
+
+    public DateTime? DatePromptSelectedDate { get; private set; }
+
+    public DateTime? DatePromptMinimumDate { get; private set; }
+
+    public DateTime? DatePromptMaximumDate { get; private set; }
+
     public Task<bool> ConfirmAsync(string title, string message, string okText = "OK", string cancelText = "Cancel")
     {
         return Task.FromResult(default(bool));
@@ -39,9 +53,33 @@ internal class MockDialogService : IDialogService
         return Task.FromResult(string.Empty);
     }
 
+    public Task<DateTime?> DisplayDatePromptAsync(
+        string title,
+        DateTime? selectedDate = null,
+        DateTime? minimumDate = null,
+        DateTime? maximumDate = null,
+        string accept = "OK",
+        string cancel = "Cancel",
+        string clear = "Clear",
+        string today = "Today")
+    {
+        DatePromptCallCount++;
+        DatePromptTitle = title;
+        DatePromptSelectedDate = selectedDate;
+        DatePromptMinimumDate = minimumDate;
+        DatePromptMaximumDate = maximumDate;
+
+        return Task.FromResult(UseDatePromptResult ? DatePromptResult : selectedDate);
+    }
+
     public Task DisplayViewAsync(string title, View content, string okText = "OK")
     {
         return Task.CompletedTask;
+    }
+
+    public Task<bool> DisplayViewAsync(string title, View content, string okText, string cancelText)
+    {
+        return Task.FromResult(true);
     }
 
     public Task<TViewModel> DisplayFormViewAsync<TViewModel>(string title, TViewModel viewModel = null, string submit = "OK", string cancel = "Cancel") where TViewModel : class

@@ -3,6 +3,7 @@ using UraniumUI.Controls;
 using UraniumUI.Pages;
 using UraniumUI.Resources;
 using UraniumUI.ViewExtensions;
+using UraniumUI.Views;
 using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace UraniumUI.Material.Controls;
@@ -19,17 +20,13 @@ public class AutoCompleteTextField : InputField
         VerticalOptions = LayoutOptions.Center
     };
 
-    protected ContentView iconClear = new ContentView
+    protected StatefulContentView iconClear = new StatefulContentView
     {
         VerticalOptions = LayoutOptions.Center,
         HorizontalOptions = LayoutOptions.End,
         IsVisible = false,
-        Padding = 10,
-        Content = new Path
-        {
-            Data = UraniumShapes.X,
-            Fill = ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.DarkGray).WithAlpha(.5f),
-        }
+        Padding = new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0),
+        Content = CreateClearIconPath(null),
     };
 
     public AutoCompleteTextField()
@@ -44,10 +41,8 @@ public class AutoCompleteTextField : InputField
 
         Content = autoCompleteView;
 
-        iconClear.GestureRecognizers.Add(new TapGestureRecognizer
-        {
-            Command = new Command(OnClearTapped)
-        });
+        iconClear.TappedCommand = new Command(OnClearTapped);
+        SetActionSemantics(iconClear, AccessibilityOptions.ClearAutocompleteTextDescription, AccessibilityOptions.ClearAutocompleteTextHint);
 
         autoCompleteView.SetBinding(AutoCompleteView.TextProperty, new Binding(nameof(Text), source: this));
         autoCompleteView.SetBinding(AutoCompleteView.SelectedTextProperty, new Binding(nameof(SelectedText), source: this));

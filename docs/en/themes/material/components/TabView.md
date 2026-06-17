@@ -9,6 +9,7 @@ TabView is a component that allows you to switch between different views by sele
 
 ```xml
 xmlns:material="http://schemas.enisn-projects.io/dotnet/maui/uraniumui/material"
+xmlns:m="clr-namespace:UraniumUI.Icons.MaterialSymbols;assembly=UraniumUI.Icons.MaterialSymbols"
 ```
 
 Then you can use it like this:
@@ -70,6 +71,8 @@ Following parameters can be used in DataTemplate for binding:
 - `Title`: Title of tab.
 - `Data`: It's used to bind custom data to tab header. You can pass this while defining `TabItem`.
 
+For accessible custom headers, use a focusable control such as `Button`, `ButtonView`, `CheckBox`, or `StatefulContentView` and bind its command to `Command`. Avoid using a passive layout with only `TapGestureRecognizer` as the tab header action. Add semantic descriptions when the tab header uses icons or abbreviated text.
+
 ```xml
 <material:TabView>
     <material:TabView.TabHeaderItemTemplate>
@@ -102,7 +105,7 @@ Also, tabs can be customized using [Triggers](https://docs.microsoft.com/en-us/d
                     <DataTrigger TargetType="Button" Binding="{Binding IsSelected}" Value="True">
                         <Setter Property="BackgroundColor" Value="{StaticResource SurfaceTint1}" />
                         <Setter Property="TextColor" Value="{StaticResource SurfaceTint3}" />
-                        <Setter Property="ImageSource" Value="{FontImageSource FontFamily=MaterialRegular, Glyph={x:Static m:MaterialRegular.Home}, Color={StaticResource SurfaceTint1}}" />
+                        <Setter Property="ImageSource" Value="{FontImageSource FontFamily=MaterialOutlinedFilled, Glyph={x:Static m:MaterialOutlined.Home}, Color={StaticResource SurfaceTint1}}" />
                     </DataTrigger>
                     <DataTrigger TargetType="Button" Binding="{Binding IsSelected}" Value="False">
                         <Setter Property="BackgroundColor" Value="Transparent" />
@@ -188,6 +191,19 @@ Even you can define DataTemplate tab by tab separetely.
 | Light - Mobile | Dark - Desktop |
 | --- | --- |
 | ![MAUI TabView](../../../../images/tabview-custom-item-template-light-android.gif) | ![MAUI TabView](../../../../images/tabview-custom-item-template-dark-windows.gif)  |
+
+## Accessibility
+
+The default tab header template uses MAUI `Button` controls, so headers keep native button focus and activation behavior. Custom tab header templates are responsible for preserving that behavior.
+
+Checklist for tab headers:
+
+- Each tab can receive keyboard focus.
+- `Enter` or `Space` selects the focused tab.
+- Selected and focused states are visually distinct.
+- The header text or semantic description announces the tab purpose.
+- Icon-only tabs provide `SemanticProperties.Description`.
+- The selected state is not communicated by color alone.
 
 ### Dynamic Tabs
 TabView supports dynamic tabs. You can add/remove tabs dynamically from a source. `ItemsSource` and `Itemtemplate` properties can be used for this purpose.
