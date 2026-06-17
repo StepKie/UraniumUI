@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using UraniumUI.Controls;
 using UraniumUI.Extensions;
 using UraniumUI.Tests.Core;
@@ -117,6 +118,165 @@ public class CalendarView_Test
         calendarView.ClearSelection();
 
         Assert.Null(calendarView.SelectedDate);
+    }
+
+    [Fact]
+    public void TrySelectDate_ShouldToggleSelectedDates_WhenSelectionModeIsMultiple()
+    {
+        var firstDate = new DateTime(2026, 5, 10);
+        var secondDate = new DateTime(2026, 5, 12);
+        var calendarView = new CalendarView
+        {
+            SelectionMode = CalendarSelectionMode.Multiple,
+            DisplayDate = new DateTime(2026, 5, 1)
+        };
+
+        Assert.True(calendarView.TrySelectDate(firstDate));
+        Assert.True(calendarView.TrySelectDate(secondDate));
+
+        Assert.Equal(new[] { firstDate, secondDate }, calendarView.SelectedDates);
+        Assert.True(calendarView.VisibleDates.Single(day => day.Date == firstDate).IsMultipleSelected);
+        Assert.True(calendarView.VisibleDates.Single(day => day.Date == firstDate).IsSelected);
+
+        Assert.True(calendarView.TrySelectDate(firstDate));
+
+        Assert.Equal(new[] { secondDate }, calendarView.SelectedDates);
+        Assert.False(calendarView.VisibleDates.Single(day => day.Date == firstDate).IsSelected);
+    }
+
+    [Fact]
+    public void VisibleDates_ShouldUpdate_WhenSelectedDatesCollectionChanges()
+    {
+        var selectedDates = new ObservableCollection<DateTime>();
+        var date = new DateTime(2026, 5, 10);
+        var calendarView = new CalendarView
+        {
+            SelectionMode = CalendarSelectionMode.Multiple,
+            DisplayDate = new DateTime(2026, 5, 1),
+            SelectedDates = selectedDates
+        };
+
+        selectedDates.Add(date);
+
+        Assert.True(calendarView.VisibleDates.Single(day => day.Date == date).IsMultipleSelected);
+    }
+
+    [Fact]
+    public void TrySelectDate_ShouldSelectRange_WhenSelectionModeIsRange()
+    {
+        var startDate = new DateTime(2026, 5, 10);
+        var middleDate = new DateTime(2026, 5, 12);
+        var endDate = new DateTime(2026, 5, 15);
+        var calendarView = new CalendarView
+        {
+            SelectionMode = CalendarSelectionMode.Range,
+            DisplayDate = new DateTime(2026, 5, 1)
+        };
+
+        Assert.True(calendarView.TrySelectDate(startDate));
+
+        Assert.Equal(startDate, calendarView.RangeStartDate);
+        Assert.Null(calendarView.RangeEndDate);
+
+        Assert.True(calendarView.TrySelectDate(endDate));
+
+        Assert.Equal(startDate, calendarView.RangeStartDate);
+        Assert.Equal(endDate, calendarView.RangeEndDate);
+        Assert.True(calendarView.VisibleDates.Single(day => day.Date == startDate).IsRangeStart);
+        Assert.True(calendarView.VisibleDates.Single(day => day.Date == middleDate).IsRangeMiddle);
+        Assert.True(calendarView.VisibleDates.Single(day => day.Date == endDate).IsRangeEnd);
+    }
+
+    [Fact]
+    public void TrySelectDate_ShouldNormalizeRange_WhenEndIsBeforeStart()
+    {
+        var firstTap = new DateTime(2026, 5, 15);
+        var secondTap = new DateTime(2026, 5, 10);
+        var calendarView = new CalendarView
+        {
+            SelectionMode = CalendarSelectionMode.Range,
+            DisplayDate = new DateTime(2026, 5, 1)
+        };
+
+        Assert.True(calendarView.TrySelectDate(firstTap));
+        Assert.True(calendarView.TrySelectDate(secondTap));
+
+        Assert.Equal(secondTap, calendarView.RangeStartDate);
+        Assert.Equal(firstTap, calendarView.RangeEndDate);
+    }
+
+    [Fact]
+    public void TrySelectDate_ShouldAllowSameDateRange()
+    {
+        var date = new DateTime(2026, 5, 10);
+        var calendarView = new CalendarView
+        {
+            SelectionMode = CalendarSelectionMode.Range,
+            DisplayDate = new DateTime(2026, 5, 1)
+        };
+
+        Assert.True(calendarView.TrySelectDate(date));
+        Assert.True(calendarView.TrySelectDate(date));
+
+        var day = calendarView.VisibleDates.Single(day => day.Date == date);
+
+        Assert.Equal(date, calendarView.RangeStartDate);
+        Assert.Equal(date, calendarView.RangeEndDate);
+        Assert.True(day.IsRangeStart);
+        Assert.True(day.IsRangeEnd);
+        Assert.True(day.IsSelected);
+    }
+
+    [Fact]
+    public void TrySelectDate_ShouldStartNewRange_WhenRangeIsComplete()
+    {
+        var calendarView = new CalendarView
+        {
+            SelectionMode = CalendarSelectionMode.Range
+        };
+
+        Assert.True(calendarView.TrySelectDate(new DateTime(2026, 5, 10)));
+        Assert.True(calendarView.TrySelectDate(new DateTime(2026, 5, 15)));
+        Assert.True(calendarView.TrySelectDate(new DateTime(2026, 5, 20)));
+
+        Assert.Equal(new DateTime(2026, 5, 20), calendarView.RangeStartDate);
+        Assert.Null(calendarView.RangeEndDate);
+    }
+
+    [Fact]
+    public void TrySelectDate_ShouldIgnoreDisabledDate_WhenSelectionModeIsRange()
+    {
+        var calendarView = new CalendarView
+        {
+            SelectionMode = CalendarSelectionMode.Range,
+            MinimumDate = new DateTime(2026, 5, 10),
+            MaximumDate = new DateTime(2026, 5, 20)
+        };
+
+        var selected = calendarView.TrySelectDate(new DateTime(2026, 5, 9));
+
+        Assert.False(selected);
+        Assert.Null(calendarView.RangeStartDate);
+        Assert.Null(calendarView.RangeEndDate);
+    }
+
+    [Fact]
+    public void ClearSelection_ShouldClearAllSelectionProperties()
+    {
+        var calendarView = new CalendarView
+        {
+            SelectedDate = new DateTime(2026, 5, 9),
+            RangeStartDate = new DateTime(2026, 5, 10),
+            RangeEndDate = new DateTime(2026, 5, 15)
+        };
+        calendarView.SelectedDates.Add(new DateTime(2026, 5, 11));
+
+        calendarView.ClearSelection();
+
+        Assert.Null(calendarView.SelectedDate);
+        Assert.Empty(calendarView.SelectedDates);
+        Assert.Null(calendarView.RangeStartDate);
+        Assert.Null(calendarView.RangeEndDate);
     }
 
     [Fact]

@@ -10,13 +10,19 @@
             <Label Text="CalendarView" FontSize="Title" />
             <Label Text="UraniumUI.Controls" FontSize="Micro" Opacity=".6" />
 
-            <Label Text="A custom MAUI calendar layout that supports nullable single-date selection without relying on native date picker behavior." />
+            <Label Text="A custom MAUI calendar layout that supports nullable single-date, multiple-date, and range selection without relying on native date picker behavior." />
+
+            <HorizontalStackLayout Spacing="8">
+                <Button Text="Single" Clicked="SingleModeClicked" StyleClass="OutlinedButton" />
+                <Button Text="Multiple" Clicked="MultipleModeClicked" StyleClass="OutlinedButton" />
+                <Button Text="Range" Clicked="RangeModeClicked" StyleClass="OutlinedButton" />
+            </HorizontalStackLayout>
 
             <Border StyleClass="SurfaceContainer, Rounded" StrokeThickness="0" Padding="16" MaximumWidthRequest="480">
                 <uranium:CalendarView x:Name="calendarView" MinimumDate="1970-01-01" />
             </Border>
 
-            <Label Text="{Binding Source={x:Reference calendarView}, Path=SelectedDate, StringFormat='Selected date: {0:yyyy-MM-dd}'}" />
+            <Label x:Name="selectionSummaryLabel" />
 
             <HorizontalStackLayout Spacing="8">
                 <Button Text="Today" Clicked="TodayClicked" StyleClass="OutlinedButton" />

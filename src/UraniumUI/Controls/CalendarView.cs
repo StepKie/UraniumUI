@@ -1,3 +1,5 @@
+using System.Collections.ObjectModel;
+using System.Collections.Specialized;
 using System.Globalization;
 using System.Windows.Input;
 using Microsoft.Maui.Controls.Shapes;
@@ -22,7 +24,10 @@ public class CalendarView : ContentView
     private const double MaxDayButtonSize = 40;
     private const uint TransitionOutLength = 80;
     private const uint TransitionInLength = 120;
+    private const uint SelectionAnimationLength = 140;
     private const double TransitionOffset = 18;
+    private const double SelectionStartScale = .92;
+    private const string DayButtonSelectionColorAnimationName = "CalendarView.DayButton.SelectionColor";
 
     private readonly Label monthLabel = new()
     {
@@ -67,6 +72,7 @@ public class CalendarView : ContentView
     private bool isYearSelectionVisible;
     private bool isTransitioning;
     private int yearPageStart;
+    private INotifyCollectionChanged selectedDatesNotifier;
 
     public event EventHandler<CalendarDateSelectedEventArgs> DateSelected;
 
@@ -91,6 +97,7 @@ public class CalendarView : ContentView
         UpdateSemanticProperties();
 
         BuildLayout();
+        OnSelectedDatesChanged(null, SelectedDates);
         UpdateCalendar();
     }
 
@@ -117,6 +124,47 @@ public class CalendarView : ContentView
     public static readonly BindableProperty SelectedDateProperty = BindableProperty.Create(
         nameof(SelectedDate), typeof(DateTime?), typeof(CalendarView), default(DateTime?), BindingMode.TwoWay,
         propertyChanged: (bindable, oldValue, newValue) => ((CalendarView)bindable).OnSelectedDateChanged((DateTime?)newValue));
+
+    public CalendarSelectionMode SelectionMode
+    {
+        get => (CalendarSelectionMode)GetValue(SelectionModeProperty);
+        set => SetValue(SelectionModeProperty, value);
+    }
+
+    public static readonly BindableProperty SelectionModeProperty = BindableProperty.Create(
+        nameof(SelectionMode), typeof(CalendarSelectionMode), typeof(CalendarView), CalendarSelectionMode.Single,
+        propertyChanged: (bindable, oldValue, newValue) => ((CalendarView)bindable).UpdateCalendar());
+
+    public IList<DateTime> SelectedDates
+    {
+        get => (IList<DateTime>)GetValue(SelectedDatesProperty);
+        set => SetValue(SelectedDatesProperty, value);
+    }
+
+    public static readonly BindableProperty SelectedDatesProperty = BindableProperty.Create(
+        nameof(SelectedDates), typeof(IList<DateTime>), typeof(CalendarView), defaultBindingMode: BindingMode.TwoWay,
+        defaultValueCreator: _ => new ObservableCollection<DateTime>(),
+        propertyChanged: (bindable, oldValue, newValue) => ((CalendarView)bindable).OnSelectedDatesChanged((IList<DateTime>)oldValue, (IList<DateTime>)newValue));
+
+    public DateTime? RangeStartDate
+    {
+        get => (DateTime?)GetValue(RangeStartDateProperty);
+        set => SetValue(RangeStartDateProperty, value?.Date);
+    }
+
+    public static readonly BindableProperty RangeStartDateProperty = BindableProperty.Create(
+        nameof(RangeStartDate), typeof(DateTime?), typeof(CalendarView), default(DateTime?), BindingMode.TwoWay,
+        propertyChanged: (bindable, oldValue, newValue) => ((CalendarView)bindable).UpdateCalendar());
+
+    public DateTime? RangeEndDate
+    {
+        get => (DateTime?)GetValue(RangeEndDateProperty);
+        set => SetValue(RangeEndDateProperty, value?.Date);
+    }
+
+    public static readonly BindableProperty RangeEndDateProperty = BindableProperty.Create(
+        nameof(RangeEndDate), typeof(DateTime?), typeof(CalendarView), default(DateTime?), BindingMode.TwoWay,
+        propertyChanged: (bindable, oldValue, newValue) => ((CalendarView)bindable).UpdateCalendar());
 
     public DateTime DisplayDate
     {
@@ -168,7 +216,7 @@ public class CalendarView : ContentView
         }
 
         var oldDate = SelectedDate;
-        SelectedDate = date;
+        ApplySelection(date);
 
         if (!IsSameMonth(DisplayDate, date))
         {
@@ -183,6 +231,9 @@ public class CalendarView : ContentView
     public void ClearSelection()
     {
         SelectedDate = null;
+        SetSelectedDates(Array.Empty<DateTime>());
+        RangeStartDate = null;
+        RangeEndDate = null;
     }
 
     protected virtual void OnSelectedDateChanged(DateTime? selectedDate)
@@ -191,6 +242,24 @@ public class CalendarView : ContentView
         {
             DisplayDate = selectedDate.Value;
             return;
+        }
+
+        UpdateCalendar();
+    }
+
+    protected virtual void OnSelectedDatesChanged(IList<DateTime> oldValue, IList<DateTime> newValue)
+    {
+        if (selectedDatesNotifier is not null)
+        {
+            selectedDatesNotifier.CollectionChanged -= OnSelectedDatesCollectionChanged;
+            selectedDatesNotifier = null;
+        }
+
+        selectedDatesNotifier = newValue as INotifyCollectionChanged;
+
+        if (selectedDatesNotifier is not null)
+        {
+            selectedDatesNotifier.CollectionChanged += OnSelectedDatesCollectionChanged;
         }
 
         UpdateCalendar();
@@ -356,15 +425,27 @@ public class CalendarView : ContentView
         var offset = ((int)firstOfMonth.DayOfWeek - (int)FirstDayOfWeek + DaysInWeek) % DaysInWeek;
         var firstVisibleDate = firstOfMonth.AddDays(-offset);
         var days = new List<CalendarDay>(VisibleDayCount);
+        var selectedDates = GetSelectedDates();
+        var (rangeStart, rangeEnd) = GetSelectedRange();
 
         for (var i = 0; i < VisibleDayCount; i++)
         {
             var date = firstVisibleDate.AddDays(i);
+            var isSingleSelected = SelectionMode == CalendarSelectionMode.Single && SelectedDate?.Date == date;
+            var isMultipleSelected = SelectionMode == CalendarSelectionMode.Multiple && selectedDates.Contains(date);
+            var isRangeStart = SelectionMode == CalendarSelectionMode.Range && rangeStart == date;
+            var isRangeMiddle = SelectionMode == CalendarSelectionMode.Range && rangeStart.HasValue && rangeEnd.HasValue && date > rangeStart.Value && date < rangeEnd.Value;
+            var isRangeEnd = SelectionMode == CalendarSelectionMode.Range && rangeEnd == date;
+
             days.Add(new CalendarDay(
                 date,
                 IsSameMonth(DisplayDate, date),
                 IsDateEnabled(date),
-                SelectedDate?.Date == date));
+                isSingleSelected || isMultipleSelected || isRangeStart || isRangeMiddle || isRangeEnd,
+                isMultipleSelected,
+                isRangeStart,
+                isRangeMiddle,
+                isRangeEnd));
         }
 
         return days;
@@ -398,14 +479,32 @@ public class CalendarView : ContentView
 
     private void UpdateDayButton(Button button, CalendarDay day)
     {
+        var previousDay = button.CommandParameter as CalendarDay;
+        var shouldAnimateSelection = previousDay?.Date == day.Date
+            && previousDay.IsSelected != day.IsSelected
+            && button.IsLoaded;
+        var selectedBackgroundColor = ColorResource.GetColor("Primary", "PrimaryDark", Colors.DodgerBlue);
+        var selectedTextColor = ColorResource.GetColor("OnPrimary", "OnPrimaryDark", Colors.White);
+        var defaultTextColor = ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.Black);
+        var targetBackgroundColor = day.IsSelected ? selectedBackgroundColor : Colors.Transparent;
+        var targetTextColor = day.IsSelected ? selectedTextColor : defaultTextColor;
+
         button.Text = day.Date.Day.ToString(CultureInfo.CurrentCulture);
         button.CommandParameter = day;
         button.IsEnabled = day.IsEnabled;
         button.Opacity = day.IsEnabled ? day.IsCurrentMonth ? 1 : .45 : .25;
-        button.BackgroundColor = day.IsSelected ? ColorResource.GetColor("Primary", "PrimaryDark", Colors.DodgerBlue) : Colors.Transparent;
-        button.TextColor = day.IsSelected
-            ? ColorResource.GetColor("OnPrimary", "OnPrimaryDark", Colors.White)
-            : ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.Black);
+
+        if (shouldAnimateSelection)
+        {
+            AnimateDayButtonSelection(button, targetBackgroundColor, targetTextColor, day.IsSelected);
+        }
+        else
+        {
+            button.AbortAnimation(DayButtonSelectionColorAnimationName);
+            button.BackgroundColor = targetBackgroundColor;
+            button.TextColor = targetTextColor;
+            button.Scale = 1;
+        }
 
         var styleClasses = new List<string> { "CalendarView.DayButton" };
 
@@ -424,7 +523,163 @@ public class CalendarView : ContentView
             styleClasses.Add("CalendarView.DayButton.Selected");
         }
 
+        if (day.IsMultipleSelected)
+        {
+            styleClasses.Add("CalendarView.DayButton.MultipleSelected");
+        }
+
+        if (day.IsRangeStart)
+        {
+            styleClasses.Add("CalendarView.DayButton.RangeStart");
+        }
+
+        if (day.IsRangeMiddle)
+        {
+            styleClasses.Add("CalendarView.DayButton.RangeMiddle");
+        }
+
+        if (day.IsRangeEnd)
+        {
+            styleClasses.Add("CalendarView.DayButton.RangeEnd");
+        }
+
         button.StyleClass = styleClasses.ToArray();
+    }
+
+    private void AnimateDayButtonSelection(Button button, Color targetBackgroundColor, Color targetTextColor, bool isSelected)
+    {
+        var startBackgroundColor = button.BackgroundColor ?? Colors.Transparent;
+        var startTextColor = button.TextColor;
+        var startScale = isSelected ? SelectionStartScale : button.Scale;
+
+        button.AbortAnimation(DayButtonSelectionColorAnimationName);
+
+        if (isSelected)
+        {
+            button.Scale = SelectionStartScale;
+        }
+
+        var animation = new Animation(progress =>
+        {
+            button.BackgroundColor = InterpolateColor(startBackgroundColor, targetBackgroundColor, progress);
+            button.TextColor = InterpolateColor(startTextColor, targetTextColor, progress);
+            button.Scale = startScale + ((1 - startScale) * progress);
+        });
+
+        animation.Commit(
+            button,
+            DayButtonSelectionColorAnimationName,
+            length: SelectionAnimationLength,
+            easing: Easing.CubicOut,
+            finished: (_, _) =>
+            {
+                button.BackgroundColor = targetBackgroundColor;
+                button.TextColor = targetTextColor;
+                button.Scale = 1;
+            });
+    }
+
+    private static Color InterpolateColor(Color start, Color end, double progress)
+    {
+        var amount = (float)progress;
+
+        return new Color(
+            start.Red + ((end.Red - start.Red) * amount),
+            start.Green + ((end.Green - start.Green) * amount),
+            start.Blue + ((end.Blue - start.Blue) * amount),
+            start.Alpha + ((end.Alpha - start.Alpha) * amount));
+    }
+
+    private void OnSelectedDatesCollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        OnPropertyChanged(nameof(SelectedDates));
+        UpdateCalendar();
+    }
+
+    private void ApplySelection(DateTime date)
+    {
+        switch (SelectionMode)
+        {
+            case CalendarSelectionMode.Multiple:
+                ToggleSelectedDate(date);
+                break;
+            case CalendarSelectionMode.Range:
+                SelectRangeDate(date);
+                break;
+            default:
+                SelectedDate = date;
+                break;
+        }
+    }
+
+    private void ToggleSelectedDate(DateTime date)
+    {
+        var selectedDates = GetSelectedDates().ToList();
+
+        if (!selectedDates.Remove(date))
+        {
+            selectedDates.Add(date);
+        }
+
+        SetSelectedDates(selectedDates);
+    }
+
+    private void SetSelectedDates(IEnumerable<DateTime> dates)
+    {
+        var normalizedDates = dates.Select(date => date.Date).Distinct().OrderBy(date => date).ToList();
+
+        if (SelectedDates is null || SelectedDates.IsReadOnly)
+        {
+            SelectedDates = new ObservableCollection<DateTime>(normalizedDates);
+            return;
+        }
+
+        SelectedDates.Clear();
+
+        foreach (var date in normalizedDates)
+        {
+            SelectedDates.Add(date);
+        }
+
+        OnPropertyChanged(nameof(SelectedDates));
+        UpdateCalendar();
+    }
+
+    private void SelectRangeDate(DateTime date)
+    {
+        if (!RangeStartDate.HasValue || RangeEndDate.HasValue)
+        {
+            RangeStartDate = date;
+            RangeEndDate = null;
+            return;
+        }
+
+        if (date < RangeStartDate.Value.Date)
+        {
+            RangeEndDate = RangeStartDate.Value.Date;
+            RangeStartDate = date;
+            return;
+        }
+
+        RangeEndDate = date;
+    }
+
+    private HashSet<DateTime> GetSelectedDates()
+    {
+        return SelectedDates?.Select(date => date.Date).ToHashSet() ?? new HashSet<DateTime>();
+    }
+
+    private (DateTime? Start, DateTime? End) GetSelectedRange()
+    {
+        var start = RangeStartDate?.Date;
+        var end = RangeEndDate?.Date;
+
+        if (start.HasValue && end.HasValue && end.Value < start.Value)
+        {
+            return (end.Value, start.Value);
+        }
+
+        return (start, end);
     }
 
     private void UpdateDayButtonSize(double width)
@@ -725,12 +980,24 @@ public class CalendarView : ContentView
 
 public class CalendarDay
 {
-    public CalendarDay(DateTime date, bool isCurrentMonth, bool isEnabled, bool isSelected)
+    public CalendarDay(
+        DateTime date,
+        bool isCurrentMonth,
+        bool isEnabled,
+        bool isSelected,
+        bool isMultipleSelected = false,
+        bool isRangeStart = false,
+        bool isRangeMiddle = false,
+        bool isRangeEnd = false)
     {
         Date = date.Date;
         IsCurrentMonth = isCurrentMonth;
         IsEnabled = isEnabled;
         IsSelected = isSelected;
+        IsMultipleSelected = isMultipleSelected;
+        IsRangeStart = isRangeStart;
+        IsRangeMiddle = isRangeMiddle;
+        IsRangeEnd = isRangeEnd;
     }
 
     public DateTime Date { get; }
@@ -740,6 +1007,21 @@ public class CalendarDay
     public bool IsEnabled { get; }
 
     public bool IsSelected { get; }
+
+    public bool IsMultipleSelected { get; }
+
+    public bool IsRangeStart { get; }
+
+    public bool IsRangeMiddle { get; }
+
+    public bool IsRangeEnd { get; }
+}
+
+public enum CalendarSelectionMode
+{
+    Single,
+    Multiple,
+    Range
 }
 
 public class CalendarDateSelectedEventArgs : EventArgs
