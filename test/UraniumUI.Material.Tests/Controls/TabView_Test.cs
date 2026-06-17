@@ -5,6 +5,7 @@ using UraniumUI.Dialogs;
 using UraniumUI.Material.Controls;
 using UraniumUI.Material.Tests.Mocks;
 using UraniumUI.Tests.Core;
+using UraniumUI.Views;
 
 namespace UraniumUI.Material.Tests.Controls;
 
@@ -83,6 +84,32 @@ public class TabView_Test
 
         pickerField.SelectedIndex.ShouldBe(1);
         viewModel.SelectedIndex.ShouldBe(1);
+    }
+
+    [Fact]
+    public void CustomHeaderTemplate_ShouldBeWrappedInFocusableHeader_WithSemanticState()
+    {
+        var tabView = AnimationReadyHandler.Prepare(new TabView
+        {
+            TabHeaderItemTemplate = CreateTestHeaderTemplate(),
+            UseAnimation = false,
+        });
+
+        tabView.Tabs.Add(new TabItem { Title = "First", Content = new Label { Text = "First content" } });
+        tabView.Tabs.Add(new TabItem { Title = "Second", Content = new Label { Text = "Second content" } });
+
+        var firstHeader = tabView.Tabs[0].Header.ShouldBeOfType<StatefulContentView>();
+        var secondHeader = tabView.Tabs[1].Header.ShouldBeOfType<StatefulContentView>();
+
+        firstHeader.IsFocusable.ShouldBeTrue();
+        firstHeader.TappedCommand.ShouldNotBeNull();
+        SemanticProperties.GetDescription(firstHeader).ShouldBe("First, selected");
+        SemanticProperties.GetHint(firstHeader).ShouldBe("Selects this tab.");
+
+        tabView.SelectedTab = tabView.Tabs[1];
+
+        SemanticProperties.GetDescription(firstHeader).ShouldBe("First");
+        SemanticProperties.GetDescription(secondHeader).ShouldBe("Second, selected");
     }
 
     private sealed class TestMultiplePickerField : MultiplePickerField

@@ -187,6 +187,16 @@ public class DatePickerField_Test
 
         clearIcon.Margin.ShouldBe(default(Thickness));
         clearIcon.Padding.ShouldBe(new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0));
+        SemanticProperties.GetDescription(clearIcon).ShouldBe("Clear date");
+        SemanticProperties.GetHint(clearIcon).ShouldBe("Clears the selected date.");
+    }
+
+    [Fact]
+    public void DateLabel_ShouldExposePromptSemanticHint()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+
+        SemanticProperties.GetHint(control.Content).ShouldBe("Opens the date picker.");
     }
 
     [Fact]

@@ -43,7 +43,7 @@ public partial class DataGrid
 
     public static readonly BindableProperty SelectedItemsProperty =
         BindableProperty.Create(nameof(SelectedItems), typeof(IList), typeof(DataGrid), defaultValue: new ObservableCollection<object>(),
-            defaultBindingMode: BindingMode.TwoWay, propertyChanged: (bo, ov, nv) => (bo as DataGrid).OnSelectedItemsSet());
+            defaultBindingMode: BindingMode.TwoWay, propertyChanged: (bo, ov, nv) => (bo as DataGrid).OnSelectedItemsChanged(ov as IList, nv as IList));
 
     public Color SelectionColor { get => (Color)GetValue(SelectionColorProperty); set => SetValue(SelectionColorProperty, value); }
 

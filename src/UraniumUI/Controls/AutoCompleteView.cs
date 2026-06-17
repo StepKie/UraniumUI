@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections;
+using System.ComponentModel;
 using System.Windows.Input;
+using Microsoft.Maui.Converters;
 
 namespace UraniumUI.Controls;
 public class AutoCompleteView : View, IAutoCompleteView
@@ -70,6 +72,15 @@ public class AutoCompleteView : View, IAutoCompleteView
         typeof(int),
         typeof(AutoCompleteView),
         2);
+
+    [TypeConverter(typeof(KeyboardTypeConverter))]
+    public Keyboard Keyboard { get => (Keyboard)GetValue(KeyboardProperty); set => SetValue(KeyboardProperty, value); }
+
+    public static readonly BindableProperty KeyboardProperty = BindableProperty.Create(
+        nameof(Keyboard),
+        typeof(Keyboard),
+        typeof(AutoCompleteView),
+        Keyboard.Default);
 
     public ICommand ReturnCommand { get => (ICommand)GetValue(ReturnCommandProperty); set => SetValue(ReturnCommandProperty, value); }
 

@@ -95,6 +95,22 @@ public class PickerField_Test
     }
 
     [Fact]
+    public void SelectedItem_ShouldBePreserved_WhenItemBeforeSelectionIsRemoved()
+    {
+        var control = AnimationReadyHandler.Prepare(new PickerField());
+        var itemsSource = new ObservableCollection<string>(new[] { "Item0", "Item1", "Item2" });
+        control.ItemsSource = itemsSource;
+        control.PickerView.SelectedIndex = 1;
+
+        control.SelectedItem.ShouldBe("Item1");
+
+        itemsSource.RemoveAt(0);
+
+        control.SelectedItem.ShouldBe("Item1");
+        control.SelectedIndex.ShouldBe(0);
+    }
+
+    [Fact]
     public void ItemDisplayBinding_ShouldBeSet_FromBindableProperty()
     {
         var control = AnimationReadyHandler.Prepare(new PickerField());
@@ -297,6 +313,8 @@ public class PickerField_Test
         clearIcon.ShouldNotBeNull();
         clearIcon.Margin.ShouldBe(default(Thickness));
         clearIcon.Padding.ShouldBe(new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0));
+        SemanticProperties.GetDescription(clearIcon).ShouldBe("Clear selection");
+        SemanticProperties.GetHint(clearIcon).ShouldBe("Clears the selected value.");
     }
 
     public class TestViewModel : UraniumBindableObject

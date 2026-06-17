@@ -23,6 +23,8 @@ public class DropdownField_Test
 
         clearIcon.Margin.ShouldBe(default(Thickness));
         clearIcon.Padding.ShouldBe(new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0));
+        SemanticProperties.GetDescription(clearIcon).ShouldBe("Clear selection");
+        SemanticProperties.GetHint(clearIcon).ShouldBe("Clears the selected value.");
     }
 
     [Fact]

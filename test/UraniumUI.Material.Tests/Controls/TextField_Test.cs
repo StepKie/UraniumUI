@@ -1,11 +1,16 @@
 ﻿using FluentAssertions;
+using InputKit.Shared.Validations;
 using NSubstitute;
 using Shouldly;
+using System.Collections.ObjectModel;
+using System.Reflection;
 using System.Windows.Input;
 using UraniumUI.Material.Controls;
+using UraniumUI.Options;
 using UraniumUI.Tests.Core;
 using UraniumUI.ViewExtensions;
 using UraniumUI.Views;
+using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace UraniumUI.Material.Tests.Controls;
 public class TextField_Test
@@ -145,6 +150,89 @@ public class TextField_Test
         endIconsContainer.Spacing.ShouldBe(InputField.AttachmentsSpacing);
         control.Attachments.ShouldContain(first);
         control.Attachments.ShouldContain(second);
+        endIconsContainer.Children.ShouldContain(first);
+        endIconsContainer.Children.ShouldContain(second);
+    }
+
+    [Fact]
+    public void Attachments_AddedBeforeTemplateApplied_ShouldBeRenderedAfterTemplateApplied()
+    {
+        var attachment = new ActivityIndicator { IsRunning = true };
+        var control = new TextField();
+
+        control.Attachments.Add(attachment);
+
+        AnimationReadyHandler.Prepare(control);
+
+        var endIconsContainer = control.FindByViewQueryIdInVisualTreeDescendants<HorizontalStackLayout>("EndIconsContainer");
+
+        endIconsContainer.ShouldNotBeNull();
+        endIconsContainer.Children.ShouldContain(attachment);
+    }
+
+    [Fact]
+    public void Attachments_CanBeSetViaImplicitStyle()
+    {
+        var attachment = new ActivityIndicator { IsRunning = true };
+        var style = new Style(typeof(TextField));
+        style.Setters.Add(new Setter
+        {
+            Property = InputField.AttachmentsProperty,
+            Value = attachment,
+        });
+
+        var resources = new ResourceDictionary();
+        resources.Add(style);
+
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        control.Resources = resources;
+
+        var endIconsContainer = control.FindByViewQueryIdInVisualTreeDescendants<HorizontalStackLayout>("EndIconsContainer");
+
+        endIconsContainer.ShouldNotBeNull();
+        control.Attachments.ShouldContain(attachment);
+        endIconsContainer.Children.ShouldContain(attachment);
+    }
+
+    [Fact]
+    public void Attachments_CanBeBoundToCollection()
+    {
+        var attachment = new ActivityIndicator { IsRunning = true };
+        var viewModel = new TestViewModel
+        {
+            Attachments = new ObservableCollection<IView> { attachment },
+        };
+        var control = new TextField
+        {
+            BindingContext = viewModel,
+        };
+
+        control.SetBinding(InputField.AttachmentsProperty, new Binding(nameof(TestViewModel.Attachments)));
+
+        AnimationReadyHandler.Prepare(control);
+
+        var endIconsContainer = control.FindByViewQueryIdInVisualTreeDescendants<HorizontalStackLayout>("EndIconsContainer");
+
+        endIconsContainer.ShouldNotBeNull();
+        endIconsContainer.Children.ShouldContain(attachment);
+    }
+
+    [Fact]
+    public void Attachments_ReplacedAfterTemplateApplied_ShouldPreserveBuiltInClearIcon()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField { AllowClear = true });
+        var clearIcon = control.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
+        var attachment = new ActivityIndicator { IsRunning = true };
+
+        control.Attachments = new ObservableCollection<IView> { attachment };
+
+        var endIconsContainer = control.FindByViewQueryIdInVisualTreeDescendants<HorizontalStackLayout>("EndIconsContainer");
+
+        clearIcon.ShouldNotBeNull();
+        endIconsContainer.ShouldNotBeNull();
+        endIconsContainer.Children.ShouldContain(clearIcon);
+        endIconsContainer.Children.ShouldContain(attachment);
     }
 
     [Fact]
@@ -158,6 +246,114 @@ public class TextField_Test
         clearIcon.ShouldNotBeNull();
         clearIcon.Margin.ShouldBe(default(Thickness));
         clearIcon.Padding.ShouldBe(new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0));
+    }
+
+    [Fact]
+    public void Title_ShouldGenerateInputSemanticDescription_AndHideFloatingLabelFromAccessibleTree()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        control.Title = "Email";
+
+        var titleLabel = control.FindByViewQueryIdInVisualTreeDescendants<Label>("TitleLabel");
+
+        SemanticProperties.GetDescription(control.EntryView).ShouldBe("Email");
+        AutomationProperties.GetIsInAccessibleTree(titleLabel).ShouldBe(false);
+    }
+
+    [Fact]
+    public void Title_ShouldNotOverwriteExplicitInputSemanticDescription()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        SemanticProperties.SetDescription(control.Content, "Custom email field");
+        control.Title = "Email";
+
+        SemanticProperties.GetDescription(control.EntryView).ShouldBe("Custom email field");
+    }
+
+    [Fact]
+    public void DisplayValidation_ShouldExposeValidationMessage_OnInputAndValidationLabel()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        control.Title = "Email";
+
+        control.Validations.Add(new FailingValidation("Email is required."));
+        control.DisplayValidation();
+
+        var validationLabel = control.FindByViewQueryIdInVisualTreeDescendants<Label>("ValidationLabel");
+        SemanticProperties.GetHint(control.EntryView).ShouldBe("Error: Email is required.");
+        SemanticProperties.GetDescription(validationLabel).ShouldBe("Email is required.");
+    }
+
+    [Fact]
+    public void ReadOnlyAndDisabledStates_ShouldBeIncludedInInputSemanticHint()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        control.IsReadOnly = true;
+
+        SemanticProperties.GetHint(control.EntryView).ShouldContain("Read only.");
+
+        control.IsEnabled = false;
+
+        SemanticProperties.GetHint(control.EntryView).ShouldContain("Disabled.");
+    }
+
+    [Fact]
+    public void ClearIcon_ShouldExposeSemanticText_AndRespectDisallowFocus()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField { AllowClear = true });
+        var clearIcon = control.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
+
+        SemanticProperties.GetDescription(clearIcon).ShouldBe("Clear text");
+        SemanticProperties.GetHint(clearIcon).ShouldBe("Clears the current value.");
+        clearIcon.IsFocusable.ShouldBeTrue();
+
+        control.DisallowClearButtonFocus = true;
+
+        clearIcon.IsFocusable.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void AccessibilityOptions_ShouldLocalizeGeneratedSemantics()
+    {
+        ApplicationExtensions.CreateAndSetMockApplication(builder =>
+        {
+            builder.ConfigureUraniumUIAccessibility(options =>
+            {
+                options.ClearTextDescription = "Metni temizle";
+                options.ClearTextHint = "Geçerli değeri temizler.";
+                options.ValidationErrorHintFormat = "Hata: {0}";
+            });
+        });
+
+        var control = AnimationReadyHandler.Prepare(new TextField { AllowClear = true });
+        var clearIcon = control.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
+
+        control.Validations.Add(new FailingValidation("E-posta gerekli."));
+        control.DisplayValidation();
+
+        SemanticProperties.GetDescription(clearIcon).ShouldBe("Metni temizle");
+        SemanticProperties.GetHint(clearIcon).ShouldBe("Geçerli değeri temizler.");
+        SemanticProperties.GetHint(control.EntryView).ShouldBe("Hata: E-posta gerekli.");
+    }
+
+    [Fact]
+    public void PasswordShowHideAttachment_ShouldExposeDynamicSemanticText()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField { IsPassword = true });
+        var attachment = new TextFieldPasswordShowHideAttachment();
+
+        control.Attachments.Add(attachment);
+
+        SemanticProperties.GetDescription(attachment).ShouldBe("Show password");
+        SemanticProperties.GetHint(attachment).ShouldBe("Toggles password visibility.");
+
+        control.IsPassword = false;
+
+        SemanticProperties.GetDescription(attachment).ShouldBe("Hide password");
     }
   
     [Fact]
@@ -306,6 +502,35 @@ public class TextField_Test
         // Assert
         control.IsPassword.ShouldBeTrue();
         control.EntryView.IsPassword.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void PasswordShowHideAttachment_IconFill_ShouldUseAppThemeBinding()
+    {
+        var originalTheme = Application.Current.UserAppTheme;
+
+        try
+        {
+            Application.Current.UserAppTheme = AppTheme.Light;
+            Application.Current.Resources["OnBackground"] = Colors.Purple;
+            Application.Current.Resources["OnBackgroundDark"] = Colors.White;
+            var attachment = new TextFieldPasswordShowHideAttachment();
+            var control = AnimationReadyHandler.Prepare(new TextField { IsPassword = true });
+
+            control.Attachments.Add(attachment);
+
+            var iconPath = attachment.Content.ShouldBeOfType<Path>();
+            iconPath.Fill.ShouldBeOfType<SolidColorBrush>().Color.ShouldBe(Colors.Purple.WithAlpha(.5f));
+            var fillBinding = GetBinding(iconPath, Path.FillProperty);
+
+            fillBinding.GetType().Name.ShouldBe("AppThemeBinding");
+            GetAppThemeBrush(fillBinding, "Light").Color.ShouldBe(Colors.Purple.WithAlpha(.5f));
+            GetAppThemeBrush(fillBinding, "Dark").Color.ShouldBe(Colors.White.WithAlpha(.5f));
+        }
+        finally
+        {
+            Application.Current.UserAppTheme = originalTheme;
+        }
     }
 
     [Fact]
@@ -516,6 +741,7 @@ public class TextField_Test
         private Keyboard keyboard;
         private ClearButtonVisibility clearButtonVisibility;
         private double characterSpacing;
+        private IList<IView> attachments;
         private object commandParameter = "My Command Parameter 1";
 
         public bool IsChecked { get => isChecked; set => SetProperty(ref isChecked, value); }
@@ -536,6 +762,8 @@ public class TextField_Test
         public ClearButtonVisibility ClearButtonVisibility { get => clearButtonVisibility; set => SetProperty(ref clearButtonVisibility, value); }
 
         public double CharacterSpacing { get => characterSpacing; set => SetProperty(ref characterSpacing, value); }
+
+        public IList<IView> Attachments { get => attachments; set => SetProperty(ref attachments, value); }
     }
 
     private sealed class TemplateAwareTextField : TextField
@@ -549,5 +777,42 @@ public class TextField_Test
             UpdateClearIconStateCallCount++;
             base.UpdateClearIconState();
         }
+    }
+
+    private static object GetBinding(BindableObject bindableObject, BindableProperty bindableProperty)
+    {
+        var properties = (System.Collections.IDictionary)typeof(BindableObject)
+            .GetField("_properties", BindingFlags.Instance | BindingFlags.NonPublic)
+            .GetValue(bindableObject);
+        var context = properties[bindableProperty];
+
+        context.ShouldNotBeNull();
+        var bindings = context.GetType()
+            .GetField("Bindings", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .GetValue(context);
+
+        return bindings.GetType()
+            .GetMethod("GetValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, Type.EmptyTypes)
+            .Invoke(bindings, null);
+    }
+
+    private static SolidColorBrush GetAppThemeBrush(object appThemeBinding, string propertyName)
+    {
+        return appThemeBinding.GetType()
+            .GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .GetValue(appThemeBinding)
+            .ShouldBeOfType<SolidColorBrush>();
+    }
+
+    private sealed class FailingValidation : IValidation
+    {
+        public FailingValidation(string message)
+        {
+            Message = message;
+        }
+
+        public string Message { get; }
+
+        public bool Validate(object value) => false;
     }
 }

@@ -53,6 +53,8 @@ public class DatePickerField : InputField
     {
         base.RegisterForEvents();
         iconClear.TappedCommand = new Command(OnClearTapped);
+        SetActionSemantics(iconClear, AccessibilityOptions.ClearDateDescription, AccessibilityOptions.ClearDateHint);
+        SemanticProperties.SetHint(Content, AccessibilityOptions.OpenDatePickerHint);
         DialogService = UraniumServiceProvider.Current.GetRequiredService<IDialogService>();
 
         Content.GestureRecognizers.Add(new TapGestureRecognizer

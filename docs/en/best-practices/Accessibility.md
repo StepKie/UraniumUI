@@ -52,6 +52,8 @@ When customizing styles:
 
 Use MAUI semantic properties for labels, hints, and descriptions that are not obvious from visible text.
 
+UraniumUI also generates semantic text for several built-in Material actions such as clear buttons, password visibility, validation state, bottom sheet expand/collapse, tabs, tree nodes, and chips. Configure those generated defaults through `UraniumUIAccessibilityOptions` when your app needs localized screen-reader text.
+
 ```xml
 <material:ButtonView
     SemanticProperties.Description="Open customer details"
@@ -99,6 +101,7 @@ When using templates in `TabView`, `TreeView`, `DataGrid`, `Select`, or `AutoFor
 
 ## Related Pages
 
+- [Localized Semantic Text](LocalizedSemanticText.md)
 - [Clickable Areas](ClickableAreas.md)
 - [StatefulContentView](../infrastructure/StatefulContentView.md)
 - [ButtonView](../themes/material/ButtonView.md)

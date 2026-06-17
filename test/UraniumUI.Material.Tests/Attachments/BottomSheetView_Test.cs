@@ -3,6 +3,7 @@ using Shouldly;
 using UraniumUI.Material.Attachments;
 using UraniumUI.Pages;
 using UraniumUI.Tests.Core;
+using UraniumUI.Views;
 
 namespace UraniumUI.Material.Tests.Attachments;
 public class BottomSheetView_Test
@@ -76,6 +77,24 @@ public class BottomSheetView_Test
         var frameProperty = typeof(VisualElement).GetProperty("Frame", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
         frameProperty.ShouldNotBeNull();
         frameProperty.SetValue(element, new Rect(0, 0, width, height));
+    }
+
+    [Fact]
+    public void GeneratedHeader_ShouldBeFocusableAndExposeExpandedStateSemantics()
+    {
+        var page = new UraniumContentPage();
+        var control = new BottomSheetView { Body = new Label { Text = "Body" } };
+
+        page.Attachments.Add(control);
+
+        var header = control.Header.ShouldBeOfType<StatefulContentView>();
+        header.IsFocusable.ShouldBeTrue();
+        SemanticProperties.GetDescription(header).ShouldBe("Expand bottom sheet");
+        SemanticProperties.GetHint(header).ShouldBe("Toggles the bottom sheet.");
+
+        control.IsPresented = true;
+
+        SemanticProperties.GetDescription(header).ShouldBe("Collapse bottom sheet");
     }
 
     internal class BottomSheetTestViewModel : UraniumBindableObject

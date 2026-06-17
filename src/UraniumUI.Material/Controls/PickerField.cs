@@ -1,6 +1,7 @@
 ﻿using Plainer.Maui.Controls;
 using System;
 using System.Collections;
+using System.Collections.Specialized;
 using System.ComponentModel;
 using System.Windows.Input;
 using UraniumUI.Converters;
@@ -46,7 +47,6 @@ public class PickerField : InputField
         pickerView.SetBinding(PickerView.SelectedItemProperty, new Binding(nameof(SelectedItem), source: this));
         pickerView.SetBinding(PickerView.SelectedIndexProperty, new Binding(nameof(SelectedIndex), source: this));
         pickerView.SetBinding(PickerView.IsEnabledProperty, new Binding(nameof(IsEnabled), source: this));
-        pickerView.SetBinding(PickerView.ItemsSourceProperty, new Binding(nameof(ItemsSource), source: this));
         pickerView.SetBinding(PickerView.FontAttributesProperty, new Binding(nameof(FontAttributes), source: this));
         pickerView.SetBinding(PickerView.FontFamilyProperty, new Binding(nameof(FontFamily), source: this));
         pickerView.SetBinding(PickerView.FontSizeProperty, new Binding(nameof(FontSize), source: this));
@@ -143,6 +143,66 @@ public class PickerField : InputField
 #endif
     }
 
+    protected virtual void OnItemsSourceChanged(IList oldValue, IList newValue)
+    {
+        if (oldValue is INotifyCollectionChanged oldObservable)
+        {
+            oldObservable.CollectionChanged -= ItemsSource_CollectionChanged;
+        }
+
+        if (newValue is INotifyCollectionChanged newObservable)
+        {
+            newObservable.CollectionChanged += ItemsSource_CollectionChanged;
+        }
+
+        if (Content is PickerView pickerView)
+        {
+            pickerView.ItemsSource = newValue;
+        }
+
+        SyncSelectionWithItemsSource(SelectedItem);
+    }
+
+    private void ItemsSource_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (SelectedItem is null)
+        {
+            return;
+        }
+
+        var selectedItem = SelectedItem;
+        if (Dispatcher?.DispatchDelayed(TimeSpan.Zero, () => SyncSelectionWithItemsSource(selectedItem)) != true)
+        {
+            SyncSelectionWithItemsSource(selectedItem);
+        }
+    }
+
+    private void SyncSelectionWithItemsSource(object selectedItem)
+    {
+        if (selectedItem is null)
+        {
+            return;
+        }
+
+        var selectedIndex = ItemsSource?.IndexOf(selectedItem) ?? -1;
+        if (selectedIndex < 0)
+        {
+            SelectedItem = null;
+            SelectedIndex = -1;
+            return;
+        }
+
+        if (!Equals(SelectedItem, selectedItem))
+        {
+            SelectedItem = selectedItem;
+        }
+
+        if (SelectedIndex != selectedIndex)
+        {
+            SelectedIndex = selectedIndex;
+        }
+    }
+
     protected virtual void OnAllowClearChanged()
     {
         UpdateClearIconState();
@@ -234,6 +294,7 @@ public class PickerField : InputField
         iconClear.SetId("ClearIcon");
 
         iconClear.SetBinding(StatefulContentView.IsVisibleProperty, new Binding(nameof(SelectedItem), converter: UraniumConverters.StringIsNotNullOrEmptyConverter, source: this));
+        SetActionSemantics(iconClear, AccessibilityOptions.ClearSelectionDescription, AccessibilityOptions.ClearSelectionHint);
 
         return iconClear;
     }
@@ -259,7 +320,8 @@ public class PickerField : InputField
 
     public static readonly BindableProperty ItemsSourceProperty = BindableProperty.Create(
        nameof(ItemsSource), typeof(IList), typeof(PickerField),
-       defaultValue: Picker.ItemsSourceProperty.DefaultValue);
+       defaultValue: Picker.ItemsSourceProperty.DefaultValue,
+       propertyChanged: (bindable, oldValue, newValue) => (bindable as PickerField).OnItemsSourceChanged((IList)oldValue, (IList)newValue));
 
     public BindingBase ItemDisplayBinding { get => (BindingBase)GetValue(ItemDisplayBindingProperty); set => SetValue(ItemDisplayBindingProperty, value); }
 

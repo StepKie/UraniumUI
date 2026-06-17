@@ -18,6 +18,7 @@ public partial class AutoCompleteViewHandler
             [nameof(AutoCompleteView.Text)] = MapText,
             [nameof(AutoCompleteView.ItemsSource)] = MapItemsSource,
             [nameof(AutoCompleteView.Threshold)] = MapThreshold,
+            [nameof(AutoCompleteView.Keyboard)] = MapKeyboard,
         };
     public AutoCompleteViewHandler() : base(AutoCompleteViewMapper)
     {
@@ -45,6 +46,10 @@ public partial class AutoCompleteViewHandler : ViewHandler<AutoCompleteView, obj
     }
 
     public static void MapThreshold(AutoCompleteViewHandler handler, AutoCompleteView view)
+    {
+    }
+
+    public static void MapKeyboard(AutoCompleteViewHandler handler, AutoCompleteView view)
     {
     }
 }
