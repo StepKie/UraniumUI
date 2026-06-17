@@ -9,6 +9,7 @@ public interface IAutoCompleteView : IView
     Color TextColor { get; set; }
     IList ItemsSource { get; set; }
     int Threshold { get; set; }
+    Keyboard Keyboard { get; set; }
 
     void Completed();
 }

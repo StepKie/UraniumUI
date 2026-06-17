@@ -108,6 +108,11 @@ public partial class AutoCompleteViewHandler : ViewHandler<IAutoCompleteView, UI
         handler.PlatformView.Threshold = view.Threshold;
     }
 
+    public static void MapKeyboard(AutoCompleteViewHandler handler, AutoCompleteView view)
+    {
+        handler.PlatformView.ApplyKeyboard(view.Keyboard);
+    }
+
     private void SetItemsSource()
     {
         if (VirtualView.ItemsSource != null)
