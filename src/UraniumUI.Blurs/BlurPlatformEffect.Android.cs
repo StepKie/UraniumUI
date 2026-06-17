@@ -19,7 +19,11 @@ public class BlurPlatformEffect : PlatformEffect
     private Drawable _originalBackground;
     private ViewGroup _blurRoot;
     private Command _updateEffectCommand;
+    private Command _invalidateEffectCommand;
     private bool _nativeRenderEffectApplied;
+    private AndroidBlurCaptureMode _blurCaptureMode;
+    private int _blurCaptureFps;
+    private float _blurCaptureDownsampleFactor;
 
     public BlurEffect VirtualEffect { get; private set; }
 
@@ -29,7 +33,9 @@ public class BlurPlatformEffect : PlatformEffect
         {
             VirtualEffect = blurEffect;
             _updateEffectCommand = new Command(UpdateEffect);
+            _invalidateEffectCommand = new Command(InvalidateBlur);
             blurEffect.UpdateEffectCommand = _updateEffectCommand;
+            blurEffect.InvalidateEffectCommand = _invalidateEffectCommand;
         }
 
         if (Element is Microsoft.Maui.Controls.View view)
@@ -56,6 +62,11 @@ public class BlurPlatformEffect : PlatformEffect
             VirtualEffect.UpdateEffectCommand = null;
         }
 
+        if (VirtualEffect?.InvalidateEffectCommand == _invalidateEffectCommand)
+        {
+            VirtualEffect.InvalidateEffectCommand = null;
+        }
+
         ReleaseBlurView();
 
         if (_mainDrawable != null)
@@ -67,12 +78,18 @@ public class BlurPlatformEffect : PlatformEffect
         }
 
         _updateEffectCommand = null;
+        _invalidateEffectCommand = null;
         VirtualEffect = null;
     }
 
     private void BlurPlatformEffect_SizeChanged(object sender, EventArgs e)
     {
         AlignBlurView();
+
+        if (_blurView != null)
+        {
+            UpdateEffect();
+        }
     }
 
     private void View_ParentChanged(object sender, EventArgs e)
@@ -94,7 +111,10 @@ public class BlurPlatformEffect : PlatformEffect
         switch (ResolveAndroidStrategy())
         {
             case AndroidBlurStrategy.RealtimeCapture:
-                ApplyRealtimeCaptureStrategy();
+                ApplyCaptureStrategy(AndroidBlurCaptureMode.Realtime);
+                break;
+            case AndroidBlurStrategy.StaticCapture:
+                ApplyCaptureStrategy(AndroidBlurCaptureMode.Static);
                 break;
             case AndroidBlurStrategy.RenderEffect:
                 ApplyRenderEffectStrategy();
@@ -130,7 +150,7 @@ public class BlurPlatformEffect : PlatformEffect
         _nativeRenderEffectApplied = true;
     }
 
-    private void ApplyRealtimeCaptureStrategy()
+    private void ApplyCaptureStrategy(AndroidBlurCaptureMode captureMode)
     {
         ClearNativeRenderEffect();
 
@@ -147,6 +167,13 @@ public class BlurPlatformEffect : PlatformEffect
             _blurView = new BlurView(Context);
             _blurView.SetOverlayColor(Color.Transparent);
         }
+
+        var captureFps = VirtualEffect?.EffectiveAndroidRealtimeCaptureFps ?? BlurViewDefaults.REALTIME_CAPTURE_FPS;
+        var downsampleFactor = VirtualEffect?.EffectiveAndroidCaptureDownsampleFactor ?? BlurViewDefaults.CAPTURE_SCALE_FACTOR;
+
+        _blurView.CaptureMode = captureMode;
+        _blurView.RealtimeCaptureFps = captureFps;
+        _blurView.CaptureDownsampleFactor = downsampleFactor;
 
         if (_blurView.Parent != viewGroup)
         {
@@ -166,7 +193,7 @@ public class BlurPlatformEffect : PlatformEffect
         _blurView.SetBackgroundColor(GetColor());
 
         var decorView = Microsoft.Maui.ApplicationModel.Platform.CurrentActivity?.Window?.DecorView;
-        var root = decorView?.FindViewById(global::Android.Resource.Id.Content) as ViewGroup;
+        var root = GetCaptureRoot(viewGroup, decorView);
         if (root == null)
         {
             _blurView.Release();
@@ -174,14 +201,47 @@ public class BlurPlatformEffect : PlatformEffect
             return;
         }
 
-        if (_blurRoot != root)
+        if (_blurRoot != root || CaptureOptionsChanged(captureMode, captureFps, downsampleFactor))
         {
             _blurRoot = root;
+            _blurCaptureMode = captureMode;
+            _blurCaptureFps = captureFps;
+            _blurCaptureDownsampleFactor = downsampleFactor;
             _blurView
                .SetupWith(root)
-               .SetFrameClearDrawable(decorView.Background)
+               .SetFrameClearDrawable(root.Background ?? decorView?.Background)
                .SetBlurRadius(DefaultBlurRadius);
         }
+    }
+
+    private bool CaptureOptionsChanged(AndroidBlurCaptureMode captureMode, int captureFps, float downsampleFactor)
+    {
+        return _blurCaptureMode != captureMode
+            || _blurCaptureFps != captureFps
+            || Math.Abs(_blurCaptureDownsampleFactor - downsampleFactor) > 0.001f;
+    }
+
+    private ViewGroup GetCaptureRoot(ViewGroup viewGroup, Android.Views.View decorView)
+    {
+        return GetClosestCaptureRoot(viewGroup)
+            ?? decorView?.FindViewById(global::Android.Resource.Id.Content) as ViewGroup;
+    }
+
+    private ViewGroup GetClosestCaptureRoot(ViewGroup viewGroup)
+    {
+        var parent = viewGroup.Parent as ViewGroup;
+
+        while (parent != null)
+        {
+            if (parent.Width > 0 && parent.Height > 0)
+            {
+                return parent;
+            }
+
+            parent = parent.Parent as ViewGroup;
+        }
+
+        return null;
     }
 
     private AndroidBlurStrategy ResolveAndroidStrategy()
@@ -218,6 +278,11 @@ public class BlurPlatformEffect : PlatformEffect
 
         Control.SetRenderEffect(null);
         _nativeRenderEffectApplied = false;
+    }
+
+    private void InvalidateBlur()
+    {
+        _blurView?.InvalidateBlur();
     }
 
     protected Android.Graphics.Color GetColor()

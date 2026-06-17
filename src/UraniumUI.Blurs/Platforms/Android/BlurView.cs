@@ -16,6 +16,12 @@ public class BlurView : FrameLayout
 
     private Color overlayColor;
 
+    internal AndroidBlurCaptureMode CaptureMode { get; set; } = AndroidBlurCaptureMode.Realtime;
+
+    internal int RealtimeCaptureFps { get; set; } = BlurViewDefaults.REALTIME_CAPTURE_FPS;
+
+    internal float CaptureDownsampleFactor { get; set; } = BlurViewDefaults.CAPTURE_SCALE_FACTOR;
+
     public BlurView(Context context) : base(context)
     {
     }
@@ -46,6 +52,20 @@ public class BlurView : FrameLayout
     public void UpdateBlurViewSize()
     {
         blurController.UpdateBlurViewSize();
+    }
+
+    internal void InvalidateBlur()
+    {
+        if (blurController is PreDrawBlurController preDrawBlurController)
+        {
+            preDrawBlurController.RefreshBlur();
+        }
+        else
+        {
+            blurController.UpdateBlurViewSize();
+        }
+
+        Invalidate();
     }
 
     protected override void OnAttachedToWindow()
@@ -89,7 +109,14 @@ public class BlurView : FrameLayout
         }
 
         this.blurController.Destroy();
-        var controller = new PreDrawBlurController(this, rootView, overlayColor, algorithm);
+        var controller = new PreDrawBlurController(
+            this,
+            rootView,
+            overlayColor,
+            algorithm,
+            CaptureMode,
+            RealtimeCaptureFps,
+            CaptureDownsampleFactor);
         this.blurController = controller;
 
         return controller;

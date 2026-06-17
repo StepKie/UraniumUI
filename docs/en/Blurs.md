@@ -2,7 +2,7 @@
 UraniumUI supports blur effects on MAUI. You can use it on any control by using `BlurEffect`.
 
 Apple has its own blur effect and Windows has a Brush for it. So it's implemented natively for those platforms.
-Android blur is best-effort because Android doesn't provide the same arbitrary backdrop blur primitive as iOS `UIVisualEffectView` or WinUI `AcrylicBrush`. By default, Android uses a lightweight native/material strategy and keeps the capture-based [Dimezis/BlurView](https://github.com/Dimezis/BlurView) pipeline as an explicit opt-in for realtime backdrop blur.
+Android blur is best-effort because Android doesn't provide the same arbitrary backdrop blur primitive as iOS `UIVisualEffectView` or WinUI `AcrylicBrush`. By default, Android uses a lightweight material-style tinted strategy and keeps the capture-based [Dimezis/BlurView](https://github.com/Dimezis/BlurView) pipeline as an explicit opt-in for backdrop blur.
 
 
 
@@ -112,7 +112,8 @@ BlurEffect is a `Effect` which means you can use it on any control.
     | `Default` | Uses the material-style tinted surface. This avoids blurring the effect host content and avoids backdrop capture. |
     | `RenderEffect` | Uses Android's native `RenderEffect` for the effect host layer on Android 12/API 31+. This blurs the host view's own rendered layer, including its content and children, not the backdrop behind it. Falls back to `Material` below API 31. |
     | `Material` | Uses only the configured tint color and opacity. This is the cheapest option and does not capture the backdrop. |
-    | `RealtimeCapture` | Uses the previous capture-based backdrop blur pipeline. This can be expensive because it redraws the backdrop into a bitmap and blurs it repeatedly. |
+    | `RealtimeCapture` | Uses capture-based backdrop blur. It is throttled by `AndroidRealtimeCaptureFps`, but it still redraws the backdrop into a bitmap repeatedly. |
+    | `StaticCapture` | Captures and blurs once, then refreshes only after size/root changes or `InvalidateAndroidBlur()`. This is useful for static backdrops. |
 
     ```xml
     <StackLayout>
@@ -123,6 +124,10 @@ BlurEffect is a `Effect` which means you can use it on any control.
     </StackLayout>
     ```
 
+- AndroidRealtimeCaptureFps: `int` (Default: `15`) - Defines the maximum capture update rate for `RealtimeCapture`. Values are clamped between `1` and `60`.
+
+- AndroidCaptureDownsampleFactor: `float` (Default: `8`) - Defines how much the Android capture bitmap is downsampled before blur. Larger values improve performance but reduce blur quality. Values are clamped between `1` and `32`.
+
 ## Android limitations
 
 Android `RenderEffect` blurs the layer owned by the effect host. It is lightweight, but it is not equivalent to arbitrary backdrop blur behind the control. If it is applied to a container, the container content is blurred too.
@@ -130,3 +135,9 @@ Android `RenderEffect` blurs the layer owned by the effect host. It is lightweig
 Do not use `RenderEffect` as a dialog, `ContentPage`, or `TabbedPage` backdrop blur replacement. It targets the native Android view generated for the MAUI element, so it cannot blur the page behind that view the same way iOS `UIVisualEffectView` does.
 
 Use `AndroidStrategy="RealtimeCapture"` only when you explicitly need backdrop blur behind an in-page surface. Prefer small, mostly static surfaces for this strategy because scrolling, repeated dialog open/close, and navigation loops can allocate and redraw bitmaps frequently.
+
+Use `AndroidStrategy="StaticCapture"` when the backdrop behind the blur surface does not move. You can request a refresh from code when the backdrop changes:
+
+```csharp
+blurEffect.InvalidateAndroidBlur();
+```
