@@ -2,7 +2,7 @@
 UraniumUI supports blur effects on MAUI. You can use it on any control by using `BlurEffect`.
 
 Apple has its own blur effect and Windows has a Brush for it. So it's implemented natively for those platforms.
-Android platform doesn't support blur effects by default. So it's implemented in [Dimezis/BlurView](https://github.com/Dimezis/BlurView) and ported to C#.
+Android blur is best-effort because Android doesn't provide the same arbitrary backdrop blur primitive as iOS `UIVisualEffectView` or WinUI `AcrylicBrush`. By default, Android uses a lightweight native/material strategy and keeps the capture-based [Dimezis/BlurView](https://github.com/Dimezis/BlurView) pipeline as an explicit opt-in for realtime backdrop blur.
 
 
 
@@ -104,3 +104,27 @@ BlurEffect is a `Effect` which means you can use it on any control.
     ```
     
     ![MAUI Blur Effect Accent Opacity](images/blurs-example-accent-dark-opacity.png)
+
+- AndroidStrategy: `AndroidBlurStrategy` (Default: `Default`) - Defines which Android blur strategy is used.
+
+    | Value | Behavior |
+    | --- | --- |
+    | `Default` | Uses `RenderEffect` on Android 12/API 31+ and a material-style tinted surface on older Android versions. |
+    | `RenderEffect` | Uses Android's native `RenderEffect` for the effect host layer on Android 12/API 31+. Falls back to `Material` below API 31. |
+    | `Material` | Uses only the configured tint color and opacity. This is the cheapest option and does not capture the backdrop. |
+    | `RealtimeCapture` | Uses the previous capture-based backdrop blur pipeline. This can be expensive because it redraws the backdrop into a bitmap and blurs it repeatedly. |
+
+    ```xml
+    <StackLayout>
+        <StackLayout.Effects>
+            <uranium:BlurEffect AndroidStrategy="RealtimeCapture" />
+        </StackLayout.Effects>
+        <!-- Your content goes here -->
+    </StackLayout>
+    ```
+
+## Android limitations
+
+Android `RenderEffect` blurs the layer owned by the effect host. It is lightweight, but it is not equivalent to arbitrary backdrop blur behind the control.
+
+Use `AndroidStrategy="RealtimeCapture"` only when you explicitly need backdrop blur behind an in-page surface. Prefer small, mostly static surfaces for this strategy because scrolling, repeated dialog open/close, and navigation loops can allocate and redraw bitmaps frequently.
