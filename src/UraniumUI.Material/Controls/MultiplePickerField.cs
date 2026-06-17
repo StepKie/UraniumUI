@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Windows.Input;
 using UraniumUI.Dialogs;
+using UraniumUI.Extensions;
 using MaterialCheckBox = UraniumUI.Material.Controls.CheckBox;
 
 namespace UraniumUI.Material.Controls;
@@ -12,6 +13,7 @@ public partial class MultiplePickerField : InputField
     public ContentView MainContentView => Content as ContentView;
 
     private bool isBusy;
+    private bool isSelectionSyncing;
     public bool IsBusy
     {
         get => isBusy;
@@ -94,20 +96,38 @@ public partial class MultiplePickerField : InputField
 #endif
         };
 
-        BindableLayout.SetItemTemplate(layout, new DataTemplate(() =>
+        BindableLayout.SetItemTemplate(layout, CreateChipTemplate());
+
+        BindableLayout.SetItemsSource(layout, SelectedItems);
+
+        return layout;
+    }
+
+    protected virtual DataTemplate CreateChipTemplate()
+    {
+        return new DataTemplate(() =>
         {
             var chip = new Chip();
-            chip.SetBinding(Chip.TextProperty, new Binding("."));
+            ApplyGeneratedChipTextBinding(chip);
             chip.SetBinding(Chip.IsDestroyVisibleProperty, new Binding(nameof(IsChipRemoveVisible), source: this));
             chip.SelfDestruct = false;
             chip.DestroyCommand = _destroyChipCommand;
             ApplyGeneratedChipStyle(chip);
             return chip;
-        }));
+        });
+    }
 
-        BindableLayout.SetItemsSource(layout, SelectedItems);
+    protected virtual void ApplyGeneratedChipTextBinding(Chip chip)
+    {
+        chip.RemoveBinding(Chip.TextProperty);
 
-        return layout;
+        if (ItemDisplayBinding is null)
+        {
+            chip.SetBinding(Chip.TextProperty, new Binding("."));
+            return;
+        }
+
+        chip.SetBinding(Chip.TextProperty, ItemDisplayBinding.CopyAsClone());
     }
 
     protected virtual async Task<IEnumerable<object>> DisplayPickerPromptAsync()
@@ -115,7 +135,7 @@ public partial class MultiplePickerField : InputField
         var selectionSource = ItemsSource?.Cast<object>() ?? Enumerable.Empty<object>();
         var selectedItems = SelectedItems?.Cast<object>();
 
-        if (!HasCheckBoxPromptStyle())
+        if (!ShouldUseCustomCheckBoxPrompt())
         {
             return await DialogService.DisplayCheckBoxPromptAsync(
                 this.Title,
@@ -137,6 +157,11 @@ public partial class MultiplePickerField : InputField
                 .Select(checkBox => checkBox.CommandParameter)
                 .ToList()
             : null;
+    }
+
+    protected virtual bool ShouldUseCustomCheckBoxPrompt()
+    {
+        return ItemDisplayBinding is not null || HasCheckBoxPromptStyle();
     }
 
     protected virtual bool HasCheckBoxPromptStyle()
@@ -179,7 +204,7 @@ public partial class MultiplePickerField : InputField
     {
         var checkBox = new MaterialCheckBox
         {
-            Text = item?.ToString(),
+            Text = GetTextForItem(item),
             CommandParameter = item,
             IsChecked = isChecked,
         };
@@ -210,6 +235,21 @@ public partial class MultiplePickerField : InputField
         {
             checkBox.IconColor = CheckBoxIconColor;
         }
+    }
+
+    protected virtual string GetTextForItem(object item)
+    {
+        if (item is null)
+        {
+            return null;
+        }
+
+        if (ItemDisplayBinding is not null)
+        {
+            return ItemDisplayBinding.GetValueOnce<object>(item)?.ToString();
+        }
+
+        return item.ToString();
     }
 
     protected virtual void ApplyGeneratedChipStyle(Chip chip)
@@ -244,7 +284,22 @@ public partial class MultiplePickerField : InputField
 
         RefreshChipLayout();
     }
-    
+
+    protected virtual void RefreshGeneratedChipTextBindings()
+    {
+        if (chipsHolderLayout is null)
+        {
+            return;
+        }
+
+        foreach (var chip in chipsHolderLayout.Children.OfType<Chip>())
+        {
+            ApplyGeneratedChipTextBinding(chip);
+        }
+
+        RefreshChipLayout();
+    }
+
     protected override object GetValueForValidator()
     {
         return SelectedItems;
@@ -252,7 +307,19 @@ public partial class MultiplePickerField : InputField
 
     protected virtual void OnItemsSourceSet()
     {
+        if (isSelectionSyncing)
+        {
+            return;
+        }
 
+        if (SelectedIndexes?.Count > 0)
+        {
+            SyncSelectedItemsFromIndexes();
+        }
+        else
+        {
+            SyncSelectedIndexesFromItems();
+        }
     }
 
     protected virtual void OnSelectedItemsSet(IList oldValue, IList newValue)
@@ -271,14 +338,165 @@ public partial class MultiplePickerField : InputField
             observable.CollectionChanged -= SelectedItemsChanged;
             observable.CollectionChanged += SelectedItemsChanged;
         }
+
+        if (!isSelectionSyncing)
+        {
+            SyncSelectedIndexesFromItems();
+        }
+    }
+
+    protected virtual void OnSelectedIndexesSet(IList oldValue, IList newValue)
+    {
+        if (oldValue is INotifyCollectionChanged oldObservable)
+        {
+            oldObservable.CollectionChanged -= SelectedIndexesChanged;
+        }
+
+        if (newValue is INotifyCollectionChanged observable)
+        {
+            observable.CollectionChanged -= SelectedIndexesChanged;
+            observable.CollectionChanged += SelectedIndexesChanged;
+        }
+
+        if (!isSelectionSyncing)
+        {
+            SyncSelectedItemsFromIndexes();
+        }
     }
 
     private void SelectedItemsChanged(object sender, NotifyCollectionChangedEventArgs e)
     {
+        if (isSelectionSyncing)
+        {
+            return;
+        }
+
+        HandleSelectedItemsChanged(sender, syncSelectedIndexes: true);
+    }
+
+    private void SelectedIndexesChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        if (isSelectionSyncing)
+        {
+            return;
+        }
+
+        SyncSelectedItemsFromIndexes();
+    }
+
+    private void HandleSelectedItemsChanged(object sender, bool syncSelectedIndexes)
+    {
         RefreshChipLayout();
         UpdateState();
+
+        if (syncSelectedIndexes)
+        {
+            SyncSelectedIndexesFromItems();
+        }
+
         SelectedValuesChangedCommand?.Execute(SelectedItems);
         SelectedValuesChanged?.Invoke(sender, SelectedItems);
+    }
+
+    protected virtual void OnItemDisplayBindingChanged()
+    {
+        RefreshGeneratedChipTextBindings();
+    }
+
+    protected virtual void SyncSelectedIndexesFromItems()
+    {
+        var indexes = GetIndexesForSelectedItems().ToList();
+
+        if (SelectedIndexes is null && indexes.Count == 0)
+        {
+            return;
+        }
+
+        isSelectionSyncing = true;
+        try
+        {
+            if (!TryReplaceItems(SelectedIndexes, indexes.Cast<object>()))
+            {
+                SelectedIndexes = new ObservableCollection<int>(indexes);
+            }
+        }
+        finally
+        {
+            isSelectionSyncing = false;
+        }
+    }
+
+    protected virtual void SyncSelectedItemsFromIndexes()
+    {
+        var items = GetItemsForSelectedIndexes().ToList();
+
+        if (SelectedItems is null && items.Count == 0)
+        {
+            return;
+        }
+
+        isSelectionSyncing = true;
+        try
+        {
+            if (!TryReplaceItems(SelectedItems, items))
+            {
+                SelectedItems = new ObservableCollection<object>(items);
+            }
+        }
+        finally
+        {
+            isSelectionSyncing = false;
+        }
+
+        BindableLayout.SetItemsSource(chipsHolderLayout, SelectedItems);
+        HandleSelectedItemsChanged(this, syncSelectedIndexes: false);
+    }
+
+    protected virtual IEnumerable<int> GetIndexesForSelectedItems()
+    {
+        if (ItemsSource is null || SelectedItems is null)
+        {
+            return Enumerable.Empty<int>();
+        }
+
+        return SelectedItems
+            .Cast<object>()
+            .Select(item => ItemsSource.IndexOf(item))
+            .Where(index => index >= 0);
+    }
+
+    protected virtual IEnumerable<object> GetItemsForSelectedIndexes()
+    {
+        if (ItemsSource is null || SelectedIndexes is null)
+        {
+            yield break;
+        }
+
+        foreach (var value in SelectedIndexes)
+        {
+            if (value is not int index || index < 0 || index >= ItemsSource.Count)
+            {
+                continue;
+            }
+
+            yield return ItemsSource[index];
+        }
+    }
+
+    private static bool TryReplaceItems(IList target, IEnumerable<object> items)
+    {
+        if (target is null || target.IsReadOnly || target.IsFixedSize)
+        {
+            return false;
+        }
+
+        target.Clear();
+        foreach (var item in items)
+        {
+            target.Add(item);
+        }
+
+        return true;
     }
 
     protected virtual void RefreshChipLayout()
@@ -314,6 +532,23 @@ public partial class MultiplePickerField : InputField
         typeof(IList),
         typeof(MultiplePickerField),
         propertyChanged: (bindable, oldValue, newValue) => (bindable as MultiplePickerField).OnSelectedItemsSet(oldValue as IList, newValue as IList));
+
+    public BindingBase ItemDisplayBinding { get => (BindingBase)GetValue(ItemDisplayBindingProperty); set => SetValue(ItemDisplayBindingProperty, value); }
+
+    public static readonly BindableProperty ItemDisplayBindingProperty = BindableProperty.Create(
+        nameof(ItemDisplayBinding),
+        typeof(BindingBase),
+        typeof(MultiplePickerField),
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as MultiplePickerField).OnItemDisplayBindingChanged());
+
+    public IList SelectedIndexes { get => (IList)GetValue(SelectedIndexesProperty); set => SetValue(SelectedIndexesProperty, value); }
+
+    public static readonly BindableProperty SelectedIndexesProperty = BindableProperty.Create(
+        nameof(SelectedIndexes),
+        typeof(IList),
+        typeof(MultiplePickerField),
+        defaultBindingMode: BindingMode.TwoWay,
+        propertyChanged: (bindable, oldValue, newValue) => (bindable as MultiplePickerField).OnSelectedIndexesSet(oldValue as IList, newValue as IList));
 
     public ICommand SelectedValuesChangedCommand { get => (ICommand)GetValue(SelectedValuesChangedCommandProperty); set => SetValue(SelectedValuesChangedCommandProperty, value); }
 

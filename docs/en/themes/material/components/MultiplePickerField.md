@@ -31,6 +31,27 @@ Then you can use it like this:
 </material:MultiplePickerField>
 ```
 
+## Item Display Binding
+Use `ItemDisplayBinding` when `ItemsSource` contains objects and the field should show a specific property instead of `ToString()`. The binding is used for both selected chips and picker dialog items.
+
+```xml
+<material:MultiplePickerField
+    Title="Pick tags"
+    ItemsSource="{Binding Tags}"
+    SelectedItems="{Binding SelectedTags}"
+    ItemDisplayBinding="{Binding Name}" />
+```
+
+## Selected Indexes
+Use `SelectedIndexes` to bind selected item positions in `ItemsSource`. The property stays synchronized with `SelectedItems`; changing either collection updates the other.
+
+```xml
+<material:MultiplePickerField
+    Title="Pick some options"
+    ItemsSource="{Binding Options}"
+    SelectedIndexes="{Binding SelectedOptionIndexes}" />
+```
+
 ## Icon
 TextFields support setting an icon on the left side of the control. You can set the icon by setting the `Icon` property. The icon can be any `ImageSource` object. FontImageSource is recommended as Icon since its color can be changed when focused.
 

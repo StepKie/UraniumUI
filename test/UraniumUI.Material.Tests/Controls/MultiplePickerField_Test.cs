@@ -114,6 +114,80 @@ public class MultiplePickerField_Test
         checkBox.IconColor.ShouldBe(Colors.Yellow);
     }
 
+    [Fact]
+    public void ItemDisplayBinding_ShouldUpdateGeneratedChipAndPromptCheckBoxText()
+    {
+        var item = new TestItem(1, "Option One");
+        var control = AnimationReadyHandler.Prepare(new TestMultiplePickerField
+        {
+            ItemDisplayBinding = new Binding(nameof(TestItem.Name)),
+            SelectedItems = new ObservableCollection<object> { item }
+        });
+
+        control.GetSingleChip().Text.ShouldBe("Option One");
+
+        var checkBox = control.CreateCheckBoxPromptCheckBoxForTest(item, false);
+        checkBox.Text.ShouldBe("Option One");
+    }
+
+    [Fact]
+    public void SetSelectedIndexes_ShouldUpdateSelectedItems()
+    {
+        var control = AnimationReadyHandler.Prepare(new TestMultiplePickerField
+        {
+            ItemsSource = new ObservableCollection<object>
+            {
+                "Option 1",
+                "Option 2",
+                "Option 3"
+            },
+            SelectedIndexes = new ObservableCollection<int> { 0, 2 }
+        });
+
+        control.SelectedItems.Cast<object>().ToArray().ShouldBe(new object[] { "Option 1", "Option 3" });
+    }
+
+    [Fact]
+    public void ChangeSelectedIndexes_ShouldUpdateSelectedItems()
+    {
+        var selectedIndexes = new ObservableCollection<int> { 1 };
+        var control = AnimationReadyHandler.Prepare(new TestMultiplePickerField
+        {
+            ItemsSource = new ObservableCollection<object>
+            {
+                "Option 1",
+                "Option 2",
+                "Option 3"
+            },
+            SelectedIndexes = selectedIndexes
+        });
+
+        selectedIndexes.Add(2);
+
+        control.SelectedItems.Cast<object>().ToArray().ShouldBe(new object[] { "Option 2", "Option 3" });
+    }
+
+    [Fact]
+    public void ChangeSelectedItems_ShouldUpdateSelectedIndexes()
+    {
+        var itemsSource = new ObservableCollection<object>
+        {
+            "Option 1",
+            "Option 2",
+            "Option 3"
+        };
+        var selectedItems = new ObservableCollection<object> { itemsSource[1] };
+        var control = AnimationReadyHandler.Prepare(new TestMultiplePickerField
+        {
+            ItemsSource = itemsSource,
+            SelectedItems = selectedItems
+        });
+
+        selectedItems.Add(itemsSource[2]);
+
+        control.SelectedIndexes.Cast<int>().ToArray().ShouldBe(new[] { 1, 2 });
+    }
+
     private sealed class TestMultiplePickerField : MultiplePickerField
     {
         public int RefreshChipLayoutCallCount { get; private set; }
@@ -140,4 +214,6 @@ public class MultiplePickerField_Test
 
         public ObservableCollection<string> SelectedItems { get; } = new();
     }
+
+    private sealed record TestItem(int Id, string Name);
 }
