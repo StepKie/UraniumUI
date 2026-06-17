@@ -32,7 +32,11 @@
 
         <StackLayout HorizontalOptions="Center" VerticalOptions="Center">
             <StackLayout.Effects>
-                <uranium:BlurEffect Mode="{root:XBind BlurMode}" AccentColor="{root:XBind AccentColor}" AccentOpacity="{root:XBind AccentOpacity}" />
+                <uranium:BlurEffect
+                    Mode="{root:XBind BlurMode}"
+                    AccentColor="{root:XBind AccentColor}"
+                    AccentOpacity="{root:XBind AccentOpacity}"
+                    AndroidStrategy="RealtimeCapture" />
             </StackLayout.Effects>
 
             <!-- TODO: Use Property Editor-->
