@@ -109,8 +109,8 @@ BlurEffect is a `Effect` which means you can use it on any control.
 
     | Value | Behavior |
     | --- | --- |
-    | `Default` | Uses `RenderEffect` on Android 12/API 31+ and a material-style tinted surface on older Android versions. |
-    | `RenderEffect` | Uses Android's native `RenderEffect` for the effect host layer on Android 12/API 31+. Falls back to `Material` below API 31. |
+    | `Default` | Uses the material-style tinted surface. This avoids blurring the effect host content and avoids backdrop capture. |
+    | `RenderEffect` | Uses Android's native `RenderEffect` for the effect host layer on Android 12/API 31+. This blurs the host view's own rendered layer, including its content and children, not the backdrop behind it. Falls back to `Material` below API 31. |
     | `Material` | Uses only the configured tint color and opacity. This is the cheapest option and does not capture the backdrop. |
     | `RealtimeCapture` | Uses the previous capture-based backdrop blur pipeline. This can be expensive because it redraws the backdrop into a bitmap and blurs it repeatedly. |
 
@@ -125,6 +125,8 @@ BlurEffect is a `Effect` which means you can use it on any control.
 
 ## Android limitations
 
-Android `RenderEffect` blurs the layer owned by the effect host. It is lightweight, but it is not equivalent to arbitrary backdrop blur behind the control.
+Android `RenderEffect` blurs the layer owned by the effect host. It is lightweight, but it is not equivalent to arbitrary backdrop blur behind the control. If it is applied to a container, the container content is blurred too.
+
+Do not use `RenderEffect` as a dialog, `ContentPage`, or `TabbedPage` backdrop blur replacement. It targets the native Android view generated for the MAUI element, so it cannot blur the page behind that view the same way iOS `UIVisualEffectView` does.
 
 Use `AndroidStrategy="RealtimeCapture"` only when you explicitly need backdrop blur behind an in-page surface. Prefer small, mostly static surfaces for this strategy because scrolling, repeated dialog open/close, and navigation loops can allocate and redraw bitmaps frequently.

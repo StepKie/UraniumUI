@@ -192,9 +192,7 @@ public class BlurPlatformEffect : PlatformEffect
             return strategy;
         }
 
-        return OperatingSystem.IsAndroidVersionAtLeast(31)
-            ? AndroidBlurStrategy.RenderEffect
-            : AndroidBlurStrategy.Material;
+        return AndroidBlurStrategy.Material;
     }
 
     private void EnsureBackgroundDrawable()
