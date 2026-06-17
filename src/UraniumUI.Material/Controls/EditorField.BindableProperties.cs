@@ -98,7 +98,12 @@ public partial class EditorField
         typeof(bool),
         typeof(EditorField),
         false,
-        propertyChanged: (bindable, oldValue, newValue) => (bindable as EditorField).EditorView.IsReadOnly = (bool)newValue);
+        propertyChanged: (bindable, oldValue, newValue) =>
+        {
+            var editorField = bindable as EditorField;
+            editorField.EditorView.IsReadOnly = (bool)newValue;
+            editorField.UpdateContentSemantics();
+        });
 
     public bool IsSpellCheckEnabled { get => (bool)GetValue(IsSpellCheckEnabledProperty); set => SetValue(IsSpellCheckEnabledProperty, value); }
 

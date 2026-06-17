@@ -44,11 +44,7 @@ public sealed class TreeViewNodeView : ContentView
         rowButton = new StatefulContentView
         {
             Content = rowGrid,
-#if WINDOWS
-            GestureRecognizers = { new TapGestureRecognizer { Command = new Command(OnRowTapped) } },
-#else
             TappedCommand = new Command(OnRowTapped),
-#endif
         };
 
         Content = rowButton;
@@ -111,11 +107,7 @@ public sealed class TreeViewNodeView : ContentView
             StyleClass = new[] { "TreeViewExpandButton" },
             Padding = 0,
             Margin = 0,
-#if WINDOWS
-            GestureRecognizers = { new TapGestureRecognizer { Command = new Command(ToggleExpanded) } },
-#else
-            PressedCommand = new Command(ToggleExpanded),
-#endif
+            TappedCommand = new Command(ToggleExpanded),
         };
 
         defaultButton.Content = new ContentView
@@ -173,6 +165,8 @@ public sealed class TreeViewNodeView : ContentView
 
         defaultExpanderButton.Opacity = node.IsLeaf ? 0 : 1;
         defaultExpanderButton.InputTransparent = node.IsLeaf;
+        defaultExpanderButton.IsEnabled = !node.IsLeaf;
+        UpdateExpanderSemantics();
 
         var rotation = node.IsExpanded ? 90 : 0;
         if (animate && treeView.UseAnimation)
@@ -187,6 +181,8 @@ public sealed class TreeViewNodeView : ContentView
 
     private void UpdateSelectionState()
     {
+        UpdateRowSemantics();
+
         if (node?.IsSelected == true)
         {
             VisualStateManager.GoToState(rowButton, CommonStates.Selected);
@@ -225,5 +221,43 @@ public sealed class TreeViewNodeView : ContentView
                 label.StyleClass = new[] { "TreeView.Label" };
             }
         }
+    }
+
+    private void UpdateExpanderSemantics()
+    {
+        if (node is null || defaultExpanderButton is null)
+        {
+            return;
+        }
+
+        var options = AccessibilityOptionsProvider.Get();
+        var nodeText = GetNodeSemanticText();
+        var description = node.IsExpanded
+            ? options.FormatCollapseTreeNodeDescription(nodeText)
+            : options.FormatExpandTreeNodeDescription(nodeText);
+
+        SemanticProperties.SetDescription(defaultExpanderButton, description);
+    }
+
+    private void UpdateRowSemantics()
+    {
+        if (node is null)
+        {
+            return;
+        }
+
+        var options = AccessibilityOptionsProvider.Get();
+        var nodeText = GetNodeSemanticText();
+        var description = node.IsSelected
+            ? options.FormatSelectedTreeNodeDescription(nodeText)
+            : options.FormatTreeNodeDescription(nodeText);
+
+        SemanticProperties.SetDescription(rowButton, description);
+        SemanticProperties.SetHint(rowButton, options.TreeNodeHint);
+    }
+
+    private string GetNodeSemanticText()
+    {
+        return node?.Item?.ToString() ?? nameof(TreeViewNode);
     }
 }

@@ -69,18 +69,19 @@ public class TimePickerField : InputField
 
 `InputField` mirrors the focus state of its inner control. When the inner input receives focus, the Material border, floating title, and icon use `AccentColor`, which gives keyboard users a visible focus state.
 
-Use `Title` or `TitleFormattedText` as the visible field label. If your wrapped control does not expose that label to screen readers by itself, add semantic metadata to the content control:
+Use `Title` or `TitleFormattedText` as the visible field label. Material input fields use that title as the semantic description of the inner input unless the app already set `SemanticProperties.Description` on the inner input.
 
 ```xml
 <material:InputField Title="Account code" ContentAutomationId="AccountCodeInput">
     <Entry
         BackgroundColor="Transparent"
-        SemanticProperties.Description="Account code"
         SemanticProperties.Hint="Enter the account code shown on the invoice" />
 </material:InputField>
 ```
 
 Use `ContentAutomationId` when UI tests or platform automation need to locate the inner input, not only the wrapper. For icon-only attachments, provide `SemanticProperties.Description` and make the attachment keyboard reachable if it performs an action.
+
+Generated clear-button, validation, read-only, disabled, and password visibility semantic text can be localized through `UraniumUIAccessibilityOptions`. See [Localized Semantic Text](../../../best-practices/LocalizedSemanticText.md) for app-level configuration and reusable language-pack examples.
 
 ## Validation
 InputField implements `IValidatable` interface and provides built-in validation support. You can add validations to your input field and display validation messages.

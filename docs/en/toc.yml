@@ -4,6 +4,8 @@
   items:
     - name: Accessibility
       href: best-practices/Accessibility.md
+    - name: Localized Semantic Text
+      href: best-practices/LocalizedSemanticText.md
     - name: Clickable Areas
       href: best-practices/ClickableAreas.md
 - name: What's New

@@ -1,8 +1,10 @@
 ﻿using FluentAssertions;
+using InputKit.Shared.Validations;
 using NSubstitute;
 using Shouldly;
 using System.Windows.Input;
 using UraniumUI.Material.Controls;
+using UraniumUI.Options;
 using UraniumUI.Tests.Core;
 using UraniumUI.ViewExtensions;
 using UraniumUI.Views;
@@ -158,6 +160,114 @@ public class TextField_Test
         clearIcon.ShouldNotBeNull();
         clearIcon.Margin.ShouldBe(default(Thickness));
         clearIcon.Padding.ShouldBe(new Thickness(InputField.BuiltInAttachmentLeftPadding, 0, 0, 0));
+    }
+
+    [Fact]
+    public void Title_ShouldGenerateInputSemanticDescription_AndHideFloatingLabelFromAccessibleTree()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        control.Title = "Email";
+
+        var titleLabel = control.FindByViewQueryIdInVisualTreeDescendants<Label>("TitleLabel");
+
+        SemanticProperties.GetDescription(control.EntryView).ShouldBe("Email");
+        AutomationProperties.GetIsInAccessibleTree(titleLabel).ShouldBe(false);
+    }
+
+    [Fact]
+    public void Title_ShouldNotOverwriteExplicitInputSemanticDescription()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        SemanticProperties.SetDescription(control.Content, "Custom email field");
+        control.Title = "Email";
+
+        SemanticProperties.GetDescription(control.EntryView).ShouldBe("Custom email field");
+    }
+
+    [Fact]
+    public void DisplayValidation_ShouldExposeValidationMessage_OnInputAndValidationLabel()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        control.Title = "Email";
+
+        control.Validations.Add(new FailingValidation("Email is required."));
+        control.DisplayValidation();
+
+        var validationLabel = control.FindByViewQueryIdInVisualTreeDescendants<Label>("ValidationLabel");
+        SemanticProperties.GetHint(control.EntryView).ShouldBe("Error: Email is required.");
+        SemanticProperties.GetDescription(validationLabel).ShouldBe("Email is required.");
+    }
+
+    [Fact]
+    public void ReadOnlyAndDisabledStates_ShouldBeIncludedInInputSemanticHint()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+
+        control.IsReadOnly = true;
+
+        SemanticProperties.GetHint(control.EntryView).ShouldContain("Read only.");
+
+        control.IsEnabled = false;
+
+        SemanticProperties.GetHint(control.EntryView).ShouldContain("Disabled.");
+    }
+
+    [Fact]
+    public void ClearIcon_ShouldExposeSemanticText_AndRespectDisallowFocus()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField { AllowClear = true });
+        var clearIcon = control.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
+
+        SemanticProperties.GetDescription(clearIcon).ShouldBe("Clear text");
+        SemanticProperties.GetHint(clearIcon).ShouldBe("Clears the current value.");
+        clearIcon.IsFocusable.ShouldBeTrue();
+
+        control.DisallowClearButtonFocus = true;
+
+        clearIcon.IsFocusable.ShouldBeFalse();
+    }
+
+    [Fact]
+    public void AccessibilityOptions_ShouldLocalizeGeneratedSemantics()
+    {
+        ApplicationExtensions.CreateAndSetMockApplication(builder =>
+        {
+            builder.ConfigureUraniumUIAccessibility(options =>
+            {
+                options.ClearTextDescription = "Metni temizle";
+                options.ClearTextHint = "Geçerli değeri temizler.";
+                options.ValidationErrorHintFormat = "Hata: {0}";
+            });
+        });
+
+        var control = AnimationReadyHandler.Prepare(new TextField { AllowClear = true });
+        var clearIcon = control.FindByViewQueryIdInVisualTreeDescendants<StatefulContentView>("ClearIcon");
+
+        control.Validations.Add(new FailingValidation("E-posta gerekli."));
+        control.DisplayValidation();
+
+        SemanticProperties.GetDescription(clearIcon).ShouldBe("Metni temizle");
+        SemanticProperties.GetHint(clearIcon).ShouldBe("Geçerli değeri temizler.");
+        SemanticProperties.GetHint(control.EntryView).ShouldBe("Hata: E-posta gerekli.");
+    }
+
+    [Fact]
+    public void PasswordShowHideAttachment_ShouldExposeDynamicSemanticText()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField { IsPassword = true });
+        var attachment = new TextFieldPasswordShowHideAttachment();
+
+        control.Attachments.Add(attachment);
+
+        SemanticProperties.GetDescription(attachment).ShouldBe("Show password");
+        SemanticProperties.GetHint(attachment).ShouldBe("Toggles password visibility.");
+
+        control.IsPassword = false;
+
+        SemanticProperties.GetDescription(attachment).ShouldBe("Hide password");
     }
   
     [Fact]
@@ -549,5 +659,17 @@ public class TextField_Test
             UpdateClearIconStateCallCount++;
             base.UpdateClearIconState();
         }
+    }
+
+    private sealed class FailingValidation : IValidation
+    {
+        public FailingValidation(string message)
+        {
+            Message = message;
+        }
+
+        public string Message { get; }
+
+        public bool Validate(object value) => false;
     }
 }

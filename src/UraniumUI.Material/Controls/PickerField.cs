@@ -234,6 +234,7 @@ public class PickerField : InputField
         iconClear.SetId("ClearIcon");
 
         iconClear.SetBinding(StatefulContentView.IsVisibleProperty, new Binding(nameof(SelectedItem), converter: UraniumConverters.StringIsNotNullOrEmptyConverter, source: this));
+        SetActionSemantics(iconClear, AccessibilityOptions.ClearSelectionDescription, AccessibilityOptions.ClearSelectionHint);
 
         return iconClear;
     }

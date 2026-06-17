@@ -21,6 +21,11 @@ public static class MauiProgramExtensions
             // Keep this here
         });
 
+        builder.Services.Configure<UraniumUIAccessibilityOptions>(options =>
+        {
+            // Keep this here
+        });
+
         builder.Services.AddTransient<IDialogService, DefaultDialogService>();
 
         builder.ConfigureAutoFormViewDefaults();

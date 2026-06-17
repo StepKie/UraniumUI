@@ -1,4 +1,5 @@
 ﻿using Microsoft.Maui.Controls.Shapes;
+using System.ComponentModel;
 using UraniumUI.Extensions;
 using UraniumUI.Pages;
 using UraniumUI.Resources;
@@ -20,13 +21,28 @@ public class TextFieldPasswordShowHideAttachment : StatefulContentView
 
     protected override void OnParentSet()
     {
+        if (TextField is not null)
+        {
+            TextField.PropertyChanged -= TextField_PropertyChanged;
+        }
+
         TextField = this.FindInParents<TextField>();
         if (TextField == null)
         {
+            UpdateSemanticProperties();
             return;
         }
 
+        TextField.PropertyChanged += TextField_PropertyChanged;
         UpdateIcon();
+    }
+
+    private void TextField_PropertyChanged(object sender, PropertyChangedEventArgs e)
+    {
+        if (e.PropertyName == nameof(TextField.IsPassword))
+        {
+            UpdateIcon();
+        }
     }
 
     protected virtual void SwitchPassword(object parameter)
@@ -51,6 +67,16 @@ public class TextFieldPasswordShowHideAttachment : StatefulContentView
         }
 
         Content = TextField.IsPassword ? GetPathFromData(UraniumShapes.Eye) : GetPathFromData(UraniumShapes.EyeSlash);
+        UpdateSemanticProperties();
+    }
+
+    private void UpdateSemanticProperties()
+    {
+        var options = AccessibilityOptionsProvider.Get();
+        var description = TextField?.IsPassword == true ? options.ShowPasswordDescription : options.HidePasswordDescription;
+
+        SemanticProperties.SetDescription(this, description);
+        SemanticProperties.SetHint(this, options.PasswordVisibilityToggleHint);
     }
 
     private Path GetPathFromData(Geometry data)
