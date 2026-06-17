@@ -1,5 +1,6 @@
 ﻿using Android.Graphics;
 using Android.Graphics.Drawables;
+using Android.OS;
 using Android.Views;
 using View = Android.Views.View;
 using Color = Android.Graphics.Color;
@@ -13,6 +14,9 @@ public class PreDrawBlurController : IBlurController
     private float blurRadius = BlurViewDefaults.BLUR_RADIUS;
 
     private readonly IBlurAlgorithm blurAlgorithm;
+    private readonly AndroidBlurCaptureMode captureMode;
+    private readonly long minRealtimeUpdateIntervalMillis;
+    private readonly float scaleFactor;
     private BlurViewCanvas internalCanvas;
     private Bitmap internalBitmap;
 
@@ -25,21 +29,45 @@ public class PreDrawBlurController : IBlurController
     private bool blurEnabled = true;
     private bool initialized;
     private bool destroyed;
+    private bool autoUpdateEnabled;
+    private bool pendingBlurUpdate = true;
+    private long lastBlurUpdateUptimeMillis;
 
     private Drawable frameClearDrawable;
 
     private readonly OnPreDrawListener drawListener;
     public PreDrawBlurController(View blurView, ViewGroup rootView, Color overlayColor, IBlurAlgorithm algorithm)
+        : this(
+            blurView,
+            rootView,
+            overlayColor,
+            algorithm,
+            AndroidBlurCaptureMode.Realtime,
+            BlurViewDefaults.REALTIME_CAPTURE_FPS,
+            BlurViewDefaults.CAPTURE_SCALE_FACTOR)
     {
-        drawListener = new OnPreDrawListener(() =>
-        {
-            UpdateBlur();
-        });
+    }
+
+    internal PreDrawBlurController(
+        View blurView,
+        ViewGroup rootView,
+        Color overlayColor,
+        IBlurAlgorithm algorithm,
+        AndroidBlurCaptureMode captureMode,
+        int maxRealtimeUpdatesPerSecond,
+        float scaleFactor)
+    {
+        drawListener = new OnPreDrawListener(HandlePreDraw);
 
         this.rootView = rootView;
         this.blurView = blurView;
         this.overlayColor = overlayColor;
         this.blurAlgorithm = algorithm;
+        this.captureMode = captureMode;
+        this.scaleFactor = Math.Clamp(scaleFactor, 1f, 32f);
+
+        var updatesPerSecond = Math.Clamp(maxRealtimeUpdatesPerSecond, 1, 60);
+        minRealtimeUpdateIntervalMillis = 1000L / updatesPerSecond;
 
         if (algorithm is RenderEffectBlur renderEffectBlur) {
             renderEffectBlur.SetContext(blurView.Context);
@@ -59,13 +87,14 @@ public class PreDrawBlurController : IBlurController
         }
 
         SetBlurAutoUpdate(true);
-        SizeScaler sizeScaler = new SizeScaler(blurAlgorithm.ScaleFactor);
+        SizeScaler sizeScaler = new SizeScaler(scaleFactor);
         if (sizeScaler.IsZeroSized(measuredWidth, measuredHeight))
         {
             // Will be initialized later when the View reports a size change
             initialized = false;
             blurView.SetWillNotDraw(true);
             ReleaseBitmap();
+            RequestBlurUpdate();
             return;
         }
 
@@ -75,7 +104,7 @@ public class PreDrawBlurController : IBlurController
         if (initialized && internalBitmap != null && !internalBitmap.IsRecycled &&
             internalBitmap.Width == bitmapSize.width && internalBitmap.Height == bitmapSize.height)
         {
-            UpdateBlur();
+            RefreshBlur();
             return;
         }
 
@@ -87,14 +116,53 @@ public class PreDrawBlurController : IBlurController
         // But it handles cases when the PreDraw listener is attached to a different Window, for example
         // when the BlurView is in a Dialog window, but the root is in the Activity.
         // Previously it was done in `draw`, but it was causing potential side effects and Jetpack Compose crashes
-        UpdateBlur();
+        RefreshBlur();
     }
 
-    void UpdateBlur()
+    private void HandlePreDraw()
     {
-        if (destroyed || !blurEnabled || !initialized || internalBitmap == null || internalCanvas == null || rootView == null)
+        if (destroyed || !blurEnabled)
         {
             return;
+        }
+
+        if (captureMode == AndroidBlurCaptureMode.Static)
+        {
+            if (pendingBlurUpdate)
+            {
+                UpdateBlur(force: true);
+            }
+
+            return;
+        }
+
+        if (pendingBlurUpdate || CanUpdateRealtimeBlur())
+        {
+            UpdateBlur(force: pendingBlurUpdate);
+        }
+    }
+
+    private bool CanUpdateRealtimeBlur()
+    {
+        if (lastBlurUpdateUptimeMillis == 0)
+        {
+            return true;
+        }
+
+        return SystemClock.UptimeMillis() - lastBlurUpdateUptimeMillis >= minRealtimeUpdateIntervalMillis;
+    }
+
+    bool UpdateBlur(bool force = false)
+    {
+        if (!force && captureMode == AndroidBlurCaptureMode.Realtime && !CanUpdateRealtimeBlur())
+        {
+            return false;
+        }
+
+        if (!CanDrawRootIntoBlurBitmap())
+        {
+            RequestBlurUpdate();
+            return false;
         }
 
         if (frameClearDrawable == null)
@@ -112,6 +180,37 @@ public class PreDrawBlurController : IBlurController
         internalCanvas.Restore();
 
         BlurAndSave();
+        pendingBlurUpdate = false;
+        lastBlurUpdateUptimeMillis = SystemClock.UptimeMillis();
+        blurView.Invalidate();
+        UpdateAutoUpdateSubscription();
+        return true;
+    }
+
+    private bool CanDrawRootIntoBlurBitmap()
+    {
+        if (destroyed || !blurEnabled || !initialized || internalBitmap == null || internalCanvas == null || rootView == null)
+        {
+            return false;
+        }
+
+        if (blurView.Width <= 0 || blurView.Height <= 0 || rootView.Width <= 0 || rootView.Height <= 0)
+        {
+            return false;
+        }
+
+        if (!blurView.IsShown || !rootView.IsShown || blurView.WindowToken == null || blurView.Alpha <= 0f)
+        {
+            return false;
+        }
+
+        return !IsNativeAnimationRunning(blurView) && !IsNativeAnimationRunning(rootView);
+    }
+
+    private static bool IsNativeAnimationRunning(View view)
+    {
+        var animation = view.Animation;
+        return animation != null && animation.HasStarted && !animation.HasEnded;
     }
     /**
     * Set up matrix to draw starting from blurView's position
@@ -212,37 +311,58 @@ public class PreDrawBlurController : IBlurController
     public IBlurViewFacade SetBlurRadius(float radius)
     {
         this.blurRadius = radius;
+        RequestBlurUpdate();
         return this;
     }
 
     public IBlurViewFacade SetFrameClearDrawable(Drawable frameClearDrawable)
     {
         this.frameClearDrawable = frameClearDrawable;
+        RequestBlurUpdate();
         return this;
     }
 
     public IBlurViewFacade SetBlurEnabled(bool enabled)
     {
         this.blurEnabled = enabled;
-        SetBlurAutoUpdate(enabled);
+        if (enabled)
+        {
+            RequestBlurUpdate();
+        }
+        else
+        {
+            UpdateAutoUpdateSubscription();
+        }
+
         blurView.Invalidate();
         return this;
     }
 
     public IBlurViewFacade SetBlurAutoUpdate(bool enabled)
     {
+        autoUpdateEnabled = enabled;
+        UpdateAutoUpdateSubscription();
+        return this;
+    }
+
+    private void UpdateAutoUpdateSubscription()
+    {
         var viewTreeObserver = rootView?.ViewTreeObserver;
         if (viewTreeObserver == null || !viewTreeObserver.IsAlive)
         {
-            return this;
+            return;
         }
 
         viewTreeObserver.RemoveOnPreDrawListener(drawListener);
-        if (enabled)
+        if (autoUpdateEnabled && blurEnabled && !destroyed && ShouldListenForPreDraw())
         {
             viewTreeObserver.AddOnPreDrawListener(drawListener);
         }
-        return this;
+    }
+
+    private bool ShouldListenForPreDraw()
+    {
+        return captureMode == AndroidBlurCaptureMode.Realtime || pendingBlurUpdate;
     }
 
     public IBlurViewFacade SetOverlayColor(Color overlayColor)
@@ -253,6 +373,18 @@ public class PreDrawBlurController : IBlurController
             blurView.Invalidate();
         }
         return this;
+    }
+
+    public void RefreshBlur()
+    {
+        RequestBlurUpdate();
+        UpdateBlur(force: true);
+    }
+
+    private void RequestBlurUpdate()
+    {
+        pendingBlurUpdate = true;
+        UpdateAutoUpdateSubscription();
     }
 
     private void ReleaseBitmap()

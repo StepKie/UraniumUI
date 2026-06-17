@@ -30,5 +30,13 @@ public interface IBlurController : IBlurViewFacade
 public static class BlurViewDefaults
 {
     public const float SCALE_FACTOR = 6f;
+    public const float CAPTURE_SCALE_FACTOR = 8f;
     public const float BLUR_RADIUS = 16f;
+    public const int REALTIME_CAPTURE_FPS = 15;
+}
+
+internal enum AndroidBlurCaptureMode
+{
+    Realtime,
+    Static,
 }
