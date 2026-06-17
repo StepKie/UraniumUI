@@ -12,6 +12,8 @@ namespace UraniumUI.Material.Controls;
 public partial class DataGrid : Border
 {
     private Grid _rootGrid;
+    private readonly HashSet<View> _selectionCells = [];
+    private bool _syncingSelectionCells;
 
     public Type CurrentType { get; protected set; }
 
@@ -179,10 +181,12 @@ public partial class DataGrid : Border
         }
 
         RegisterSelectionChanges();
+        UpdateSelections();
     }
 
     private void ResetGrid()
     {
+        _selectionCells.Clear();
         _rootGrid.Clear();
         _rootGrid.Children.Clear();
 
@@ -276,6 +280,10 @@ public partial class DataGrid : Border
             cell.SetBinding(ContentView.IsVisibleProperty, new Binding(nameof(DataGridColumn.IsVisible), source: column));
 
             SetSelectionVisualStates(cell);
+            if (column is IDataGridSelectionColumn)
+            {
+                _selectionCells.Add(cell);
+            }
 
             _rootGrid.RowDefinitions.Add(new RowDefinition(GridLength.Auto));
             _rootGrid.Add(cell, columnNumber, row: actualRow);
@@ -366,29 +374,94 @@ public partial class DataGrid : Border
         }
     }
 
+    private void OnSelectedItemsChanged(IList oldValue, IList newValue)
+    {
+        if (oldValue is INotifyCollectionChanged oldObservable)
+        {
+            oldObservable.CollectionChanged -= SelectedItems_CollectionChanged;
+        }
+
+        if (newValue is INotifyCollectionChanged observable)
+        {
+            observable.CollectionChanged -= SelectedItems_CollectionChanged;
+            observable.CollectionChanged += SelectedItems_CollectionChanged;
+        }
+
+        OnSelectedItemsSet();
+    }
+
     protected virtual void OnSelectedItemsSet()
     {
         UpdateSelections();
+    }
 
-        if (SelectedItems is INotifyCollectionChanged observable)
-        {
-            observable.CollectionChanged += (s, e) => UpdateSelections();
-        }
+    private void SelectedItems_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
+    {
+        UpdateSelections();
     }
 
     protected void UpdateSelections()
     {
-        foreach (View child in _rootGrid.Children)
+        if (_rootGrid is null)
         {
-            if (SelectedItems.Contains(child.BindingContext))
+            return;
+        }
+
+        _syncingSelectionCells = true;
+
+        try
+        {
+            foreach (View child in _rootGrid.Children)
             {
-                VisualStateManager.GoToState(child, DataGridCellVisualStates.Selected);
-            }
-            else
-            {
-                VisualStateManager.GoToState(child, DataGridCellVisualStates.Unselected);
+                var isSelected = SelectedItems?.Contains(child.BindingContext) == true;
+                VisualStateManager.GoToState(child, isSelected ? DataGridCellVisualStates.Selected : DataGridCellVisualStates.Unselected);
+
+                if (_selectionCells.Contains(child))
+                {
+                    UpdateSelectionCellCheckBox(child, isSelected);
+                }
             }
         }
+        finally
+        {
+            _syncingSelectionCells = false;
+        }
+    }
+
+    private static void UpdateSelectionCellCheckBox(Element element, bool isSelected)
+    {
+        var checkBox = FindSelectionCheckBox(element);
+        if (checkBox is not null && checkBox.IsChecked != isSelected)
+        {
+            checkBox.IsChecked = isSelected;
+        }
+    }
+
+    private static CheckBox FindSelectionCheckBox(Element element)
+    {
+        if (element is CheckBox checkBox)
+        {
+            return checkBox;
+        }
+
+        if (element is ContentView { Content: Element content })
+        {
+            return FindSelectionCheckBox(content);
+        }
+
+        if (element is Layout layout)
+        {
+            foreach (var child in layout.Children.OfType<Element>())
+            {
+                var checkBoxChild = FindSelectionCheckBox(child);
+                if (checkBoxChild is not null)
+                {
+                    return checkBoxChild;
+                }
+            }
+        }
+
+        return null;
     }
 
     protected virtual void RenderEmptyView()
@@ -435,12 +508,18 @@ public partial class DataGrid : Border
     {
         foreach (IDataGridSelectionColumn selection in Columns.Where(x => x is IDataGridSelectionColumn))
         {
+            selection.SelectionChanged -= SelectionChanged;
             selection.SelectionChanged += SelectionChanged;
         }
     }
 
     private void SelectionChanged(object sender, bool isSelected)
     {
+        if (_syncingSelectionCells)
+        {
+            return;
+        }
+
         if (SelectedItems is null)
         {
             SelectedItems = new ObservableCollection<object>();
@@ -461,6 +540,7 @@ public partial class DataGrid : Border
             }
 
             OnPropertyChanged(nameof(SelectedItems));
+            UpdateSelections();
         }
     }
 

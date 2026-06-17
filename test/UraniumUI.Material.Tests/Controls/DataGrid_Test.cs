@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Linq;
 using Microsoft.Maui.Controls.Xaml;
 using Shouldly;
 using UraniumUI.Material.Controls;
 using UraniumUI.Tests.Core;
+using MaterialCheckBox = UraniumUI.Material.Controls.CheckBox;
 
 namespace UraniumUI.Material.Tests.Controls;
 public class DataGrid_Test
@@ -202,6 +204,72 @@ public class DataGrid_Test
 
         control.Columns.Select(column => column.Title).ShouldBe(["Identity", "Name"]);
         control.Columns.Select(column => ((Binding)column.ValueBinding).Path).ShouldBe([nameof(AutoColumnRow.Id), nameof(AutoColumnRow.Name)]);
+    }
+
+    [Fact]
+    public void SelectionColumn_CheckBox_ShouldBeChecked_WhenSelectedItemsInitializedBeforeItemsSource()
+    {
+        var rows = new List<DataGridRow>
+        {
+            new() { Id = 1, Name = "One" },
+            new() { Id = 2, Name = "Two" },
+        };
+
+        var control = AnimationReadyHandler.Prepare(new DataGrid
+        {
+            Columns =
+            [
+                new DataGridSelectionColumn(),
+                new DataGridColumn { Title = "Id", ValueBinding = new Binding(nameof(DataGridRow.Id)) },
+            ],
+            SelectedItems = new ObservableCollection<object> { rows[1] },
+            ItemsSource = rows,
+        });
+
+        var checkBox = GetSelectionCheckBox(control, rows[1]);
+
+        checkBox.IsChecked.ShouldBeTrue();
+    }
+
+    [Fact]
+    public void SelectionColumn_CheckBox_ShouldUpdate_WhenSelectedItemsCollectionChanges()
+    {
+        var rows = new List<DataGridRow>
+        {
+            new() { Id = 1, Name = "One" },
+            new() { Id = 2, Name = "Two" },
+        };
+        var selectedItems = new ObservableCollection<object>();
+
+        var control = AnimationReadyHandler.Prepare(new DataGrid
+        {
+            Columns =
+            [
+                new DataGridSelectionColumn(),
+                new DataGridColumn { Title = "Id", ValueBinding = new Binding(nameof(DataGridRow.Id)) },
+            ],
+            ItemsSource = rows,
+            SelectedItems = selectedItems,
+        });
+
+        var checkBox = GetSelectionCheckBox(control, rows[0]);
+        checkBox.IsChecked.ShouldBeFalse();
+
+        selectedItems.Add(rows[0]);
+        checkBox.IsChecked.ShouldBeTrue();
+
+        selectedItems.Remove(rows[0]);
+        checkBox.IsChecked.ShouldBeFalse();
+    }
+
+    private static MaterialCheckBox GetSelectionCheckBox(DataGrid control, DataGridRow row)
+    {
+        var rootGrid = control.Content.ShouldBeOfType<Grid>();
+        var selectionCell = rootGrid.Children.OfType<ContentView>()
+            .Single(child => Grid.GetColumn(child) == 0 && child.BindingContext == row);
+
+        return selectionCell.Content.ShouldBeOfType<ContentView>()
+            .Content.ShouldBeOfType<MaterialCheckBox>();
     }
 
     private sealed class DataGridRow
