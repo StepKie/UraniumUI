@@ -31,8 +31,6 @@ public partial class InputField : ContentView
     private string generatedSemanticHint;
     private string explicitSemanticHint;
     private string validationSemanticMessage;
-    private Shadow unfocusedBorderShadow;
-    private bool isFocusVisualApplied;
 
     public virtual new View Content { get => (View)GetValue(ContentProperty); set => SetValue(ContentProperty, value); }
 
@@ -392,6 +390,11 @@ public partial class InputField : ContentView
     }
 #endif
 
+    public new bool Focus()
+    {
+        return Content?.Focus() ?? base.Focus();
+    }
+
     // TODO: Remove this member hiding after android unfocus fixed.
     public new void Unfocus()
     {
@@ -535,7 +538,6 @@ public partial class InputField : ContentView
         var currentLabelTitle = labelTitle;
 
         currentBorder?.SetBinding(Border.StrokeProperty, GetRelativeBinding(nameof(BorderColor)));
-        ResetFocusVisual(currentBorder);
         currentLabelTitle?.SetBinding(Label.TextColorProperty, GetRelativeBinding(nameof(TitleColor)));
         UpdateState();
 
@@ -550,7 +552,6 @@ public partial class InputField : ContentView
         if (border is not null)
         {
             border.Stroke = AccentColor;
-            ApplyFocusVisual(border);
         }
 
         if (labelTitle is not null)
@@ -565,35 +566,6 @@ public partial class InputField : ContentView
             LastFontimageColor = fontImageSource.Color?.WithAlpha(1); // To create a new instance.
             fontImageSource.Color = AccentColor;
         }
-    }
-
-    private void ApplyFocusVisual(Border currentBorder)
-    {
-        if (!isFocusVisualApplied)
-        {
-            unfocusedBorderShadow = currentBorder.Shadow;
-            isFocusVisualApplied = true;
-        }
-
-        currentBorder.Shadow = new Shadow
-        {
-            Brush = AccentColor.ToSolidColorBrush(),
-            Opacity = 0.35f,
-            Radius = 6,
-            Offset = new Point(0, 0),
-        };
-    }
-
-    private void ResetFocusVisual(Border currentBorder)
-    {
-        if (currentBorder is null || !isFocusVisualApplied)
-        {
-            return;
-        }
-
-        currentBorder.Shadow = unfocusedBorderShadow;
-        unfocusedBorderShadow = null;
-        isFocusVisualApplied = false;
     }
 
     protected virtual bool IsContentReadOnly => false;

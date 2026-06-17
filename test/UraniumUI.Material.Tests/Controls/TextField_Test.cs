@@ -1,5 +1,6 @@
 ﻿using FluentAssertions;
 using InputKit.Shared.Validations;
+using Microsoft.Maui.Handlers;
 using NSubstitute;
 using Shouldly;
 using System.Collections.ObjectModel;
@@ -18,6 +19,19 @@ public class TextField_Test
     public TextField_Test()
     {
         ApplicationExtensions.CreateAndSetMockApplication();
+    }
+
+    [Fact]
+    public void Focus_ShouldForward_ToContent()
+    {
+        var control = AnimationReadyHandler.Prepare(new TextField());
+        var handler = new FocusTrackingHandler();
+
+        control.EntryView.Handler = handler;
+
+        control.Focus();
+
+        handler.FocusRequested.ShouldBeTrue();
     }
 
     [Fact]
@@ -776,6 +790,36 @@ public class TextField_Test
         {
             UpdateClearIconStateCallCount++;
             base.UpdateClearIconState();
+        }
+    }
+
+    private sealed class FocusTrackingHandler : ViewHandler<IView, object>
+    {
+        private static readonly IPropertyMapper<IView, FocusTrackingHandler> Mapper = new PropertyMapper<IView, FocusTrackingHandler>(ViewHandler.ViewMapper);
+
+        private static readonly CommandMapper<IView, FocusTrackingHandler> Commands = new(ViewHandler.ViewCommandMapper)
+        {
+            [nameof(IView.Focus)] = MapFocus,
+        };
+
+        public FocusTrackingHandler()
+            : base(Mapper, Commands)
+        {
+            SetMauiContext(new AnimationReadyHandler.AnimationReadyMauiContext());
+        }
+
+        public bool FocusRequested { get; private set; }
+
+        protected override object CreatePlatformView() => new();
+
+        private static void MapFocus(FocusTrackingHandler handler, IView view, object args)
+        {
+            handler.FocusRequested = true;
+
+            if (args is RetrievePlatformValueRequest<bool> request)
+            {
+                request.SetResult(true);
+            }
         }
     }
 
