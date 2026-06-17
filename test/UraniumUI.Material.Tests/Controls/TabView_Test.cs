@@ -112,6 +112,84 @@ public class TabView_Test
         SemanticProperties.GetDescription(secondHeader).ShouldBe("Second, selected");
     }
 
+    [Fact]
+    public void TabHeaderItemTemplate_ShouldUseItemsSourceItemBindingContext()
+    {
+        var items = new ObservableCollection<HeaderItem>
+        {
+            new("First"),
+            new("Second"),
+        };
+
+        var tabView = AnimationReadyHandler.Prepare(new TabView
+        {
+            TabHeaderItemTemplate = CreateItemsSourceHeaderTemplate(),
+            ItemTemplate = CreateTestHeaderTemplate(),
+            ItemsSource = items,
+            UseAnimation = false,
+        });
+
+        tabView.Tabs.Count.ShouldBe(2);
+        var firstHeaderContent = GetWrappedHeaderContent<Label>(tabView.Tabs[0]);
+
+        firstHeaderContent.BindingContext.ShouldBeSameAs(items[0]);
+        firstHeaderContent.Text.ShouldBe("First");
+    }
+
+    [Fact]
+    public void TabHeaderItemTemplate_ShouldExposeSelectedStateForItemsSourceHeaders()
+    {
+        var items = new ObservableCollection<HeaderItem>
+        {
+            new("First"),
+            new("Second"),
+        };
+
+        var tabView = AnimationReadyHandler.Prepare(new TabView
+        {
+            TabHeaderItemTemplate = CreateItemsSourceHeaderTemplate(),
+            ItemTemplate = CreateTestHeaderTemplate(),
+            ItemsSource = items,
+            UseAnimation = false,
+        });
+
+        var firstHeaderContent = GetWrappedHeaderContent<Label>(tabView.Tabs[0]);
+        var secondHeaderContent = GetWrappedHeaderContent<Label>(tabView.Tabs[1]);
+
+        TabView.GetIsHeaderSelected(firstHeaderContent).ShouldBeTrue();
+        TabView.GetIsHeaderSelected(secondHeaderContent).ShouldBeFalse();
+
+        tabView.SelectedTab = tabView.Tabs[1];
+
+        TabView.GetIsHeaderSelected(firstHeaderContent).ShouldBeFalse();
+        TabView.GetIsHeaderSelected(secondHeaderContent).ShouldBeTrue();
+    }
+
+    [Fact]
+    public void TabHeaderItemTemplate_ShouldSelectItemsSourceTabWithoutTemplateCommand()
+    {
+        var items = new ObservableCollection<HeaderItem>
+        {
+            new("First"),
+            new("Second"),
+        };
+
+        var tabView = AnimationReadyHandler.Prepare(new TabView
+        {
+            TabHeaderItemTemplate = CreateItemsSourceHeaderTemplate(),
+            ItemTemplate = CreateTestHeaderTemplate(),
+            ItemsSource = items,
+            UseAnimation = false,
+        });
+
+        var secondHeader = tabView.Tabs[1].Header.ShouldBeOfType<StatefulContentView>();
+
+        secondHeader.TappedCommand.Execute(null);
+
+        tabView.SelectedTab.ShouldBeSameAs(tabView.Tabs[1]);
+        tabView.CurrentItem.ShouldBeSameAs(items[1]);
+    }
+
     private sealed class TestMultiplePickerField : MultiplePickerField
     {
         public string[] GetChipTexts()
@@ -123,6 +201,33 @@ public class TabView_Test
     private static DataTemplate CreateTestHeaderTemplate()
     {
         return new DataTemplate(() => new Label());
+    }
+
+    private static DataTemplate CreateItemsSourceHeaderTemplate()
+    {
+        return new DataTemplate(() =>
+        {
+            var label = new Label();
+            label.SetBinding(Label.TextProperty, nameof(HeaderItem.Title));
+            return label;
+        });
+    }
+
+    private static TView GetWrappedHeaderContent<TView>(TabItem tabItem)
+        where TView : View
+    {
+        var header = tabItem.Header.ShouldBeOfType<StatefulContentView>();
+        return header.Content.ShouldBeOfType<TView>();
+    }
+
+    private sealed class HeaderItem
+    {
+        public HeaderItem(string title)
+        {
+            Title = title;
+        }
+
+        public string Title { get; }
     }
 
     private sealed class MultiplePickerViewModel

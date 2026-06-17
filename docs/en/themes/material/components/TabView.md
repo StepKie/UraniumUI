@@ -64,14 +64,42 @@ Table tabs can be placed at the top, bottom, start or left of the tab view. You 
 | ![MAUI TabView Tab Placement](../../../../images/tabview-tabplacement-light-android.gif)| ![MAUI TabView Tab Placement](../../../../images/tabview-tabplacement-dark-windows.gif)  | ![MAUI TabView Tab Placement](../../../../images/tabview-tabplacement-light-ios.gif) |
 
 ### Custom Tab Header
-You can customize the tab header by setting the `TabHeaderItemTemplate` property. The `TabHeaderItemTemplate` property is a **DataTemplate** that is used to render the tab header. The `TabHeaderItemTemplate` property is useful when you want to customize the tab header. In the datatemplate `Command` must be used in binding. That Command must be triggered when use tapped in the custom tab header.
+You can customize the tab header by setting the `TabHeaderItemTemplate` property. The `TabHeaderItemTemplate` property is a **DataTemplate** that is used to render the tab header.
 
-Following parameters can be used in DataTemplate for binding:
+When `TabView` uses an `ItemsSource`, the header template binding context is the current source item. This allows compiled bindings with `x:DataType` and works better with trimming and AOT. The tab selection action is wired by `TabView`, so the template does not need to bind a command just to select the tab.
+
+When tabs are declared directly with `<material:TabItem>`, the header template binding context remains the `TabItem`.
+
+Use `TabView.IsHeaderSelected` to style the selected header when the binding context is an `ItemsSource` item.
+
+```xml
+<material:TabView ItemsSource="{Binding Tabs}">
+    <material:TabView.TabHeaderItemTemplate>
+        <DataTemplate x:DataType="vm:BrowserTab">
+            <Grid Padding="12,8">
+                <Label Text="{Binding Title}" />
+
+                <Grid.Triggers>
+                    <DataTrigger TargetType="Grid"
+                                 Binding="{Binding Source={RelativeSource Self}, Path=(material:TabView.IsHeaderSelected)}"
+                                 Value="True">
+                        <Setter Property="BackgroundColor" Value="{StaticResource Primary}" />
+                    </DataTrigger>
+                </Grid.Triggers>
+            </Grid>
+        </DataTemplate>
+    </material:TabView.TabHeaderItemTemplate>
+</material:TabView>
+```
+
+For directly declared `TabItem` headers, following parameters can be used in DataTemplate for binding:
+
 - `Command`: Command that is triggered when user tapped in the tab header.**Must be used** for functionality of tab view.
 - `Title`: Title of tab.
 - `Data`: It's used to bind custom data to tab header. You can pass this while defining `TabItem`.
+- `IsSelected`: Indicates whether the tab is selected.
 
-For accessible custom headers, use a focusable control such as `Button`, `ButtonView`, `CheckBox`, or `StatefulContentView` and bind its command to `Command`. Avoid using a passive layout with only `TapGestureRecognizer` as the tab header action. Add semantic descriptions when the tab header uses icons or abbreviated text.
+For accessible directly declared `TabItem` headers, use a focusable control such as `Button`, `ButtonView`, `CheckBox`, or `StatefulContentView` and bind its command to `Command`. Avoid using a passive layout with only `TapGestureRecognizer` as the tab header action. Add semantic descriptions when the tab header uses icons or abbreviated text.
 
 ```xml
 <material:TabView>
@@ -92,7 +120,7 @@ For accessible custom headers, use a focusable control such as `Button`, `Button
 | ![MAUI TabView](../../../../images/tabview-simple-custom-light-android.gif) | ![MAUI TabView](../../../../images/tabview-simple-custom-dark-windows.gif)  |
 
 
-Also, tabs can be customized using [Triggers](https://docs.microsoft.com/en-us/dotnet/maui/fundamentals/triggers) according to the state of tab. `DataTrigger` can be used for styling tab item according to the state of tab. `IsSelected` property of `TabItem` can be used in DataTrigger.
+Also, directly declared `TabItem` headers can be customized using [Triggers](https://docs.microsoft.com/en-us/dotnet/maui/fundamentals/triggers) according to the state of tab. `DataTrigger` can be used for styling tab item according to the state of tab. `IsSelected` property of `TabItem` can be used in DataTrigger.
 
 ```xml
 <material:TabView>

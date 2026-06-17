@@ -118,6 +118,8 @@ public partial class TabView : Grid
         Orientation = ScrollOrientation.Horizontal,
     };
 
+    private bool hasCustomTabHeaderItemTemplate;
+
     public TabView()
     {
         Tabs = new ObservableCollection<TabItem>();
@@ -152,6 +154,12 @@ public partial class TabView : Grid
     private void OnItemTemplateChanged()
     {
         Render();
+    }
+
+    private void OnTabHeaderItemTemplateChanged()
+    {
+        hasCustomTabHeaderItemTemplate = true;
+        RenderHeaders();
     }
 
     protected virtual void InitializeLayout()
@@ -326,7 +334,15 @@ public partial class TabView : Grid
 
     internal virtual void RenderHeaders()
     {
+        foreach (var item in Tabs)
+        {
+            ClearHeaderBindingContext(item.Header);
+        }
+
         _headerContainer.Children.Clear();
+        _headerContainer.RowDefinitions.Clear();
+        _headerContainer.ColumnDefinitions.Clear();
+
         foreach (var item in Tabs)
         {
             AddHeaderFor(item);
@@ -336,7 +352,10 @@ public partial class TabView : Grid
         {
             foreach (var item in ItemsSource)
             {
-                AddHeaderForItem(item);
+                if (!Tabs.Any(x => x.IsGeneratedFromItemsSource && Equals(x.Data, item)))
+                {
+                    AddHeaderForItem(item);
+                }
             }
         }
     }
@@ -369,19 +388,20 @@ public partial class TabView : Grid
     protected virtual void AddHeaderFor(TabItem tabItem)
     {
         tabItem.TabView = this;
+        var useItemsSourceHeaderContext = ShouldUseItemsSourceHeaderContext(tabItem);
         var headerContent =
             tabItem.HeaderTemplate?.CreateContent() as View
             ?? TabHeaderItemTemplate?.CreateContent() as View
             //?? DefaultTabHeaderItemTemplate.CreateContent() as View
             ?? throw new InvalidOperationException("TabView requires a HeaderTemplate or TabHeaderItemTemplate to be set.");
 
-        headerContent.BindingContext = tabItem;
+        headerContent.BindingContext = useItemsSourceHeaderContext ? tabItem.Data : tabItem;
 
-        tabItem.Header = CreateAccessibleHeader(tabItem, headerContent);
+        tabItem.Header = CreateAccessibleHeader(tabItem, headerContent, useItemsSourceHeaderContext);
 
         UpdateHeaderSemantics(tabItem);
 
-        if (!_headerContainer.Children.Any())
+        if (!_headerContainer.Children.Any() && SelectedTab is null)
         {
             SelectedTab = tabItem;
         }
@@ -399,9 +419,45 @@ public partial class TabView : Grid
         _headerContainer.Add(tabItem.Header);
     }
 
-    private View CreateAccessibleHeader(TabItem tabItem, View headerContent)
+    private static void ClearHeaderBindingContext(View header)
+    {
+        if (header is null)
+        {
+            return;
+        }
+
+        foreach (var view in header.FindManyInChildrenHierarchy<View>())
+        {
+            view.Triggers.Clear();
+            view.BindingContext = null;
+        }
+    }
+
+    private bool ShouldUseItemsSourceHeaderContext(TabItem tabItem)
+    {
+        return tabItem.IsGeneratedFromItemsSource
+            && tabItem.HeaderTemplate is null
+            && hasCustomTabHeaderItemTemplate;
+    }
+
+    private View CreateAccessibleHeader(TabItem tabItem, View headerContent, bool controlOwnsActivation)
     {
         var selectCommand = new Command(() => SelectedTab = tabItem);
+
+        if (controlOwnsActivation)
+        {
+            if (TrySetHeaderActivationCommand(headerContent, selectCommand))
+            {
+                return headerContent;
+            }
+
+            return new StatefulContentView
+            {
+                Content = headerContent,
+                TappedCommand = selectCommand,
+                BindingContext = headerContent.BindingContext,
+            };
+        }
 
         if (HasKeyboardReachableElement(headerContent))
         {
@@ -415,6 +471,24 @@ public partial class TabView : Grid
             TappedCommand = selectCommand,
             BindingContext = tabItem,
         };
+    }
+
+    private static bool TrySetHeaderActivationCommand(View headerContent, ICommand selectCommand)
+    {
+        switch (headerContent)
+        {
+            case Button button:
+                button.Command = selectCommand;
+                return true;
+            case ButtonView buttonView:
+                buttonView.TappedCommand = selectCommand;
+                return true;
+            case StatefulContentView statefulContentView:
+                statefulContentView.TappedCommand = selectCommand;
+                return true;
+            default:
+                return false;
+        }
     }
 
     private static bool HasKeyboardReachableElement(View view)
@@ -432,6 +506,8 @@ public partial class TabView : Grid
             return;
         }
 
+        UpdateHeaderSelectionState(tabItem);
+
         var options = AccessibilityOptionsProvider.Get();
         var title = tabItem.Title ?? tabItem.Data?.ToString() ?? nameof(TabItem);
         var description = tabItem.IsSelected ? options.FormatSelectedTabDescription(title) : title;
@@ -439,6 +515,14 @@ public partial class TabView : Grid
 
         SemanticProperties.SetDescription(semanticTarget, description);
         SemanticProperties.SetHint(semanticTarget, options.SelectTabHint);
+    }
+
+    private static void UpdateHeaderSelectionState(TabItem tabItem)
+    {
+        foreach (var view in tabItem.Header.FindManyInChildrenHierarchy<View>())
+        {
+            SetIsHeaderSelected(view, tabItem.IsSelected);
+        }
     }
 
     private static VisualElement GetHeaderSemanticTarget(View header)
@@ -455,14 +539,14 @@ public partial class TabView : Grid
 
     protected virtual void AddHeaderForItem(object item)
     {
-        var tabItem = new TabItem { Data = item, Title = item?.ToString() };
+        var tabItem = new TabItem { Data = item, Title = item?.ToString(), IsGeneratedFromItemsSource = true };
 
         Tabs.Add(tabItem);
     }
 
     protected virtual void RemoveHeaderFor(TabItem tabItem)
     {
-        var existing = _headerContainer.Children.FirstOrDefault(x => x is View view && view.BindingContext == tabItem);
+        var existing = tabItem.Header ?? _headerContainer.Children.FirstOrDefault(x => x is View view && view.BindingContext == tabItem);
 
         if (tabItem == SelectedTab)
         {
@@ -513,11 +597,20 @@ public partial class TabView : Grid
             return;
         }
 
-        var content = newValue.Content ??=
-            ((View)newValue.ContentTemplate?.CreateContent()
-                ?? (View)ItemTemplate?.CreateContent());
+        if (newValue.Data is not null && CurrentItem != newValue.Data)
+        {
+            CurrentItem = newValue.Data;
+        }
 
-        ApplyContentBindingContext(newValue, content);
+        var content = newValue.Content
+            ?? (View)newValue.ContentTemplate?.CreateContent()
+            ?? (View)ItemTemplate?.CreateContent();
+
+        if (content is not null)
+        {
+            newValue.Content ??= content;
+            ApplyContentBindingContext(newValue, content);
+        }
 
         foreach (var item in Tabs)
         {
@@ -530,13 +623,14 @@ public partial class TabView : Grid
             oldValue.Content = null; // Make it null, in the next visit of this method, a new instance will be created.
         }
 
-        await PresentContentAsync(content);
-
-        content.Opacity = 1;
-
-        if (SelectedTab?.Data != null)
+        if (content is not null)
         {
-            CurrentItem = SelectedTab.Data;
+            await PresentContentAsync(content);
+            content.Opacity = 1;
+        }
+        else
+        {
+            _contentContainer.Content = null;
         }
 
         SelectedTabChanged?.Invoke(this, newValue);
