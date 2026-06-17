@@ -2,12 +2,14 @@
 using InputKit.Shared.Validations;
 using NSubstitute;
 using Shouldly;
+using System.Reflection;
 using System.Windows.Input;
 using UraniumUI.Material.Controls;
 using UraniumUI.Options;
 using UraniumUI.Tests.Core;
 using UraniumUI.ViewExtensions;
 using UraniumUI.Views;
+using Path = Microsoft.Maui.Controls.Shapes.Path;
 
 namespace UraniumUI.Material.Tests.Controls;
 public class TextField_Test
@@ -419,6 +421,35 @@ public class TextField_Test
     }
 
     [Fact]
+    public void PasswordShowHideAttachment_IconFill_ShouldUseAppThemeBinding()
+    {
+        var originalTheme = Application.Current.UserAppTheme;
+
+        try
+        {
+            Application.Current.UserAppTheme = AppTheme.Light;
+            Application.Current.Resources["OnBackground"] = Colors.Purple;
+            Application.Current.Resources["OnBackgroundDark"] = Colors.White;
+            var attachment = new TextFieldPasswordShowHideAttachment();
+            var control = AnimationReadyHandler.Prepare(new TextField { IsPassword = true });
+
+            control.Attachments.Add(attachment);
+
+            var iconPath = attachment.Content.ShouldBeOfType<Path>();
+            iconPath.Fill.ShouldBeOfType<SolidColorBrush>().Color.ShouldBe(Colors.Purple.WithAlpha(.5f));
+            var fillBinding = GetBinding(iconPath, Path.FillProperty);
+
+            fillBinding.GetType().Name.ShouldBe("AppThemeBinding");
+            GetAppThemeBrush(fillBinding, "Light").Color.ShouldBe(Colors.Purple.WithAlpha(.5f));
+            GetAppThemeBrush(fillBinding, "Dark").Color.ShouldBe(Colors.White.WithAlpha(.5f));
+        }
+        finally
+        {
+            Application.Current.UserAppTheme = originalTheme;
+        }
+    }
+
+    [Fact]
     public void IsSpellCheckEnabled_ShouldBeSet_FromViewModel()
     {
         var control = AnimationReadyHandler.Prepare(new TextField());
@@ -659,6 +690,31 @@ public class TextField_Test
             UpdateClearIconStateCallCount++;
             base.UpdateClearIconState();
         }
+    }
+
+    private static object GetBinding(BindableObject bindableObject, BindableProperty bindableProperty)
+    {
+        var properties = (System.Collections.IDictionary)typeof(BindableObject)
+            .GetField("_properties", BindingFlags.Instance | BindingFlags.NonPublic)
+            .GetValue(bindableObject);
+        var context = properties[bindableProperty];
+
+        context.ShouldNotBeNull();
+        var bindings = context.GetType()
+            .GetField("Bindings", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .GetValue(context);
+
+        return bindings.GetType()
+            .GetMethod("GetValue", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic, Type.EmptyTypes)
+            .Invoke(bindings, null);
+    }
+
+    private static SolidColorBrush GetAppThemeBrush(object appThemeBinding, string propertyName)
+    {
+        return appThemeBinding.GetType()
+            .GetProperty(propertyName, BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic)
+            .GetValue(appThemeBinding)
+            .ShouldBeOfType<SolidColorBrush>();
     }
 
     private sealed class FailingValidation : IValidation

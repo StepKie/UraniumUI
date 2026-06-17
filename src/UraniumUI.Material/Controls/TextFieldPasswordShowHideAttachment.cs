@@ -81,11 +81,17 @@ public class TextFieldPasswordShowHideAttachment : StatefulContentView
 
     private Path GetPathFromData(Geometry data)
     {
-        return new Path
+        var path = new Path
         {
-            Fill = ColorResource.GetColor("OnBackground", "OnBackgroundDark", Colors.DarkGray).WithAlpha(.5f),
             VerticalOptions = LayoutOptions.Center,
             Data = data,
         };
+
+        path.SetAppTheme(
+            Path.FillProperty,
+            new SolidColorBrush(ColorResource.GetColor("OnBackground", Colors.DarkGray).WithAlpha(.5f)),
+            new SolidColorBrush(ColorResource.GetColor("OnBackgroundDark", Colors.DarkGray).WithAlpha(.5f)));
+
+        return path;
     }
 }
