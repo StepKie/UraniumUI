@@ -1,6 +1,6 @@
 # CalendarView
 
-`CalendarView` is a cross-platform calendar layout for single-date selection. It is rendered with MAUI controls instead of native calendar views, so nullable selection, min/max behavior, and same-date selection are consistent across platforms.
+`CalendarView` is a cross-platform calendar layout for single-date, multiple-date, and date-range selection. It is rendered with MAUI controls instead of native calendar views, so nullable selection, min/max behavior, and same-date selection are consistent across platforms.
 
 ## Usage
 
@@ -23,7 +23,11 @@ Then you can use it with the `uranium:CalendarView` tag.
 
 ## Properties
 
-- **SelectedDate**: The selected date. Supports `DateTime?` and can be `null`.
+- **SelectionMode**: The active selection behavior. Supports `Single`, `Multiple`, and `Range`. The default is `Single`.
+- **SelectedDate**: The selected date for `Single` mode. Supports `DateTime?` and can be `null`.
+- **SelectedDates**: The selected dates for `Multiple` mode. Supports `IList<DateTime>`.
+- **RangeStartDate**: The selected range start for `Range` mode. Supports `DateTime?` and can be `null`.
+- **RangeEndDate**: The selected range end for `Range` mode. Supports `DateTime?` and can be `null`.
 - **DisplayDate**: The month currently displayed by the calendar.
 - **MinimumDate**: The earliest selectable date. Dates before this value are disabled.
 - **MaximumDate**: The latest selectable date. Dates after this value are disabled.
@@ -47,6 +51,35 @@ You can also select or clear dates from code:
 calendarView.TrySelectDate(DateTime.Today);
 calendarView.ClearSelection();
 ```
+
+`ClearSelection()` clears `SelectedDate`, `SelectedDates`, `RangeStartDate`, and `RangeEndDate` regardless of the active selection mode.
+
+## Multiple Selection
+
+Use `SelectionMode="Multiple"` and bind `SelectedDates` when users can select more than one day.
+
+```xml
+<uranium:CalendarView
+    SelectionMode="Multiple"
+    SelectedDates="{Binding SelectedDates}" />
+```
+
+Tapping a selectable day toggles that date in `SelectedDates`. Tapping a disabled day does nothing.
+
+## Range Selection
+
+Use `SelectionMode="Range"` and bind `RangeStartDate` and `RangeEndDate` when users can select a continuous range.
+
+```xml
+<uranium:CalendarView
+    SelectionMode="Range"
+    RangeStartDate="{Binding StartDate}"
+    RangeEndDate="{Binding EndDate}" />
+```
+
+The first selectable tap sets `RangeStartDate` and clears `RangeEndDate`. The second selectable tap completes the range. If the second tap is before the first tap, the start and end are normalized into date order. Tapping the same date twice creates a one-day range. After a complete range is selected, the next selectable tap starts a new range.
+
+`MinimumDate` and `MaximumDate` disable out-of-range days for all selection modes, so disabled dates cannot be selected as multiple dates or range endpoints.
 
 ## Year Selection
 
@@ -77,6 +110,10 @@ The view exposes style classes for common parts:
 - `CalendarView.DayButton.OutsideMonth`
 - `CalendarView.DayButton.Disabled`
 - `CalendarView.DayButton.Selected`
+- `CalendarView.DayButton.MultipleSelected`
+- `CalendarView.DayButton.RangeStart`
+- `CalendarView.DayButton.RangeMiddle`
+- `CalendarView.DayButton.RangeEnd`
 - `CalendarView.YearGrid`
 - `CalendarView.YearButton`
 - `CalendarView.YearButton.Disabled`
