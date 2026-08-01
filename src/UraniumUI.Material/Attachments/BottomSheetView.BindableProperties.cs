@@ -5,7 +5,7 @@ public partial class BottomSheetView
 
     public static readonly BindableProperty IsPresentedProperty =
         BindableProperty.Create(nameof(IsPresented), typeof(bool), typeof(BottomSheetView), defaultValue: false, defaultBindingMode: BindingMode.TwoWay,
-            propertyChanged: (bo, ov, nv) => (bo as BottomSheetView).AlignBottomSheet());
+            propertyChanged: (bo, ov, nv) => (bo as BottomSheetView).OnIsPresentedChanged((bool)ov, (bool)nv));
 
     public bool DisablePageWhenOpened { get => (bool)GetValue(DisablePageWhenOpenedProperty); set => SetValue(DisablePageWhenOpenedProperty, value); }
 

@@ -16,6 +16,10 @@ public partial class BottomSheetView : Border, IPageAttachment
 
     public View Header { get; set; }
 
+    public event EventHandler Opened;
+
+    public event EventHandler Closed;
+
     private TapGestureRecognizer closeGestureRecognizer = new();
     private bool isGeneratedHeader;
 
@@ -86,6 +90,25 @@ public partial class BottomSheetView : Border, IPageAttachment
         IsPresented = !IsPresented;
     }
 
+    private void OnIsPresentedChanged(bool oldValue, bool newValue)
+    {
+        AlignBottomSheet();
+
+        if (oldValue == newValue)
+        {
+            return;
+        }
+
+        if (newValue)
+        {
+            OnOpened();
+        }
+        else
+        {
+            OnClosed();
+        }
+    }
+
     protected virtual View GenerateAnchor()
     {
         var anchor = new StatefulContentView
@@ -124,6 +147,8 @@ public partial class BottomSheetView : Border, IPageAttachment
         {
             AttachedPage?.ContentFrame?.GestureRecognizers.Add(closeGestureRecognizer);
         }
+
+        Opened?.Invoke(this, EventArgs.Empty);
     }
 
     protected virtual void OnClosed()
@@ -132,6 +157,8 @@ public partial class BottomSheetView : Border, IPageAttachment
         {
             AttachedPage?.ContentFrame?.GestureRecognizers.Remove(closeGestureRecognizer);
         }
+
+        Closed?.Invoke(this, EventArgs.Empty);
     }
 
     private void PanGestureRecognizer_PanUpdated(object sender, PanUpdatedEventArgs e)
@@ -167,11 +194,6 @@ public partial class BottomSheetView : Border, IPageAttachment
         if (IsPresented)
         {
             y = 0;
-            OnOpened();
-        }
-        else
-        {
-            OnClosed();
         }
 
         if (animate)

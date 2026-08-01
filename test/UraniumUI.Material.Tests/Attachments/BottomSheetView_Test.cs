@@ -72,6 +72,75 @@ public class BottomSheetView_Test
         control.TranslationY.ShouldBe(240);
     }
 
+    [Fact]
+    public void PresentationEvents_ShouldOnlyBeRaisedOnStateChanges()
+    {
+        var header = AnimationReadyHandler.Prepare(new Border());
+        var control = AnimationReadyHandler.Prepare(new BottomSheetView
+        {
+            Header = header,
+            Body = AnimationReadyHandler.Prepare(new BoxView()),
+            CloseOnTapOutside = false,
+            DisablePageWhenOpened = false,
+        });
+        control.OnAttached(new UraniumContentPage());
+        SetFrame(control, 100, 300);
+        var openedCount = 0;
+        var closedCount = 0;
+        control.Opened += (_, _) => openedCount++;
+        control.Closed += (_, _) => closedCount++;
+
+        control.IsPresented = true;
+
+        openedCount.ShouldBe(1);
+        closedCount.ShouldBe(0);
+
+#pragma warning disable CS0618
+        header.Layout(new Rect(0, 0, 100, 60));
+#pragma warning restore CS0618
+
+        openedCount.ShouldBe(1);
+        closedCount.ShouldBe(0);
+
+        control.IsPresented = false;
+
+        openedCount.ShouldBe(1);
+        closedCount.ShouldBe(1);
+
+#pragma warning disable CS0618
+        header.Layout(new Rect(0, 0, 100, 80));
+#pragma warning restore CS0618
+
+        openedCount.ShouldBe(1);
+        closedCount.ShouldBe(1);
+    }
+
+    [Fact]
+    public void TapOutside_ShouldRaiseClosed()
+    {
+        var page = new UraniumContentPage { Body = new Label() };
+        var control = AnimationReadyHandler.Prepare(new BottomSheetView
+        {
+            Header = AnimationReadyHandler.Prepare(new Border()),
+            Body = AnimationReadyHandler.Prepare(new BoxView()),
+            DisablePageWhenOpened = false,
+        });
+        page.Attachments.Add(control);
+        var closedCount = 0;
+        control.Closed += (_, _) => closedCount++;
+
+        control.IsPresented = true;
+
+        var closeGesture = page.ContentFrame.GestureRecognizers.ShouldHaveSingleItem().ShouldBeOfType<TapGestureRecognizer>();
+        var sendTapped = typeof(TapGestureRecognizer).GetMethod("SendTapped", BindingFlags.Instance | BindingFlags.NonPublic);
+        sendTapped.ShouldNotBeNull();
+        sendTapped.Invoke(closeGesture, new object[] { page.ContentFrame, null });
+
+        control.IsPresented.ShouldBeFalse();
+        closedCount.ShouldBe(1);
+        page.ContentFrame.GestureRecognizers.ShouldBeEmpty();
+    }
+
     private static void SetFrame(VisualElement element, double width, double height)
     {
         var frameProperty = typeof(VisualElement).GetProperty("Frame", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);
