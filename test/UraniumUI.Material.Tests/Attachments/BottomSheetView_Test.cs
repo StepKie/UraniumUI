@@ -141,6 +141,31 @@ public class BottomSheetView_Test
         page.ContentFrame.GestureRecognizers.ShouldBeEmpty();
     }
 
+    [Fact]
+    public void InitiallyPresentedSheet_ShouldRegisterTapOutsideAfterAttachment()
+    {
+        var page = new UraniumContentPage { Body = new Label() };
+        var control = AnimationReadyHandler.Prepare(new BottomSheetView
+        {
+            Body = AnimationReadyHandler.Prepare(new BoxView()),
+            DisablePageWhenOpened = false,
+            IsPresented = true,
+        });
+        var closedCount = 0;
+        control.Closed += (_, _) => closedCount++;
+
+        page.Attachments.Add(control);
+
+        var closeGesture = page.ContentFrame.GestureRecognizers.ShouldHaveSingleItem().ShouldBeOfType<TapGestureRecognizer>();
+        var sendTapped = typeof(TapGestureRecognizer).GetMethod("SendTapped", BindingFlags.Instance | BindingFlags.NonPublic);
+        sendTapped.ShouldNotBeNull();
+        sendTapped.Invoke(closeGesture, new object[] { page.ContentFrame, null });
+
+        control.IsPresented.ShouldBeFalse();
+        closedCount.ShouldBe(1);
+        page.ContentFrame.GestureRecognizers.ShouldBeEmpty();
+    }
+
     private static void SetFrame(VisualElement element, double width, double height)
     {
         var frameProperty = typeof(VisualElement).GetProperty("Frame", BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic);

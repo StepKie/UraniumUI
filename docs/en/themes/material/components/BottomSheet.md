@@ -127,6 +127,15 @@ _It might be useful if you use bottom sheet for something like filtering the con
     </material:BottomSheetView>
 ```
 
+## Events
+
+| Event | Description |
+| --- | --- |
+| `Opened` | Raised when `IsPresented` changes to `true`. |
+| `Closed` | Raised when `IsPresented` changes to `false`, including when the sheet is dismissed by tapping outside it. |
+
+These events report the presentation state change; they do not wait for the open or close animation to finish.
+
 ## Accessibility
 
 Bottom sheets behave like temporary surfaces. Provide a visible heading inside the sheet, keep actions as buttons or focusable UraniumUI controls, and avoid using a passive layout with only `TapGestureRecognizer` for close, submit, or navigation actions.

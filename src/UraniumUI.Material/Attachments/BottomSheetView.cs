@@ -33,6 +33,9 @@ public partial class BottomSheetView : Border, IPageAttachment
         {
             Body.SizeChanged += BottomSheetContent_SizeChanged;
         }
+
+        AlignBottomSheet(false);
+        UpdateTapOutsideGestureRecognizer();
     }
 
     private void BottomSheetContent_SizeChanged(object sender, EventArgs e)
@@ -92,7 +95,10 @@ public partial class BottomSheetView : Border, IPageAttachment
 
     private void OnIsPresentedChanged(bool oldValue, bool newValue)
     {
-        AlignBottomSheet();
+        if (Header is not null)
+        {
+            AlignBottomSheet();
+        }
 
         if (oldValue == newValue)
         {
@@ -143,22 +149,37 @@ public partial class BottomSheetView : Border, IPageAttachment
 
     protected virtual void OnOpened()
     {
-        if (CloseOnTapOutside)
-        {
-            AttachedPage?.ContentFrame?.GestureRecognizers.Add(closeGestureRecognizer);
-        }
+        UpdateTapOutsideGestureRecognizer();
 
         Opened?.Invoke(this, EventArgs.Empty);
     }
 
     protected virtual void OnClosed()
     {
-        if (CloseOnTapOutside)
-        {
-            AttachedPage?.ContentFrame?.GestureRecognizers.Remove(closeGestureRecognizer);
-        }
+        UpdateTapOutsideGestureRecognizer();
 
         Closed?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void UpdateTapOutsideGestureRecognizer()
+    {
+        var gestureRecognizers = AttachedPage?.ContentFrame?.GestureRecognizers;
+        if (gestureRecognizers is null)
+        {
+            return;
+        }
+
+        if (IsPresented && CloseOnTapOutside)
+        {
+            if (!gestureRecognizers.Contains(closeGestureRecognizer))
+            {
+                gestureRecognizers.Add(closeGestureRecognizer);
+            }
+        }
+        else
+        {
+            gestureRecognizers.Remove(closeGestureRecognizer);
+        }
     }
 
     private void PanGestureRecognizer_PanUpdated(object sender, PanUpdatedEventArgs e)
