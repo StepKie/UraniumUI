@@ -16,6 +16,10 @@ public partial class BottomSheetView : Border, IPageAttachment
 
     public View Header { get; set; }
 
+    public event EventHandler Opened;
+
+    public event EventHandler Closed;
+
     private TapGestureRecognizer closeGestureRecognizer = new();
     private bool isGeneratedHeader;
 
@@ -29,6 +33,9 @@ public partial class BottomSheetView : Border, IPageAttachment
         {
             Body.SizeChanged += BottomSheetContent_SizeChanged;
         }
+
+        AlignBottomSheet(false);
+        UpdateTapOutsideGestureRecognizer();
     }
 
     private void BottomSheetContent_SizeChanged(object sender, EventArgs e)
@@ -86,6 +93,28 @@ public partial class BottomSheetView : Border, IPageAttachment
         IsPresented = !IsPresented;
     }
 
+    private void OnIsPresentedChanged(bool oldValue, bool newValue)
+    {
+        if (Header is not null)
+        {
+            AlignBottomSheet();
+        }
+
+        if (oldValue == newValue)
+        {
+            return;
+        }
+
+        if (newValue)
+        {
+            OnOpened();
+        }
+        else
+        {
+            OnClosed();
+        }
+    }
+
     protected virtual View GenerateAnchor()
     {
         var anchor = new StatefulContentView
@@ -120,17 +149,36 @@ public partial class BottomSheetView : Border, IPageAttachment
 
     protected virtual void OnOpened()
     {
-        if (CloseOnTapOutside)
-        {
-            AttachedPage?.ContentFrame?.GestureRecognizers.Add(closeGestureRecognizer);
-        }
+        UpdateTapOutsideGestureRecognizer();
+
+        Opened?.Invoke(this, EventArgs.Empty);
     }
 
     protected virtual void OnClosed()
     {
-        if (CloseOnTapOutside)
+        UpdateTapOutsideGestureRecognizer();
+
+        Closed?.Invoke(this, EventArgs.Empty);
+    }
+
+    private void UpdateTapOutsideGestureRecognizer()
+    {
+        var gestureRecognizers = AttachedPage?.ContentFrame?.GestureRecognizers;
+        if (gestureRecognizers is null)
         {
-            AttachedPage?.ContentFrame?.GestureRecognizers.Remove(closeGestureRecognizer);
+            return;
+        }
+
+        if (IsPresented && CloseOnTapOutside)
+        {
+            if (!gestureRecognizers.Contains(closeGestureRecognizer))
+            {
+                gestureRecognizers.Add(closeGestureRecognizer);
+            }
+        }
+        else
+        {
+            gestureRecognizers.Remove(closeGestureRecognizer);
         }
     }
 
@@ -167,11 +215,6 @@ public partial class BottomSheetView : Border, IPageAttachment
         if (IsPresented)
         {
             y = 0;
-            OnOpened();
-        }
-        else
-        {
-            OnClosed();
         }
 
         if (animate)
