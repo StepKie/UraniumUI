@@ -503,13 +503,14 @@ public class DatePickerField_Test
     }
 
     [Fact]
-    public void UseNativePicker_IsDefault_AndEmbedsNativePickerAsContent()
+    public void UseNativePicker_IsDefault_AndHidesNativePicker_WhenDateIsNull()
     {
         var control = AnimationReadyHandler.Prepare(new DatePickerField());
 
         control.UseNativePicker.ShouldBeTrue();
         control.Content.ShouldBeSameAs(control.DatePickerView);
-        control.DatePickerView.Opacity.ShouldBe(1);
+        control.Date.ShouldBeNull();
+        control.DatePickerView.Opacity.ShouldBe(0);
     }
 
     [Fact]
@@ -531,13 +532,20 @@ public class DatePickerField_Test
         var control = AnimationReadyHandler.Prepare(new DatePickerField());
         AnimationReadyHandler.Prepare(control.DatePickerView);
 
+        control.DatePickerView.Opacity.ShouldBe(0);
+
         var picked = DateTime.Today.AddDays(3);
         control.Date = picked;
         control.DatePickerView.Date.ShouldBe(picked);
+        control.DatePickerView.Opacity.ShouldBe(1);
 
         var pickedInView = DateTime.Today.AddDays(5);
         control.DatePickerView.Date = pickedInView;
         control.Date.ShouldBe(pickedInView);
+
+        control.Date = null;
+        control.DatePickerView.Date.ShouldBeNull();
+        control.DatePickerView.Opacity.ShouldBe(0);
     }
 
     [Fact]
@@ -551,6 +559,7 @@ public class DatePickerField_Test
 
         control.Date.ShouldBeNull();
         control.DatePickerView.Date.ShouldBeNull();
+        control.DatePickerView.Opacity.ShouldBe(0);
     }
 
     public class TestViewModel : UraniumBindableObject

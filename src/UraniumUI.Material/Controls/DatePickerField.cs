@@ -81,19 +81,18 @@ public class DatePickerField : InputField
 
         if (UseNativePicker)
         {
-            DatePickerView.Opacity = 1;
             DatePickerView.SetBinding(DatePicker.DateProperty, new Binding(nameof(Date), source: this, mode: BindingMode.TwoWay));
             Content = DatePickerView;
         }
         else
         {
             DatePickerView.RemoveBinding(DatePicker.DateProperty);
-            DatePickerView.Opacity = 0;
             Content = promptLabel;
             UpdateDateText();
             UpdateDatePickerViewDate();
         }
 
+        UpdateDatePickerOpacity();
         RegisterForEvents();
         UpdateContentSemantics();
 
@@ -150,6 +149,7 @@ public class DatePickerField : InputField
         CheckAndShowValidations();
         UpdateDateText();
         UpdateDatePickerViewDate();
+        UpdateDatePickerOpacity();
 
         if (AllowClear)
         {
@@ -157,6 +157,11 @@ public class DatePickerField : InputField
         }
 
         UpdateState();
+    }
+
+    private void UpdateDatePickerOpacity()
+    {
+        DatePickerView.Opacity = UseNativePicker && Date is not null ? 1 : 0;
     }
 
     protected override void OnIconChanged()
