@@ -1,5 +1,5 @@
 # DatePickerField
-DatePickerField is a control that allows users to select a date. It opens the UraniumUI date prompt backed by the custom `CalendarView`, so nullable dates, clear, and same-date reselection behave consistently across platforms.
+DatePickerField is a control that allows users to select a date. By default it opens the UraniumUI date prompt backed by the custom `CalendarView`. Set `UseNativePicker` to `true` to embed the platform date picker instead. Nullable dates, clear, and same-date reselection behave consistently in both modes.
 
 - [Material Design Date Pickers](https://material.io/components/date-pickers)
 
@@ -54,6 +54,15 @@ Clearing the field sets `Date` to `null`. `Date`, `MinimumDate`, and `MaximumDat
 | Dark | Light|
 | --- | --- |
 | ![MAUI Material Input](../../../../images/datepickerfield-allowclear-dark-android.gif) | ![MAUI Material Input](../../../../images/datepickerfield-allowclear-light-android.gif) |
+
+## UseNativePicker
+DatePickerField opens the UraniumUI calendar prompt by default. Set `UseNativePicker` to `true` to embed the platform date picker instead.
+
+```xml
+<material:DatePickerField Title="Pick a Date" UseNativePicker="True" />
+```
+
+The platform picker gives `DatePickerField` and `TimePickerField` the same look and feel on each platform. The calendar prompt renders the same UraniumUI calendar on every platform instead. `MinimumDate` and `MaximumDate` are honored in both modes.
 
 ## Accessibility
 

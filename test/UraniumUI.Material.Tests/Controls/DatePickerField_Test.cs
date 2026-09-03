@@ -1,4 +1,4 @@
-﻿using Shouldly;
+using Shouldly;
 using UraniumUI.Material.Controls;
 using UraniumUI.Material.Tests.Mocks;
 using UraniumUI.Dialogs;
@@ -108,7 +108,9 @@ public class DatePickerField_Test
     [Fact]
     public void Clear_ShouldSetDateToNull()
     {
-        var control = AnimationReadyHandler.Prepare(new TestDatePickerField { Date = DateTime.Today });
+        var control = AnimationReadyHandler.Prepare(new TestDatePickerField());
+        AnimationReadyHandler.Prepare(control.DatePickerView);
+        control.Date = DateTime.Today;
 
         // Act
         control.Clear();
@@ -122,7 +124,7 @@ public class DatePickerField_Test
     public void Clear_ShouldResetDatePickerViewDate()
     {
         var fallbackDate = DateTime.Today;
-        var control = AnimationReadyHandler.Prepare(new TestDatePickerField { Date = fallbackDate.AddDays(7) });
+        var control = AnimationReadyHandler.Prepare(new TestDatePickerField { UseNativePicker = false, Date = fallbackDate.AddDays(7) });
 
         // Act
         control.Clear();
@@ -134,7 +136,7 @@ public class DatePickerField_Test
     [Fact]
     public void Date_ShouldUpdateDisplayText()
     {
-        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+        var control = AnimationReadyHandler.Prepare(new DatePickerField { UseNativePicker = false });
         var date = DateTime.Today.AddDays(2);
 
         // Act
@@ -149,6 +151,7 @@ public class DatePickerField_Test
     public void Date_ShouldUpdateDatePickerViewDate()
     {
         var control = AnimationReadyHandler.Prepare(new DatePickerField());
+        AnimationReadyHandler.Prepare(control.DatePickerView);
         var date = DateTime.Today.AddDays(2);
 
         // Act
@@ -161,7 +164,7 @@ public class DatePickerField_Test
     [Fact]
     public void DateLabel_ShouldCenterTextVertically()
     {
-        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+        var control = AnimationReadyHandler.Prepare(new DatePickerField { UseNativePicker = false });
 
         // Assert
         ((Label)control.Content).VerticalTextAlignment.ShouldBe(TextAlignment.Center);
@@ -170,7 +173,7 @@ public class DatePickerField_Test
     [Fact]
     public void DateLabel_ShouldOwnPromptTapGesture()
     {
-        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+        var control = AnimationReadyHandler.Prepare(new DatePickerField { UseNativePicker = false });
         var dateLabel = (Label)control.Content;
 
         // Assert
@@ -194,9 +197,38 @@ public class DatePickerField_Test
     [Fact]
     public void DateLabel_ShouldExposePromptSemanticHint()
     {
-        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+        var control = AnimationReadyHandler.Prepare(new DatePickerField { UseNativePicker = false });
 
         SemanticProperties.GetHint(control.Content).ShouldBe("Opens the date picker.");
+    }
+
+    [Fact]
+    public void NativePicker_ShouldCarrySemanticsOfActiveContent()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField { UseNativePicker = true });
+
+        control.Title = "Birth date";
+
+        control.Content.ShouldBe(control.DatePickerView);
+        SemanticProperties.GetHint(control.Content).ShouldBe("Opens the date picker.");
+        SemanticProperties.GetDescription(control.Content).ShouldBe("Birth date");
+    }
+
+    [Fact]
+    public void UseNativePicker_Toggled_ShouldMoveSemanticsToActiveContent()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+
+        control.Title = "Birth date";
+        control.UseNativePicker = false;
+
+        control.Content.ShouldBeOfType<Label>();
+        SemanticProperties.GetDescription(control.Content).ShouldBe("Birth date");
+
+        control.UseNativePicker = true;
+
+        control.Content.ShouldBe(control.DatePickerView);
+        SemanticProperties.GetDescription(control.Content).ShouldBe("Birth date");
     }
 
     [Fact]
@@ -204,6 +236,7 @@ public class DatePickerField_Test
     {
         var control = AnimationReadyHandler.Prepare(new DatePickerField
         {
+            UseNativePicker = false,
             Icon = new FontImageSource
             {
                 FontFamily = "MaterialSharp",
@@ -221,7 +254,7 @@ public class DatePickerField_Test
         var selectedDate = new DateTime(2026, 6, 2);
         dialogService.UseDatePromptResult = true;
         dialogService.DatePromptResult = selectedDate;
-        var control = AnimationReadyHandler.Prepare(new TestDatePickerField());
+        var control = AnimationReadyHandler.Prepare(new TestDatePickerField { UseNativePicker = false });
         control.Title = "Birth Date";
 
         // Act
@@ -241,6 +274,7 @@ public class DatePickerField_Test
         var maximumDate = new DateTime(2026, 12, 31);
         var control = AnimationReadyHandler.Prepare(new TestDatePickerField
         {
+            UseNativePicker = false,
             Date = selectedDate,
             MinimumDate = minimumDate,
             MaximumDate = maximumDate,
@@ -265,7 +299,7 @@ public class DatePickerField_Test
         var dialogService = UseMockDialogService();
         dialogService.UseDatePromptResult = true;
         dialogService.DatePromptResult = null;
-        var control = AnimationReadyHandler.Prepare(new TestDatePickerField { Date = DateTime.Today });
+        var control = AnimationReadyHandler.Prepare(new TestDatePickerField { UseNativePicker = false, Date = DateTime.Today });
 
         // Act
         await control.OpenPromptAsync();
@@ -282,6 +316,7 @@ public class DatePickerField_Test
         var originalDate = DateTime.Today;
         var control = AnimationReadyHandler.Prepare(new TestDatePickerField
         {
+            UseNativePicker = false,
             Date = originalDate,
             IsEnabled = false,
         });
@@ -301,7 +336,7 @@ public class DatePickerField_Test
         var selectedDate = DateTime.Today;
         dialogService.UseDatePromptResult = true;
         dialogService.DatePromptResult = selectedDate;
-        var control = AnimationReadyHandler.Prepare(new TestDatePickerField { Date = selectedDate });
+        var control = AnimationReadyHandler.Prepare(new TestDatePickerField { UseNativePicker = false, Date = selectedDate });
 
         // Act
         control.Clear();
@@ -465,6 +500,75 @@ public class DatePickerField_Test
 
         // Assert
         control.DatePickerView.FontSize.ShouldBe(fontSize);
+    }
+
+    [Fact]
+    public void UseNativePicker_IsFalseByDefault_AndUsesPromptLabel()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+
+        control.UseNativePicker.ShouldBeFalse();
+        control.Content.ShouldBeOfType<Label>();
+        control.DatePickerView.Opacity.ShouldBe(0);
+    }
+
+    [Fact]
+    public void UseNativePicker_True_EmbedsHiddenNativePicker_WhenDateIsNull()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField { UseNativePicker = true });
+
+        control.Content.ShouldBeSameAs(control.DatePickerView);
+        control.Date.ShouldBeNull();
+        control.DatePickerView.Opacity.ShouldBe(0);
+    }
+
+    [Fact]
+    public void UseNativePicker_False_RestoresPromptLabel()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField { UseNativePicker = false });
+        var date = DateTime.Today.AddDays(2);
+
+        control.Date = date;
+
+        control.Content.ShouldBeOfType<Label>();
+        ((Label)control.Content).Text.ShouldBe(date.ToString(control.Format, CultureInfo.CurrentCulture));
+        control.Content.GestureRecognizers.Count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void UseNativePicker_Date_FlowsBothWays()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField { UseNativePicker = true });
+        AnimationReadyHandler.Prepare(control.DatePickerView);
+
+        control.DatePickerView.Opacity.ShouldBe(0);
+
+        var picked = DateTime.Today.AddDays(3);
+        control.Date = picked;
+        control.DatePickerView.Date.ShouldBe(picked);
+        control.DatePickerView.Opacity.ShouldBe(1);
+
+        var pickedInView = DateTime.Today.AddDays(5);
+        control.DatePickerView.Date = pickedInView;
+        control.Date.ShouldBe(pickedInView);
+
+        control.Date = null;
+        control.DatePickerView.Date.ShouldBeNull();
+        control.DatePickerView.Opacity.ShouldBe(0);
+    }
+
+    [Fact]
+    public void UseNativePicker_Clear_ClearsNativePickerDate()
+    {
+        var control = AnimationReadyHandler.Prepare(new TestDatePickerField { UseNativePicker = true });
+        AnimationReadyHandler.Prepare(control.DatePickerView);
+        control.Date = DateTime.Today;
+
+        control.Clear();
+
+        control.Date.ShouldBeNull();
+        control.DatePickerView.Date.ShouldBeNull();
+        control.DatePickerView.Opacity.ShouldBe(0);
     }
 
     public class TestViewModel : UraniumBindableObject
