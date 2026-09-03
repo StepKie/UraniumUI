@@ -73,8 +73,11 @@ public class DatePickerField : InputField
         ApplyPickerMode();
     }
 
-    private void ApplyPickerMode()
+    private void ApplyPickerMode
     {
+        // Ensure InputField hooks (focus visuals, semantics) are attached to the currently active content.
+        ReleaseEvents();
+
         if (UseNativePicker)
         {
             DatePickerView.Opacity = 1;
@@ -89,6 +92,10 @@ public class DatePickerField : InputField
             UpdateDateText();
             UpdateDatePickerViewDate();
         }
+
+        // Re-attach focus events and re-generate semantic description/hint for the new Content instance.
+        RegisterForEvents();
+        UpdateContentSemantics();
 
         // Binding refreshes ride on the dispatcher; without one (constructor in unit tests) the swap is picked up when the template binds.
         if (Microsoft.Maui.Dispatching.Dispatcher.GetForCurrentThread() is not null)
