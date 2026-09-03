@@ -205,7 +205,7 @@ public class DatePickerField_Test
     [Fact]
     public void NativePicker_ShouldCarrySemanticsOfActiveContent()
     {
-        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+        var control = AnimationReadyHandler.Prepare(new DatePickerField { UseNativePicker = true });
 
         control.Title = "Birth date";
 
@@ -503,11 +503,20 @@ public class DatePickerField_Test
     }
 
     [Fact]
-    public void UseNativePicker_IsDefault_AndHidesNativePicker_WhenDateIsNull()
+    public void UseNativePicker_IsFalseByDefault_AndUsesPromptLabel()
     {
         var control = AnimationReadyHandler.Prepare(new DatePickerField());
 
-        control.UseNativePicker.ShouldBeTrue();
+        control.UseNativePicker.ShouldBeFalse();
+        control.Content.ShouldBeOfType<Label>();
+        control.DatePickerView.Opacity.ShouldBe(0);
+    }
+
+    [Fact]
+    public void UseNativePicker_True_EmbedsHiddenNativePicker_WhenDateIsNull()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField { UseNativePicker = true });
+
         control.Content.ShouldBeSameAs(control.DatePickerView);
         control.Date.ShouldBeNull();
         control.DatePickerView.Opacity.ShouldBe(0);
@@ -529,7 +538,7 @@ public class DatePickerField_Test
     [Fact]
     public void UseNativePicker_Date_FlowsBothWays()
     {
-        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+        var control = AnimationReadyHandler.Prepare(new DatePickerField { UseNativePicker = true });
         AnimationReadyHandler.Prepare(control.DatePickerView);
 
         control.DatePickerView.Opacity.ShouldBe(0);
@@ -551,7 +560,7 @@ public class DatePickerField_Test
     [Fact]
     public void UseNativePicker_Clear_ClearsNativePickerDate()
     {
-        var control = AnimationReadyHandler.Prepare(new TestDatePickerField());
+        var control = AnimationReadyHandler.Prepare(new TestDatePickerField { UseNativePicker = true });
         AnimationReadyHandler.Prepare(control.DatePickerView);
         control.Date = DateTime.Today;
 

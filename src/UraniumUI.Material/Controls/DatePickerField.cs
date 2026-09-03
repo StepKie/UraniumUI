@@ -379,6 +379,6 @@ public class DatePickerField : InputField
     public static readonly BindableProperty UseNativePickerProperty = BindableProperty.Create(
         nameof(UseNativePicker),
         typeof(bool), typeof(DatePickerField),
-        true,
+        false,
         propertyChanged: (bindable, oldValue, newValue) => (bindable as DatePickerField).OnUseNativePickerChanged());
 }
