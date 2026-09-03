@@ -1,4 +1,4 @@
-﻿using Shouldly;
+using Shouldly;
 using UraniumUI.Material.Controls;
 using UraniumUI.Material.Tests.Mocks;
 using UraniumUI.Dialogs;
@@ -472,7 +472,6 @@ public class DatePickerField_Test
         // Assert
         control.DatePickerView.FontSize.ShouldBe(fontSize);
     }
-
 
     [Fact]
     public void UseNativePicker_IsDefault_AndEmbedsNativePickerAsContent()
