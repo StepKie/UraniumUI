@@ -203,6 +203,35 @@ public class DatePickerField_Test
     }
 
     [Fact]
+    public void NativePicker_ShouldCarrySemanticsOfActiveContent()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+
+        control.Title = "Birth date";
+
+        control.Content.ShouldBe(control.DatePickerView);
+        SemanticProperties.GetHint(control.Content).ShouldBe("Opens the date picker.");
+        SemanticProperties.GetDescription(control.Content).ShouldBe("Birth date");
+    }
+
+    [Fact]
+    public void UseNativePicker_Toggled_ShouldMoveSemanticsToActiveContent()
+    {
+        var control = AnimationReadyHandler.Prepare(new DatePickerField());
+
+        control.Title = "Birth date";
+        control.UseNativePicker = false;
+
+        control.Content.ShouldBeOfType<Label>();
+        SemanticProperties.GetDescription(control.Content).ShouldBe("Birth date");
+
+        control.UseNativePicker = true;
+
+        control.Content.ShouldBe(control.DatePickerView);
+        SemanticProperties.GetDescription(control.Content).ShouldBe("Birth date");
+    }
+
+    [Fact]
     public void Icon_ShouldPreserveDateLabelLeadingMargin()
     {
         var control = AnimationReadyHandler.Prepare(new DatePickerField

@@ -56,10 +56,11 @@ public class DatePickerField : InputField
         promptLabel = (Label)Content;
         iconClear.TappedCommand = new Command(OnClearTapped);
         SetActionSemantics(iconClear, AccessibilityOptions.ClearDateDescription, AccessibilityOptions.ClearDateHint);
-        SemanticProperties.SetHint(Content, AccessibilityOptions.OpenDatePickerHint);
+        SemanticProperties.SetHint(promptLabel, AccessibilityOptions.OpenDatePickerHint);
+        SemanticProperties.SetHint(DatePickerView, AccessibilityOptions.OpenDatePickerHint);
         DialogService = UraniumServiceProvider.Current.GetRequiredService<IDialogService>();
 
-        Content.GestureRecognizers.Add(new TapGestureRecognizer
+        promptLabel.GestureRecognizers.Add(new TapGestureRecognizer
         {
             Command = new Command(async () => await OpenDatePromptAsync())
         });
@@ -73,9 +74,9 @@ public class DatePickerField : InputField
         ApplyPickerMode();
     }
 
-    private void ApplyPickerMode
+    private void ApplyPickerMode()
     {
-        // Ensure InputField hooks (focus visuals, semantics) are attached to the currently active content.
+        // Content is an auto-property override here, so InputField's bindable-property hooks never see the swap.
         ReleaseEvents();
 
         if (UseNativePicker)
@@ -93,7 +94,6 @@ public class DatePickerField : InputField
             UpdateDatePickerViewDate();
         }
 
-        // Re-attach focus events and re-generate semantic description/hint for the new Content instance.
         RegisterForEvents();
         UpdateContentSemantics();
 
