@@ -85,6 +85,44 @@ public class TabView_Test
         viewModel.SelectedIndex.ShouldBe(1);
     }
 
+    [Fact]
+    public void ContentTemplate_ShouldKeepContentOwnBindingContextBinding()
+    {
+        var viewModel = new ParentViewModel();
+
+        var tabView = AnimationReadyHandler.Prepare(new TabView
+        {
+            BindingContext = viewModel,
+            TabHeaderItemTemplate = CreateTestHeaderTemplate(),
+            UseAnimation = false,
+        });
+
+        tabView.Tabs.Add(new TabItem { Title = "Child", ContentTemplate = CreateChildBoundContentTemplate() });
+
+        tabView.Tabs[0].Content.BindingContext.ShouldBeSameAs(viewModel.Child);
+    }
+
+    [Fact]
+    public void ContentTemplate_ShouldKeepContentOwnBindingContextBinding_WhenSwitchingTabs()
+    {
+        var viewModel = new ParentViewModel();
+
+        var tabView = AnimationReadyHandler.Prepare(new TabView
+        {
+            BindingContext = viewModel,
+            TabHeaderItemTemplate = CreateTestHeaderTemplate(),
+            UseAnimation = false,
+        });
+
+        tabView.Tabs.Add(new TabItem { Title = "Child", ContentTemplate = CreateChildBoundContentTemplate() });
+        tabView.Tabs.Add(new TabItem { Title = "Other", Content = new Label { Text = "Other" } });
+
+        tabView.SelectedTab = tabView.Tabs[1];
+        tabView.SelectedTab = tabView.Tabs[0];
+
+        tabView.Tabs[0].Content.BindingContext.ShouldBeSameAs(viewModel.Child);
+    }
+
     private sealed class TestMultiplePickerField : MultiplePickerField
     {
         public string[] GetChipTexts()
@@ -96,6 +134,21 @@ public class TabView_Test
     private static DataTemplate CreateTestHeaderTemplate()
     {
         return new DataTemplate(() => new Label());
+    }
+
+    private static DataTemplate CreateChildBoundContentTemplate()
+    {
+        return new DataTemplate(() =>
+        {
+            var content = new Label();
+            content.SetBinding(BindableObject.BindingContextProperty, nameof(ParentViewModel.Child));
+            return content;
+        });
+    }
+
+    private sealed class ParentViewModel
+    {
+        public object Child { get; } = new();
     }
 
     private sealed class MultiplePickerViewModel
